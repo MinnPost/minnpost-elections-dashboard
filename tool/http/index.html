@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Code your own dataset!</title>
+    <link rel="stylesheet" href="//scraperwiki.com/vendor/style/bootstrap.min.css">
+    <link rel="stylesheet" href="//scraperwiki.com/style/scraperwiki.css">
+    <style type="text/css">
+    body { padding: 20px; text-align: center; }
+    h2 { margin-top: 0; }
+    .interesting {
+      width: 17em;
+      margin: 0 auto;
+      padding: 8px 14px;
+      text-align: left;
+      color: #68460B;
+    }
+    .interesting h4 {
+      text-align: center;
+      color: inherit;
+      margin: 10px 0;
+    }
+    #return { cursor: pointer; }
+    #help {
+      margin-left: 5px;
+      font-size: 0.7em;
+      cursor: pointer;
+    }
+    </style>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+    <script src="//scraperwiki.com/vendor/js/bootstrap.min.js"></script>
+    <script src="//scraperwiki.com/js/scraperwiki.js"></script>
+    <script>
+$(function(){
+
+  $('#return').on('click', function(){
+    scraperwiki.tool.redirect('/dataset/' + scraperwiki.box)
+  })
+  $('#help').on('click', function(){
+    scraperwiki.tool.redirect('/docs/developer/')
+  })
+
+})
+    </script>
+  </head>
+  <body>
+    <h2>New, empty dataset created!</h2>
+    <p class="lead">ScraperWiki datasets are just like Unix shell accounts,<br/>with code and a SQLite database inside. <a id="help">More &raquo;</a></p>
+    <div class="alert interesting">
+      <h4>To write code in this dataset:</h4>
+      <ol>
+        <li><a id="return">Go to this dataset&rsquo;s main page</a>.</li>
+        <li>Click the <strong>SSH in</strong> link.</li>
+      </ol>
+    </div>
+  </body>
+</html>
