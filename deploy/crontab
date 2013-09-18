@@ -1,0 +1,29 @@
+MAILTO=scraper@zzolo.org
+
+
+#   .---------------- minute (0 - 59)
+#   |     .------------- hour (0 - 23)
+#   |     |     .---------- day of month (1 - 31)
+#   |     |     |     .------- month (1 - 12) OR jan,feb,mar,apr ...
+#   |     |     |     |     .---- day of week (0 - 6) (Sunday=0 or 7)  OR sun,mon,tue,wed,thu,fri,sat
+#   |     |     |     |     |
+#   *     *     *     *     *    command to be executed
+
+# Run the general results every 5 minutes
+# except when we want to run some of the other
+# meta scripts.  Offset hours for server time
+# and MN time (-5): 3AM = 8AM
+
+# Results
+
+  0,25 0-7,10-23 *     *     *     python /home/ubuntu/minnpost-scraper-2012-general-elections/scraper_results.py
+  43   0-7,10-23 *     *     *     python /home/ubuntu/minnpost-scraper-2012-general-elections/scraper_results_county.py
+  0       8      *     *     0     cd /home/ubuntu/minnpost-scraper-2012-general-elections/data && wget ftp://media:results@ftp.sos.state.mn.us/20121106_SG/allracesbyprecinct.txt -N
+  0       9      *     *     0     python /home/ubuntu/minnpost-scraper-2012-general-elections/scraper_results_precincts.py
+
+# Meta
+
+    10    8      *     *     *     python /home/ubuntu/minnpost-scraper-2012-general-elections/scraper_candidates.py
+    20    8      *     *     *     python /home/ubuntu/minnpost-scraper-2012-general-elections/scraper_districts.py
+    40    8      *     *     *     python /home/ubuntu/minnpost-scraper-2012-general-elections/scraper_meta.py
+

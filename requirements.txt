@@ -1,0 +1,3 @@
+scraperwiki_local
+lxml
+datetime

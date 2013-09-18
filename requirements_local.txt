@@ -1,0 +1,4 @@
+git+git://github.com/zzolo/dumptruck.git#eggs=dumptruck
+git+git://github.com/zzolo/scraperwiki_local.git#eggs=scraperwiki
+lxml
+datetime
