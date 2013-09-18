@@ -42,15 +42,18 @@ class ElectionScraper:
     """
     Route via arguments
     """
-    self.scrape('results')
+    self.scrape('results', '20121106')
 
 
-  def scrape(self, type):
+  def scrape(self, type, year):
     """
     Main scraper handler.
     """
-    for i in self.sources:
-      s = self.sources[i]
+    if year not in self.sources:
+      return
+
+    for i in self.sources[year]:
+      s = self.sources[year][i]
 
       if s['type'] == type:
         # Ensure we have a valid parser for this type
@@ -65,7 +68,7 @@ class ElectionScraper:
             self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (u, s['url']))
             raise
 
-          # Crete table
+          # Creat table
           self.create_table(s['table'])
 
           # Index is created after first insert
@@ -78,7 +81,7 @@ class ElectionScraper:
           count = 0
           for row in rows:
             # Parse row
-            parsed = parser_method(row)
+            parsed = parser_method(row, i)
 
             # Save to database
             try:
@@ -94,14 +97,28 @@ class ElectionScraper:
 
             count = count + 1
 
+          # Handle post actions
+          post = 'post_' + s['type']
+          post_method = getattr(self, post, None)
+          if callable(post_method):
+            post_method(i)
+
+          # Log
+          self.log.info('[%s] Scraped rows for %s: %s' % (s['type'], i, count))
+
 
   def create_table(self, table):
     query = "CREATE TABLE IF NOT EXISTS %s (key INTEGER PRIMARY KEY)"
     scraperwiki.sqlite.dt.execute(query % (table))
 
-  def parser_results(self, row):
+  def parser_results(self, row, i):
     # Make a UTC timestamp
     timestamp = calendar.timegm(datetime.datetime.utcnow().utctimetuple())
+
+    # To better match up with other data, we set a no county_id to 88 as
+    # that is what MN SoS uses
+    if not row[1] and i in ['amendments_results', 'us_senate_results', 'us_house_results', 'supreme_appeal_courts_results']:
+      row[1] = '88'
 
     # Create ids
     cand_name_id = re.sub(r'\W+', '', row[7])
@@ -147,6 +164,17 @@ class ElectionScraper:
     scraperwiki.sqlite.dt.execute(index_query % ('race_id', 'race_id'))
     self.log.info('[%s] Creating indices for results table.' % ('results'))
 
+  def post_results(self, i):
+    # Update some vars for easy retrieval
+    scraperwiki.sqlite.save_var('updated', int(calendar.timegm(datetime.datetime.utcnow().utctimetuple())))
+    races = scraperwiki.sqlite.select("COUNT(DISTINCT race_id) AS race_count FROM results")
+    if races != []:
+      scraperwiki.sqlite.save_var('races', races[0]['race_count'])
+    # Use the first state level race to get general number of precincts reporting
+    p_race = scraperwiki.sqlite.select("* FROM results WHERE county_id = '88' LIMIT 1")
+    if p_race != []:
+      scraperwiki.sqlite.save_var('precincts_reporting', p_race[0]['precincts_reporting'])
+      scraperwiki.sqlite.save_var('total_effected_precincts', p_race[0]['total_effected_precincts'])
 
 
 # If calling directly
