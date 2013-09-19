@@ -14,7 +14,7 @@ data across the state for general elections.
 
 ## Scraping
 
-* 
+* `python code/scraper.py`
 
 ## Local setup and development
 
@@ -43,7 +43,6 @@ These instructions have been performed on an EC2 Ubuntu instance.
 1. Change the directory: `cd minnpost-scraper-mn-election-results`
 1. `pip install -r requirements_local.txt`
     * This is used locally to get around some bugs in the scraperwiki libraries.
-1. Run the API server: `python deploy/local_server.py`
 
 ### Setup webserver/API
 
