@@ -40,20 +40,17 @@ module.exports = function(grunt) {
         fontsDir: 'font',
         imagesDir: 'images',
         javascriptsDir: 'js',
-        generatedImagesDir: '.tmp/css/images/',
         importPath: 'bower_components',
         httpPath: './',
         relativeAssets: true
       },
-      clean: {
-        options: {
-          clean: true
-        }
-      },
       dist: {
         options: {
+          imagesDir: './images',
           environment: 'production',
-          outputStyle: 'compressed'
+          outputStyle: 'compressed',
+          relativeAssets: false,
+          cssDir: '.tmp/dist_css'
         }
       },
       dev: {
@@ -91,19 +88,19 @@ module.exports = function(grunt) {
       },
       // CSS application
       dist_css: {
-        src: ['<%= compass.options.cssDir %>/main.css'],
+        src: ['<%= compass.dist.options.cssDir %>/main.css'],
         dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.css'
       },
       dist_css_latest: {
-        src: ['<%= compass.options.cssDir %>/main.css'],
+        src: ['<%= compass.dist.options.cssDir %>/main.css'],
         dest: 'dist/<%= pkg.name %>.latest.css'
       },
       dist_css_ie: {
-        src: ['<%= compass.options.cssDir %>/main.ie.css'],
+        src: ['<%= compass.dist.options.cssDir %>/main.ie.css'],
         dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.ie.css'
       },
       dist_css_latest_ie: {
-        src: ['<%= compass.options.cssDir %>/main.ie.css'],
+        src: ['<%= compass.dist.options.cssDir %>/main.ie.css'],
         dest: 'dist/<%= pkg.name %>.latest.ie.css'
       },
 
@@ -149,7 +146,14 @@ module.exports = function(grunt) {
       images: {
         files: [
           {
-            cwd: './css/images/',
+            cwd: './images/',
+            expand: true,
+            filter: 'isFile',
+            src: ['*'],
+            dest: 'dist/images/'
+          },
+          {
+            cwd: '<%= compass.options.generatedImagesDir %>',
             expand: true,
             filter: 'isFile',
             src: ['*'],
@@ -248,7 +252,7 @@ module.exports = function(grunt) {
   });
 
   // Default build task
-  grunt.registerTask('default', ['jshint', 'compass:clean', 'compass:dist', 'clean', 'data_embed', 'jst', 'concat', 'uglify', 'copy']);
+  grunt.registerTask('default', ['jshint', 'compass:dist', 'clean', 'data_embed', 'jst', 'concat', 'uglify', 'copy']);
 
   // Watch tasks
   grunt.registerTask('lint-watch', ['jshint', 'compass:dev']);
