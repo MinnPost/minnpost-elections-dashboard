@@ -1,3 +1,4 @@
-scraperwiki_local
+scraperwiki
 lxml
 datetime
+flask

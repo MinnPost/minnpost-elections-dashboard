@@ -68,9 +68,6 @@ class ElectionScraper:
             self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (u, s['url']))
             raise
 
-          # Creat table
-          self.create_table(s['table'])
-
           # Index is created after first insert
           if s['table'] not in self.index_created:
             self.index_created[s['table']] = False
@@ -85,14 +82,14 @@ class ElectionScraper:
 
             # Save to database
             try:
-              scraperwiki.sqlite.save(unique_keys = [], data = parsed, table_name = s['table'])
+              scraperwiki.sqlite.save(unique_keys = ['id'], data = parsed, table_name = s['table'])
 
               # Create index if needed
               if callable(index_method) and not self.index_created[s['table']]:
                 index_method()
                 self.index_created[s['table']] = True
             except Exception, err:
-              self.log.exception('[%s] Error thrown while saving to table: %s' % (s['table'], row))
+              self.log.exception('[%s] Error thrown while saving to table: %s' % (s['table'], parsed))
               raise
 
             count = count + 1
@@ -106,10 +103,6 @@ class ElectionScraper:
           # Log
           self.log.info('[%s] Scraped rows for %s: %s' % (s['type'], i, count))
 
-
-  def create_table(self, table):
-    query = "CREATE TABLE IF NOT EXISTS %s (key INTEGER PRIMARY KEY)"
-    scraperwiki.sqlite.dt.execute(query % (table))
 
   def parser_results(self, row, i):
     # Make a UTC timestamp

@@ -16,55 +16,60 @@ data across the state for general elections.
 
 * 
 
-## Setup
+## Local setup and development
 
-### Local
-
+1. Install `git`
+1. Get the code: `git clone https://github.com/MinnPost/minnpost-scraper-mn-election-results.git`
+1. Change the directory: `cd minnpost-scraper-mn-election-results`
 1. (optional) Make a `virtualenv`
 1. `pip install -r requirements_local.txt`
     * This is used locally to get around some bugs in the scraperwiki libraries.
-1. (how to run API locally...)
+1. Run a scraper process (see above).
+1. Run basic API server; this should not be run on production, it is meant for local developmet: `python deploy/local_server.py`
 
-### Independent Deployment
+## Production setup and deployment
 
-For election night, the scraper needs to run every 10 minutes or less,
-and with ScraperWiki, it is not fast enough and there were some issues
-with SQLite performance.
+As this is meant to remulate how ScraperWiki works, it uses Python, FastCGI
+and Nginx to create an API for the scraped data in the sqlite database.
 
-These instructions were performed on EC2's quick-launch
-Ubuntu 12 install.
+These instructions have been performed on an EC2 Ubuntu instance.
 
-#### Libraries and prerequisites
+### Code, Libraries and prerequisites
 
-    sudo apt-get install git-core git python-pip python-dev build-essential python-xml sqlite3 nginx fcgiwrap
-    sudo pip install --upgrade pip
-    sudo pip install --upgrade virtualenv
+1. `sudo apt-get install git-core git python-pip python-dev build-essential python-xml sqlite3 nginx fcgiwrap && sudo pip install --upgrade pip && sudo pip install --upgrade virtualenv`
+1. `cd ~`
+1. Install `git`
+1. Get the code: `git clone https://github.com/MinnPost/minnpost-scraper-mn-election-results.git`
+1. Change the directory: `cd minnpost-scraper-mn-election-results`
+1. `pip install -r requirements_local.txt`
+    * This is used locally to get around some bugs in the scraperwiki libraries.
+1. Run the API server: `python deploy/local_server.py`
 
-#### Install codebase
+### Setup webserver/API
 
-We are assuming this is the only thing running on server so not using Virtualenv, but
-feel free to use it.  Assuming all relative paths are from repo directory.
+#### Dumptruck
 
-    git clone git://github.com/MinnPost/minnpost-scraper-2012-general-elections.git
-    cd minnpost-scraper-2012-general-elections
-    sudo pip install -r requirements_local.txt
-
-#### Setup webserver/API
+Dumptruck-web is a Python script that runs through FastCGI to handle API
+requests.
 
     sudo git clone https://github.com/zzolo/dumptruck-web.git /var/www/dumptruck-web
     sudo chown -R www-data:www-data /var/www/dumptruck-web
 
-Configure fcgiwrap to use more children, check if this file exists, if so
+#### FCGIWrap
+
+On Ubuntu, configure fcgiwrap to use more children, check if this file exists, if so
 just copy it.
 
     ls /etc/default/fcgiwrap
     sudo cp deploy/fcgiwrap /etc/default/fcgiwrap
 
-Configure nginx.
+#### Nginx
 
-    sudo cp deploy/nginx-scraper-api /etc/nginx/sites-available/nginx-scraper-api
-    sudo ln -s /etc/nginx/sites-available/nginx-scraper-api /etc/nginx/sites-enabled/nginx-scraper-api
+    sudo cp deploy/nginx-scraper-api.conf /etc/nginx/sites-available/nginx-scraper-api.conf
+    sudo ln -s /etc/nginx/sites-available/nginx-scraper-api.conf /etc/nginx/sites-enabled/nginx-scraper-api.conf
     sudo rm /etc/nginx/sites-enabled/default
+
+#### Deploy
 
 Restart services.
 
