@@ -26,7 +26,10 @@
       this.$el.find('.message-container').html(this.template('template-loading')({ })).slideDown();
 
       // Do stuff like get data
-
+      this.router = new this.DashboardRouter({
+        app: this
+      });
+      this.router.start();
 
       // Stop loading
       this.$el.find('.message-container').slideUp(function() {
