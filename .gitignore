@@ -5,6 +5,7 @@ bower_components
 dist/data.js
 dist/templates.js
 false
+.tmp
 
 # General git ignores
 .sass-cache

@@ -18,9 +18,7 @@
     this.getTemplate('template-application', function(compiledTemplate) {
       this.getTemplate('template-footnote', function(compiledTemplate) {
         this.getTemplate('template-loading', function(compiledTemplate) {
-          
-            done.apply(context, []);
-          
+          done.apply(context, []);
         }, this);
       }, this);
     }, this);

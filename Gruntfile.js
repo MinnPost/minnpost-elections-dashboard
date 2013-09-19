@@ -9,7 +9,7 @@ module.exports = function(grunt) {
         '<%= grunt.template.today("yyyy-mm-dd") + "\\n" %>' +
         '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
         '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-        ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */' + 
+        ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */' +
         '<%= "\\n\\n" %>'
     },
     data_embed: {
@@ -33,23 +33,32 @@ module.exports = function(grunt) {
       },
       files: ['Gruntfile.js', 'js/*.js', 'data-processing/*.js']
     },
-    sass: {
+    compass: {
+      options: {
+        sassDir: 'sass',
+        cssDir: '.tmp/css',
+        fontsDir: 'font',
+        imagesDir: 'images',
+        javascriptsDir: 'js',
+        generatedImagesDir: '.tmp/css/images/',
+        importPath: 'bower_components',
+        httpPath: './',
+        relativeAssets: true
+      },
+      clean: {
+        options: {
+          clean: true
+        }
+      },
       dist: {
         options: {
-          style: 'compressed'
-        },
-        files: {
-          'css/styles.min.css': 'sass/main.scss',
-          'css/styles.ie.min.css': 'sass/main.ie.scss'
+          environment: 'production',
+          outputStyle: 'compressed'
         }
       },
       dev: {
         options: {
-          style: 'expanded'
-        },
-        files: {
-          'css/styles.css': 'sass/main.scss',
-          'css/styles.ie.css': 'sass/main.ie.scss'
+          debugInfo: true
         }
       }
     },
@@ -72,36 +81,35 @@ module.exports = function(grunt) {
       },
       // JS application
       dist: {
-        src: ['js/core.js', 'dist/data.js', 'dist/templates.js', 
+        src: ['js/core.js', 'dist/data.js', 'dist/templates.js',
           'js/app.js', 'js/*.js'],
         dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.js'
       },
       dist_latest: {
-        src: ['<%= concat.dist.src %>'], 
+        src: ['<%= concat.dist.src %>'],
         dest: 'dist/<%= pkg.name %>.latest.js'
       },
       // CSS application
       dist_css: {
-        src: ['css/styles.min.css'], 
+        src: ['<%= compass.options.cssDir %>/main.css'],
         dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.css'
       },
       dist_css_latest: {
-        src: ['css/styles.min.css'], 
+        src: ['<%= compass.options.cssDir %>/main.css'],
         dest: 'dist/<%= pkg.name %>.latest.css'
       },
       dist_css_ie: {
-        src: ['css/styles.ie.min.css'], 
+        src: ['<%= compass.options.cssDir %>/main.ie.css'],
         dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.ie.css'
       },
       dist_css_latest_ie: {
-        src: ['css/styles.ie.min.css'], 
+        src: ['<%= compass.options.cssDir %>/main.ie.css'],
         dest: 'dist/<%= pkg.name %>.latest.ie.css'
       },
-      
+
       // JS libs
       libs: {
         src: [
-          
           'bower_components/jquery/jquery.min.js',
           'bower_components/jquery-jsonp/src/jquery.jsonp.js',
           'bower_components/underscore/underscore-min.js',
@@ -115,8 +123,8 @@ module.exports = function(grunt) {
       // CSS libs
       libs_css: {
         src: [
-            
-        ], 
+
+        ],
         dest: 'dist/<%= pkg.name %>.libs.css'
       },
       libs_css_ie: {
@@ -203,15 +211,15 @@ module.exports = function(grunt) {
       }
     },
     watch: {
-      files: ['<%= jshint.files %>', 'css/*.scss'],
+      files: ['<%= jshint.files %>', 'sass/*.scss'],
       tasks: 'lint-watch'
     }
   });
-  
+
   // Load plugin tasks
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-sass');
+  grunt.loadNpmTasks('grunt-contrib-compass');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-jst');
@@ -219,7 +227,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-s3');
-  
+
 
   // Custom task to save json data into a JS file for concatentation
   grunt.registerMultiTask('data_embed', 'Make data embeddable', function() {
@@ -227,25 +235,25 @@ module.exports = function(grunt) {
     var config = grunt.config.get();
     var finalOutput = '';
     console.log(options);
-    
+
     this.files.forEach(function(f) {
       var data = grunt.file.readJSON(f.src[0]);
       finalOutput += 'mpApp["' + config.pkg.name + '"].data["' + f.dest + '"] = ' + JSON.stringify(data) + '; \n\n';
       grunt.log.write('Read file: ' + f.src[0] + '...').ok();
-      
+
     });
-    
+
     grunt.file.write(options.output, finalOutput);
     grunt.log.write('Wrote data to: ' + options.output + '...').ok();
   });
 
   // Default build task
-  grunt.registerTask('default', ['jshint', 'sass', 'clean', 'data_embed', 'jst', 'concat', 'uglify', 'copy']);
+  grunt.registerTask('default', ['jshint', 'compass:clean', 'compass:dist', 'clean', 'data_embed', 'jst', 'concat', 'uglify', 'copy']);
 
   // Watch tasks
-  grunt.registerTask('lint-watch', ['jshint', 'sass:dev']);
+  grunt.registerTask('lint-watch', ['jshint', 'compass:dev']);
   grunt.registerTask('server', ['connect', 'watch']);
-  
+
   // Deploy tasks
   grunt.registerTask('mp-deploy', ['s3']);
 

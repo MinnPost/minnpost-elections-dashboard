@@ -4,15 +4,11 @@ An elections results dashboard for MN elections.
 
 ## Data
 
-*Describe the data sources here.  Use links and URLs to show where the data came from.  Put small sized originals or modified data sources in the ```data``` folder*
-
-*For larger data sources that may need to be processed, provide instructions on how to download.  For instance:  ```cd data && wget blah.txt```.  Also, make sure to put an entry in the ```.gitignore```.*
+Data is coming from an the [elections scraper API](https://github.com/MinnPost/minnpost-scraper-mn-election-results).
 
 ## Data processing
 
-The following describes how the data was processed and is not necessarily needed to run or install the application, but more included for reference, transparency, and development.
-
-*Describe data processing here, include commands.  Put data processing scripts or configurations in the ```data-processing``` folder.*
+There is no pre-data-processing.  Some processing/translating will happen client side.
 
 ## Prerequisites
 
@@ -27,10 +23,9 @@ All commands are assumed to on the [command line](http://en.wikipedia.org/wiki/C
 1. Install [NodeJS](http://nodejs.org/).
    * On a Mac, do: `brew install node`.
 1. Optionally, for development, install [Grunt](http://gruntjs.com/): `npm install -g grunt-cli`
-1. Install [Bower](http://bower.io/): `npm install -g bower` 
+1. Install [Bower](http://bower.io/): `npm install -g bower`
 1. Install [Ruby](http://www.ruby-lang.org/en/downloads/), though it is probably already installed on your system.
-1. Install [Bundler](http://gembundler.com/): `gem install bundler` 
-
+1. Install [Bundler](http://gembundler.com/): `gem install bundler`
 1. Install [Sass](http://sass-lang.com/): `gem install sass`
 1. Install [Compass](http://compass-style.org/): `gem install compass`
 
@@ -41,14 +36,12 @@ Get the code for this project and install the necessary dependency libraries and
 1. Check out this code with [Git](http://git-scm.com/): `git clone https://github.com/MinnPost/minnpost-elections-dashboard.git`
 1. Go into the template directory: `cd minnpost-elections-dashboard`
 1. Install NodeJS packages: `npm install`
-1. Install Bower components: `bower install` 
-
-
+1. Install Bower components: `bower install`
 
 ### Running
 
 * Run: `grunt server`
-   * This will run a local webserver for development and you can view the application in your web browser at [http://localhost:8899](http://localhost:8899).
+    * This will run a local webserver for development and you can view the application in your web browser at [http://localhost:8899](http://localhost:8899).
     * Utilize `index.html` for development, while `index-deploy.html` is used for the deployed version, and `index-build.html` is used to test the build before deployment.
     * The server runs `grunt watch` which will watch for linting JS files and compiling SASS.  If you have your own webserver, feel free to use that with just this command.
 
@@ -63,5 +56,4 @@ To build or compile all the assets together for easy and efficient deployment, d
 Deploying will push the relevant files up to Amazon's AWS S3 so that they can be easily referenced on the MinnPost site.  This is specific to MinnPost, and your deployment might be different.
 
 1. Run: `grunt mp-deploy`
-
 
