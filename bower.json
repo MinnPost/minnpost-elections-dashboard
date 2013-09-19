@@ -1,0 +1,17 @@
+{
+  "name": "minnpost-elections-dashboard",
+  "version": "0.0.1",
+  "main": "index.html",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components",
+    "bower_components"
+  ],
+  "dependencies": {
+    "jquery": "1.9",
+    "jquery-jsonp": "*",
+    "underscore": "*",
+    "backbone": "*"
+  }
+}

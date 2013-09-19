@@ -1,0 +1,74 @@
+/**
+ * Main styles for: minnpost-elections-dashboard
+ *
+ * Make the default styles for a 960px wide screen.  A mobile
+ * first approach is fine, but starting with a 960px wide
+ * screen means that older browsers that do not support
+ * media queries will be fine as they are all desktop browsers. 
+ */
+
+body .node-unpublished {
+  background-repeat: no-repeat;
+}
+      
+.interactive-container  {
+  max-width: 960px;
+  margin: 0 auto;
+  padding-top: 1em;
+}
+
+.minnpost-elections-dashboard-application-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding-top: 1em;
+
+  .clear {
+    clear: both;
+  }
+  .hidden {
+    display: none;
+  }
+
+  /* Clearfix from http://nicolasgallagher.com/micro-clearfix-hack/ */
+  .cf:before,
+  .cf:after {
+    content: " "; /* 1 */
+    display: table; /* 2 */
+  }
+
+  .cf:after {
+    clear: both;
+  }
+  .cf {
+    *zoom: 1;
+  }
+  
+  .footnote {
+    font-size: .75em;
+    font-style: italic;
+    color: #414141;
+    margin-top: 3em;
+    border-top: 1px solid #BCBCBC;
+    padding-top: 1em;
+  }
+  
+  .loading {
+    width: 100%;
+    text-align: center;
+    padding: 2em 2em;
+    color: #ABABAB;
+    vertical-align: middle;
+    height: 100%;
+    line-height: 100%;
+  
+    span {
+      padding: 10px 5px 10px 40px;
+      background: transparent url($loader-image) center left no-repeat;
+      vertical-align: middle;
+      height: 100%;
+      line-height: 100%;
+    }
+  }
+  
+  
+}
