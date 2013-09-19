@@ -10,8 +10,6 @@ Data is coming from an the [elections scraper API](https://github.com/MinnPost/m
 
 There is no pre-data-processing.  Some processing/translating will happen client side.
 
-## Prerequisites
-
 ## Development and running locally
 
 ### Prerequisites
