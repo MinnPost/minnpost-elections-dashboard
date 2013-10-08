@@ -3,6 +3,7 @@
 Main scraper.
 """
 
+import sys
 import os
 import re
 import scraperwiki
@@ -19,6 +20,7 @@ class ElectionScraper:
   """
   sources_file = os.path.join(os.path.dirname(__file__), '../scraper_sources.json')
   index_created = {}
+
 
   def __init__(self):
     """
@@ -42,7 +44,13 @@ class ElectionScraper:
     """
     Route via arguments
     """
-    self.scrape('results', '20121106')
+    if len(sys.argv) >= 2:
+      method = sys.argv[1]
+      arg1 = sys.argv[2] if 2 in sys.argv else None
+      arg2 = sys.argv[3] if 3 in sys.argv else None
+      action = getattr(self, method, None)
+      if callable(action):
+        action(arg1, arg2)
 
 
   def scrape(self, type, year):
@@ -122,6 +130,10 @@ class ElectionScraper:
     race_id = base_id
     race_id_name = base_id + '-' + office_name_id
 
+    # Office refers to office name and office id as assigned by SoS, but
+    # race ID is a more specific id as office id's are not unique across
+    # all results
+
     return {
       'id': row_id,
       'office_type': 'to-fix', # FIX
@@ -150,12 +162,14 @@ class ElectionScraper:
       'updated': int(timestamp)
     }
 
+
   def index_results(self):
     index_query = "CREATE INDEX IF NOT EXISTS %s ON results (%s)"
     scraperwiki.sqlite.dt.execute(index_query % ('office_name', 'office_name'))
     scraperwiki.sqlite.dt.execute(index_query % ('candidate', 'candidate'))
     scraperwiki.sqlite.dt.execute(index_query % ('race_id', 'race_id'))
     self.log.info('[%s] Creating indices for results table.' % ('results'))
+
 
   def post_results(self, i):
     # Update some vars for easy retrieval
@@ -168,6 +182,37 @@ class ElectionScraper:
     if p_race != []:
       scraperwiki.sqlite.save_var('precincts_reporting', p_race[0]['precincts_reporting'])
       scraperwiki.sqlite.save_var('total_effected_precincts', p_race[0]['total_effected_precincts'])
+
+
+  def aggregate_results(self, *args):
+    """
+    Given results, aggregate into a table of races.
+    """
+    index_created = False
+    results = scraperwiki.sqlite.select("DISTINCT office_id, office_name, office_name_id, race_id, race_id_name FROM results")
+
+    for r in results:
+      # The only way to know if there are multiple seats is look at the office
+      # name which has "(Elect X)" in it.
+      r['seats'] = 1
+      re_seats = re.compile('.*\(elect ([0-9]+)\).*', re.IGNORECASE)
+      matched_seats = re_seats.match(r['office_name'])
+      if matched_seats is not None:
+        r['seats'] = matched_seats.group(1)
+
+      # Save to database
+      try:
+        scraperwiki.sqlite.save(unique_keys = ['race_id'], data = r, table_name = 'races')
+
+        # Create index if needed
+        if index_created == False:
+          index_query = "CREATE INDEX IF NOT EXISTS %s ON races (%s)"
+          scraperwiki.sqlite.dt.execute(index_query % ('office_id', 'office_id'))
+          self.log.info('[%s] Creating indices for races table.' % ('races'))
+          index_created = True
+      except Exception, err:
+        self.log.exception('[%s] Error thrown while saving to table: %s' % ('races', r))
+        raise
 
 
 # If calling directly
