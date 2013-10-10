@@ -46,8 +46,8 @@ class ElectionScraper:
     """
     if len(sys.argv) >= 2:
       method = sys.argv[1]
-      arg1 = sys.argv[2] if 2 in sys.argv else None
-      arg2 = sys.argv[3] if 3 in sys.argv else None
+      arg1 = sys.argv[2] if len(sys.argv) > 2 else None
+      arg2 = sys.argv[3] if len(sys.argv) > 3 else None
       action = getattr(self, method, None)
       if callable(action):
         action(arg1, arg2)
@@ -116,23 +116,29 @@ class ElectionScraper:
     # Make a UTC timestamp
     timestamp = calendar.timegm(datetime.datetime.utcnow().utctimetuple())
 
-    # To better match up with other data, we set a no county_id to 88 as
-    # that is what MN SoS uses
-    if not row[1] and i in ['amendments_results', 'us_senate_results', 'us_house_results', 'supreme_appeal_courts_results']:
-      row[1] = '88'
-
     # Create ids
     cand_name_id = re.sub(r'\W+', '', row[7])
     office_name_id = re.sub(r'\W+', '', row[4])
-    base_id = 'id-' + row[1] + '-' + row[2] + '-' + row[5] + '-' + row[3]
+    base_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[5] + '-' + row[3]
     row_id = base_id + '-' + row[6]
     id_name = base_id + '-' + row[6] + '-' + office_name_id + '-' + cand_name_id
-    race_id = base_id
-    race_id_name = base_id + '-' + office_name_id
 
     # Office refers to office name and office id as assigned by SoS, but
-    # race ID is a more specific id as office id's are not unique across
+    # contest ID is a more specific id as office id's are not unique across
     # all results
+    contest_id = base_id
+    contest_id_name = contest_id + '-' + office_name_id
+
+    # For ranked choice voting, we want to a consistent contest id, as the
+    # office_id is different for each set of choices.
+    #
+    # It seems that the office id is incremented by 1 starting at 1 so
+    # we use the first
+    ranked_choice = re.compile('.*(first|second|third|\w*th) choice.*', re.IGNORECASE).match(row[4])
+    if ranked_choice is not None:
+      office_id = ''.join(row[3].split())[:-1] + '1'
+      contest_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[5] + '-' + office_id
+      contest_id_name = contest_id + '-' + office_name_id
 
     return {
       'id': row_id,
@@ -144,7 +150,7 @@ class ElectionScraper:
       'office_name': row[4],
       'district_code': row[5], # District, mcd, or fips code
       'candidate_id': row[6],
-      'candidate': row[7],
+      'candidate': row[7].replace('WRITE-IN**', 'WRITE-IN'),
       'suffix': row[8],
       'incumbent_code': row[9],
       'party_id': row[10],
@@ -154,8 +160,8 @@ class ElectionScraper:
       'percentage': float(row[14]),
       'total_votes_for_office': int(row[15]),
       'id_name': id_name,
-      'race_id': race_id,
-      'race_id_name': race_id_name,
+      'contest_id': contest_id,
+      'contest_id_name': contest_id_name,
       'cand_name_id': cand_name_id,
       'office_name_id': office_name_id,
       'question_body': '',
@@ -167,21 +173,22 @@ class ElectionScraper:
     index_query = "CREATE INDEX IF NOT EXISTS %s ON results (%s)"
     scraperwiki.sqlite.dt.execute(index_query % ('office_name', 'office_name'))
     scraperwiki.sqlite.dt.execute(index_query % ('candidate', 'candidate'))
-    scraperwiki.sqlite.dt.execute(index_query % ('race_id', 'race_id'))
+    scraperwiki.sqlite.dt.execute(index_query % ('contest_id', 'contest_id'))
     self.log.info('[%s] Creating indices for results table.' % ('results'))
 
 
   def post_results(self, i):
     # Update some vars for easy retrieval
     scraperwiki.sqlite.save_var('updated', int(calendar.timegm(datetime.datetime.utcnow().utctimetuple())))
-    races = scraperwiki.sqlite.select("COUNT(DISTINCT race_id) AS race_count FROM results")
-    if races != []:
-      scraperwiki.sqlite.save_var('races', races[0]['race_count'])
+    contests = scraperwiki.sqlite.select("COUNT(DISTINCT contest_id) AS contest_count FROM results")
+    if contests != []:
+      scraperwiki.sqlite.save_var('contests', contests[0]['contest_count'])
+
     # Use the first state level race to get general number of precincts reporting
-    p_race = scraperwiki.sqlite.select("* FROM results WHERE county_id = '88' LIMIT 1")
-    if p_race != []:
-      scraperwiki.sqlite.save_var('precincts_reporting', p_race[0]['precincts_reporting'])
-      scraperwiki.sqlite.save_var('total_effected_precincts', p_race[0]['total_effected_precincts'])
+    state_contest = scraperwiki.sqlite.select("* FROM results WHERE county_id = '88' LIMIT 1")
+    if state_contest != []:
+      scraperwiki.sqlite.save_var('precincts_reporting', state_contest[0]['precincts_reporting'])
+      scraperwiki.sqlite.save_var('total_effected_precincts', state_contest[0]['total_effected_precincts'])
 
 
   def aggregate_results(self, *args):
@@ -189,7 +196,7 @@ class ElectionScraper:
     Given results, aggregate into a table of races.
     """
     index_created = False
-    results = scraperwiki.sqlite.select("DISTINCT office_id, office_name, office_name_id, race_id, race_id_name FROM results")
+    results = scraperwiki.sqlite.select("DISTINCT contest_id, office_name FROM results")
 
     for r in results:
       # The only way to know if there are multiple seats is look at the office
@@ -200,18 +207,39 @@ class ElectionScraper:
       if matched_seats is not None:
         r['seats'] = matched_seats.group(1)
 
+      # Ranked choice voting can be determined by a "* choice" string
+      r['ranked_choice'] = False
+      re_ranked_choice = re.compile('.*(first|second|third|\w*th) choice.*', re.IGNORECASE)
+      matched_ranked_choice = re_ranked_choice.match(r['office_name'])
+      if matched_ranked_choice is not None:
+        r['ranked_choice'] = True
+
+      # Title and search term
+      r['title'] = r['office_name']
+      r['title'] = re.compile('(\(elect [0-9]+\))', re.IGNORECASE).sub('', r['title'])
+      r['title'] = re.compile('((first|second|third|\w*th) choice)', re.IGNORECASE).sub('', r['title'])
+      # Look for non-ISD parenthesis which should be place names
+      re_place = re.compile('.*\(([^#]*)\).*', re.IGNORECASE).match(r['title'])
+      r['title'] = re.compile('(\([^#]*\))', re.IGNORECASE).sub('', r['title'])
+      if re_place is not None:
+        r['title'] = re_place.group(1) + ' ' + r['title']
+      r['title'] = r['title'].rstrip()
+
+      # Remove office
+      del r['office_name']
+
       # Save to database
       try:
-        scraperwiki.sqlite.save(unique_keys = ['race_id'], data = r, table_name = 'races')
+        scraperwiki.sqlite.save(unique_keys = ['contest_id'], data = r, table_name = 'contests')
 
         # Create index if needed
         if index_created == False:
-          index_query = "CREATE INDEX IF NOT EXISTS %s ON races (%s)"
-          scraperwiki.sqlite.dt.execute(index_query % ('office_id', 'office_id'))
-          self.log.info('[%s] Creating indices for races table.' % ('races'))
+          index_query = "CREATE INDEX IF NOT EXISTS %s ON contests (%s)"
+          scraperwiki.sqlite.dt.execute(index_query % ('title', 'title'))
+          self.log.info('[%s] Creating indices for contests table.' % ('contests'))
           index_created = True
       except Exception, err:
-        self.log.exception('[%s] Error thrown while saving to table: %s' % ('races', r))
+        self.log.exception('[%s] Error thrown while saving to table: %s' % ('contests', r))
         raise
 
 
