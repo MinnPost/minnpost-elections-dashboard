@@ -14,7 +14,11 @@ data across the state for general elections.
 
 ## Scraping
 
-* `python code/scraper.py`
+Something to the following commands.
+
+* Scrape areas: `python code/scraper.py scrape areas 20131105`
+* Scrape just the results: `python code/scraper.py scrape results 20131105`
+* Aggregate the results for higher level querying: `python code/scraper.py aggregate_results`
 
 ## Local setup and development
 
