@@ -36,13 +36,11 @@ These instructions have been performed on an EC2 Ubuntu instance.
 
 ### Code, Libraries and prerequisites
 
-1. `sudo apt-get install git-core git python-pip python-dev build-essential python-xml sqlite3 nginx fcgiwrap && sudo pip install --upgrade pip && sudo pip install --upgrade virtualenv`
+1. `sudo apt-get install git-core git python-pip python-dev build-essential python-lxml sqlite3 nginx fcgiwrap && sudo pip install --upgrade pip && sudo pip install --upgrade virtualenv`
 1. `cd ~`
-1. Install `git`
 1. Get the code: `git clone https://github.com/MinnPost/minnpost-scraper-mn-election-results.git`
 1. Change the directory: `cd minnpost-scraper-mn-election-results`
-1. `pip install -r requirements_local.txt`
-    * This is used locally to get around some bugs in the scraperwiki libraries.
+1. `pip install -r requirements.txt`
 
 ### Setup webserver/API
 
@@ -75,12 +73,16 @@ Restart services.
     sudo service fcgiwrap restart
     sudo service nginx restart
 
-API Setup.  If for some reason, you need a publish token, then update scraperwiki.json
-as needed.
+Create the ```scraperwiki.json file```.  (If for some reason, you need a publish token, then update scraperwiki.json
+as needed.)
 
     echo "{ \"database\": \"scraperwiki.sqlite\" }" > scraperwiki.json
-    ln -s /home/ubuntu/minnpost-scraper-2012-general-elections/scraperwiki.json scraperwiki.json
-    ln -s /home/ubuntu/minnpost-scraper-2012-general-elections/scraperwiki.sqlite scraperwiki.sqlite
+    ln -s /home/ubuntu/minnpost-scraper-mn-election-results/scraperwiki.json ~/scraperwiki.json
+    ln -s /home/ubuntu/minnpost-scraper-mn-election-results/scraperwiki.sqlite ~/scraperwiki.sqlite
+
+Test with a call like:
+
+    http://ec2-XX-XX-XX.compute-1.amazonaws.com/?box=ubuntu&q=SELECT%20*%20FROM%20results%20LIMIT%2010
 
 #### Cron
 
