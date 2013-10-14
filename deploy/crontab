@@ -16,14 +16,10 @@ MAILTO=scraper@zzolo.org
 
 # Results
 
-  0,25 0-7,10-23 *     *     *     python /home/ubuntu/minnpost-scraper-2012-general-elections/scraper_results.py
-  43   0-7,10-23 *     *     *     python /home/ubuntu/minnpost-scraper-2012-general-elections/scraper_results_county.py
-  0       8      *     *     0     cd /home/ubuntu/minnpost-scraper-2012-general-elections/data && wget ftp://media:results@ftp.sos.state.mn.us/20121106_SG/allracesbyprecinct.txt -N
-  0       9      *     *     0     python /home/ubuntu/minnpost-scraper-2012-general-elections/scraper_results_precincts.py
+    1,6,11,16,21,26,31,36,41,46,51,56 * * * * python /home/ubuntu/minnpost-scraper-mn-election-results/python code/scraper.py scrape results 20131105
 
 # Meta
 
-    10    8      *     *     *     python /home/ubuntu/minnpost-scraper-2012-general-elections/scraper_candidates.py
-    20    8      *     *     *     python /home/ubuntu/minnpost-scraper-2012-general-elections/scraper_districts.py
-    40    8      *     *     *     python /home/ubuntu/minnpost-scraper-2012-general-elections/scraper_meta.py
+    3    8      *     *     *    python /home/ubuntu/minnpost-scraper-mn-election-results/python code/scraper.py scrape areas 20131105
+    8    8      *     *     *    python /home/ubuntu/minnpost-scraper-mn-election-results/python code/scraper.py aggregate_results
 
