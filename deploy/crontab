@@ -16,10 +16,10 @@ MAILTO=scraper@zzolo.org
 
 # Results
 
-    1,6,11,16,21,26,31,36,41,46,51,56 * * * * python /home/ubuntu/minnpost-scraper-mn-election-results/python code/scraper.py scrape results 20131105
+    1,6,11,16,21,26,31,36,41,46,51,56 * * * * python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py scrape results 20131105
 
 # Meta
 
-    3    8      *     *     *    python /home/ubuntu/minnpost-scraper-mn-election-results/python code/scraper.py scrape areas 20131105
-    8    8      *     *     *    python /home/ubuntu/minnpost-scraper-mn-election-results/python code/scraper.py aggregate_results
+    3    8      *     *     *    python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py scrape areas 20131105
+    8    8      *     *     *    python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py aggregate_results
 
