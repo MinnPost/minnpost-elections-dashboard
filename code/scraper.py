@@ -12,6 +12,7 @@ import datetime
 import calendar
 import logger
 import json
+import requests
 
 
 class ElectionScraper:
@@ -396,6 +397,30 @@ class ElectionScraper:
       except Exception, err:
         self.log.exception('[%s] Error thrown while saving to table: %s' % ('contests', r))
         raise
+
+
+  def check_boundaries(self, *args):
+    """
+    Checks that boundary sets match to an actual boundary set from
+    the API.  Can take a bit of time.
+    """
+    boundary_url = 'http://174.129.233.171/1.0/boundary/%s'
+    contests = scraperwiki.sqlite.select("* FROM contests")
+    contests_count = 0;
+    boundaries_found = 0;
+
+    for c in contests:
+      contests_count = contests_count + 1
+      for b in c['boundary'].split(','):
+        request = requests.get(boundary_url % b)
+
+        if request.status_code == 200:
+          boundaries_found = boundaries_found + 1
+        else:
+          self.log.info('[%s] Boundary not found: %s | %s' % ('contests', c['title'], b))
+
+    self.log.info('[%s] Contests count: %s' % ('contests', contests_count))
+    self.log.info('[%s] Boundaries found: %s' % ('contests', boundaries_found))
 
 
   def slugify(self, orig):
