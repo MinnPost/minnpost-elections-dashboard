@@ -319,27 +319,42 @@ class ElectionScraper:
     # For the sub-municpal results, we need wards.  Unfortunately the boundary
     # id for wards is the actual name of the city and the ward number due to the
     # face that the original boundary data did not have mcd codes in it.
+    #
+    # And there is also just wrong data occassionaly
     if parsed_row['results_group'] == 'municipal_results':
+
       # Check for sub municipal
       wards_matched = re.compile('.*(Council Member Ward|Council Member District) ([0-9]+).*\((((?!elect).)*)\).*', re.IGNORECASE).match(parsed_row['office_name'])
       if wards_matched is not None:
         boundary = self.slugify(wards_matched.group(3)) + '-w-' + '{0:02d}'.format(int(wards_matched.group(2))) + '-ward-2012'
       else:
         if parsed_row['county_id']:
-          fips = '{0:03d}'.format((int(parsed_row['county_id']) * 2) - 1)
-          boundary = '27' + fips + parsed_row['district_code'] + '-minor-civil-division-2010'
+          boundary = self.boundary_make_mcd(parsed_row['county_id'], parsed_row['district_code'])
         else:
           mcd = scraperwiki.sqlite.select("* FROM areas WHERE areas_group = 'municipalities' AND mcd_id = '%s'" % (parsed_row['district_code']))
           if mcd != []:
             boundaries = []
             for r in mcd:
-              fips = '{0:03d}'.format((int(r['county_id']) * 2) - 1)
-              boundaries.append('27' + fips + parsed_row['district_code'] + '-minor-civil-division-2010')
+              boundaries.append(self.boundary_make_mcd(r['county_id'], parsed_row['district_code']))
             boundary = ','.join(boundaries)
           else:
             self.log.info('[%s] Could not find corresponding county for municpality: %s' % ('results', parsed_row['office_name']))
 
     return boundary
+
+
+  def boundary_make_mcd(self, county_id, district):
+    """
+    Makes MCD code from values.
+    """
+    bad_data = {
+      '2713702872': '2713702890' # Aurora City
+    }
+    fips = '{0:03d}'.format((int(county_id) * 2) - 1)
+    mcd_id = '27' + fips + district
+    if mcd_id in bad_data:
+      mcd_id = bad_data[mcd_id]
+    return mcd_id + '-minor-civil-division-2010'
 
 
   def aggregate_results(self, *args):
@@ -404,7 +419,7 @@ class ElectionScraper:
     Checks that boundary sets match to an actual boundary set from
     the API.  Can take a bit of time.
     """
-    boundary_url = 'http://174.129.233.171/1.0/boundary/%s'
+    boundary_url = 'http://boundaries.minnpost.com/1.0/boundary/%s'
     contests = scraperwiki.sqlite.select("* FROM contests")
     contests_count = 0;
     boundaries_found = 0;
