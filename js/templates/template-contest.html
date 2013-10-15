@@ -1,0 +1,22 @@
+<div class="contest">
+
+  <h3>{{ title }}</h3>
+
+  <table>
+    <thead>
+      <tr><th>Candidate</th><th>Party</th><th>Votes</th><th>Percentage</th></tr>
+    </thead>
+
+    <tbody>
+      {{#results:r}}
+        <tr>
+          <td>{{ candidate }}</td>
+          <td>{{ party_id }}</td>
+          <td>{{ votes_candidate }}</td>
+          <td>{{ percentage }}</td>
+        </tr>
+      {{/results}}
+    </tbody>
+  </table>
+
+</div>

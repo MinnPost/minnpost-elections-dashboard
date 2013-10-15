@@ -3,15 +3,16 @@
  */
 (function(App, $, undefined) {
   App.prototype.DashboardRouter = Backbone.Router.extend({
-    intialize: function(options) {
+    initialize: function(options) {
       this.options = options;
+      this.app = options.app;
     },
 
     routes: {
       'dashboard': 'routeDashboard',
       'search/:term': 'routeSearch',
       'contest/:contest': 'routeContest',
-      'contests/*contests': 'routeContests',
+      'contests/:contests': 'routeContests',
       '*default': 'routeDefault'
     },
 
@@ -26,10 +27,21 @@
     },
     routeSearch: function() {
     },
+
+    // Single contest route.  Creates contest model, fetches it
+    // and renders view into application container.
     routeContest: function(contest) {
-      this.contest = new this.ContestModel({ id: contest }, { app: this });
-      this.contest.fetch();
+      this.app.contest = new this.app.ContestModel({ id: contest }, { app: this.app });
+      this.app.contest.fetch();
+      this.app.contestView = new this.app.ContestView({
+        el: this.app.$el.find('.content-container'),
+        template: this.app.template('template-contest'),
+        data: this.app.contest,
+        adaptors: [ 'Backbone' ]
+      });
+      console.log(this.app.contest);
     },
+
     routeContests: function() {
     }
   });

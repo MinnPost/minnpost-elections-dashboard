@@ -9,7 +9,9 @@
       this.getTemplate('template-application', function(compiledTemplate) {
         this.getTemplate('template-footnote', function(compiledTemplate) {
           this.getTemplate('template-loading', function(compiledTemplate) {
-            done.apply(context, []);
+            this.getTemplate('template-contest', function(compiledTemplate) {
+              done.apply(context, []);
+            }, this);
           }, this);
         }, this);
       }, this);
@@ -20,11 +22,19 @@
       var thisApp = this;
 
       this.getTemplates(function() {
-        this.$el.html(this.template('template-application')({ }));
-        this.$el.find('.footnote-container').html(this.template('template-footnote')({ }));
+        this.applicationView = new this.ApplicationView({
+          el: this.$el,
+          template: this.template('template-application')
+        });
+        this.footnoteView = new this.FootnoteView({
+          el: this.$el.find('.footnote-container'),
+          template: this.template('template-footnote')
+        });
 
-        // Create router which will kick off the application
-        this.router = new this.DashboardRouter(this.options);
+        // Create router which will handle most of the high
+        // level logic
+        this.router = new this.DashboardRouter(_.extend(this.options, { app: this }));
+        this.router.start();
       }, this);
     }
   });

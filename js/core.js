@@ -99,7 +99,7 @@ _.mixin({
           async: false,
           contentType: 'text',
           success: function(data) {
-            thisApp.templates[templatePath] = _.template(data);
+            thisApp.templates[templatePath] = data;
             callback.apply(context, [ thisApp.templates[templatePath] ]);
           }
         });
