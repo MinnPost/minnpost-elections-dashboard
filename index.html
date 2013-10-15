@@ -81,10 +81,12 @@ addthis_config = Drupal.settings.addthis.config_default; addthis_share = Drupal.
 
     <!-- Application CSS -->
     <style type="text/css">
+      @import url('./bower_components/leaflet/dist/leaflet.css');
       @import url('./.tmp/css/main.css');
     </style>
     <!--[if lte IE 8]>
       <style type="text/css">
+        @import url('./bower_components/leaflet/dist/leaflet.ie.css');
         @import url('./.tmp/css/main.ie.css');
       </style>
     <![endif]-->
@@ -147,6 +149,8 @@ addthis_config = Drupal.settings.addthis.config_default; addthis_share = Drupal.
     <script type="text/javascript" src="./bower_components/backbone/backbone-min.js"></script>
     <script type="text/javascript" src="./bower_components/ractive/build/Ractive.min.js"></script>
     <script type="text/javascript" src="./bower_components/ractive/plugins/adaptors/Backbone.js"></script>
+    <script type="text/javascript" src="./bower_components/momentjs/min/moment.min.js"></script>
+    <script type="text/javascript" src="./bower_components/leaflet/dist/leaflet.js"></script>
 
     <script type="text/javascript" src="./js/core.js"></script>
     <script type="text/javascript" src="./js/models.js"></script>

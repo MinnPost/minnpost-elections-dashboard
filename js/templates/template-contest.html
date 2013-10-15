@@ -2,6 +2,9 @@
 
   <h3>{{ title }}</h3>
 
+  <p>Last updated at {{ updated.format('MMMM Do YYYY, h:mm:ss a') }}</p>
+  <p>{{ precincts_reporting }} of {{ total_effected_precincts }} reporting.</p>
+
   <table>
     <thead>
       <tr><th>Candidate</th><th>Party</th><th>Votes</th><th>Percentage</th></tr>
@@ -18,5 +21,8 @@
       {{/results}}
     </tbody>
   </table>
+
+  <div class="contest-map" id="contest-map-{{ id }}">
+  </div>
 
 </div>

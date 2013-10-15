@@ -39,7 +39,6 @@
         data: this.app.contest,
         adaptors: [ 'Backbone' ]
       });
-      console.log(this.app.contest);
     },
 
     routeContests: function() {

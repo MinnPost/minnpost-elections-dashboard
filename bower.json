@@ -13,6 +13,8 @@
     "jquery-jsonp": "*",
     "underscore": "*",
     "backbone": "*",
-    "ractive": "~0.3.7"
+    "ractive": "~0.3.7",
+    "momentjs": "~2.3.1",
+    "leaflet": "~0.6.4"
   }
 }

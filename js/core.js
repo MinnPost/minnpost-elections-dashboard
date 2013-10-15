@@ -70,7 +70,8 @@ _.mixin({
     defaultOptions: {
       dataPath: './data/',
       jsonpProxy: 'http://mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
-      electionsAPI: 'http://ec2-54-221-171-99.compute-1.amazonaws.com/?box=ubuntu&q='
+      electionsAPI: 'http://ec2-54-221-171-99.compute-1.amazonaws.com/?box=ubuntu&q=',
+      boundaryAPI: 'http://boundaries.minnpost.com/1.0/'
     },
 
     /**

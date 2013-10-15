@@ -26,6 +26,7 @@ All commands are assumed to on the [command line](http://en.wikipedia.org/wiki/C
 1. Install [Bundler](http://gembundler.com/): `gem install bundler`
 1. Install [Sass](http://sass-lang.com/): `gem install sass`
 1. Install [Compass](http://compass-style.org/): `gem install compass`
+1. Because Leaflet comes unbuilt, we need to build it with Jake: `npm install -g jake`
 
 ### Get code and install packages
 
@@ -35,6 +36,7 @@ Get the code for this project and install the necessary dependency libraries and
 1. Go into the template directory: `cd minnpost-elections-dashboard`
 1. Install NodeJS packages: `npm install`
 1. Install Bower components: `bower install`
+1. Because Leaflet comes unbuilt, we need to build it: `cd bower_components/leaflet/ && npm install && jake; cd -;`
 
 ### Running
 

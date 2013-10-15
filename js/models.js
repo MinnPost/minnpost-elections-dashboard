@@ -10,6 +10,12 @@
     // Fields that are for contests (not result)
     contestFields: ['boundary', 'contest_id', 'contest_id_name', 'county_id', 'district_code', 'office_id', 'office_name', 'office_name_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'total_effected_precincts', 'total_votes_for_office', 'updated'],
 
+    // Initializer
+    initialize: function(model, options) {
+      this.app = options.app;
+      this.on('change:title', this.contestUpdate);
+    },
+
     // Construct API call
     url: function() {
       return this.app.options.electionsAPI +
@@ -22,6 +28,8 @@
       var parsed = {};
       parsed.results = [];
 
+      // Separate out what is contest level properties and what is
+      // results
       _.each(response, function(r) {
         var result = {};
         _.each(r, function(v, k) {
@@ -34,13 +42,33 @@
         });
         parsed.results.push(result);
       });
-
       parsed.results = _.sortBy(parsed.results, 'percentage');
+
+      // Further formatting
+      parsed.updated = moment.unix(parsed.updated);
       return parsed;
     },
 
-    initialize: function(model, options) {
-      this.app = options.app;
+    // When data comes is, handle it
+    contestUpdate: function() {
+      // Only handle once
+      if (!this.fetchedBoundary && _.isString(this.get('boundary'))) {
+        this.fetchBoundary();
+      }
+    },
+
+    // Gets boundary data from boundary service
+    fetchBoundary: function() {
+      var thisModel = this;
+
+      $.jsonp({
+        url: this.app.options.boundaryAPI + 'boundary/' +
+          encodeURIComponent(this.get('boundary')) + '?callback=?'
+      })
+      .done(function(boundary) {
+        thisModel.set('boundarySet', boundary);
+        thisModel.fetchedBoundary = true;
+      });
     }
   });
 
