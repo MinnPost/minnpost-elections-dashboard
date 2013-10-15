@@ -12,6 +12,7 @@
     "jquery": "1.9",
     "jquery-jsonp": "*",
     "underscore": "*",
-    "backbone": "*"
+    "backbone": "*",
+    "ractive": "~0.3.7"
   }
 }
