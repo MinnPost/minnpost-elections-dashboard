@@ -3,7 +3,7 @@
  */
 
 /**
- * Global variable to hold the "applications".
+ * Global variable to hold the "application" and templates.
  */
 var mpApps = mpApps || {};
 var mpTemplates = mpTemplates || {};
@@ -50,34 +50,28 @@ _.mixin({
 });
 
 /**
- * Override Backbone's ajax function to use $.jsonp as it handles
- * errors for JSONP requests
- */
-if (!_.isUndefined(Backbone) && !_.isUndefined($.jsonp) && _.isFunction(Backbone.$.jsonp)) {
-  Backbone.ajax = function() {
-    return Backbone.$.jsonp.apply(Backbone.$, arguments);
-  };
-}
-
-/**
  * Create "class" for the main application.  This way it could be
  * used more than once.
  */
 (function($, undefined) {
-  var App;
   var appTemplates = mpTemplates['minnpost-elections-dashboard'] || {};
 
-  mpApps['minnpost-elections-dashboard'] = App = (function() {
-    function App(options) {
-      this.options = _.extend(this.defaultOptions, options);
-      this.$el = $(this.options.el);
-    }
+  // Create "class"
+  App = mpApps['minnpost-elections-dashboard'] = function(options) {
+    this.options = _.extend(this.defaultOptions, options);
+    this.$el = $(this.options.el);
+  };
+
+  _.extend(App.prototype, {
+    // Use backbone's extend function
+    extend: Backbone.Model.extend,
 
     // Default options
-    App.prototype.defaultOptions = {
+    defaultOptions: {
       dataPath: './data/',
-      jsonpProxy: 'http://mp-jsonproxy.herokuapp.com/proxy?callback=?&url='
-    };
+      jsonpProxy: 'http://mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
+      electionsAPI: 'http://ec2-54-221-171-99.compute-1.amazonaws.com/?box=ubuntu&q='
+    },
 
     /**
      * Template handling.  For development, we want to use
@@ -89,8 +83,8 @@ if (!_.isUndefined(Backbone) && !_.isUndefined($.jsonp) && _.isFunction(Backbone
      *
      * Expects callback like: function(compiledTemplate) {  }
      */
-    App.prototype.templates = appTemplates;
-    App.prototype.getTemplate = function(name, callback, context) {
+    templates: appTemplates,
+    getTemplate: function(name, callback, context) {
       var thisApp = this;
       var templatePath = 'js/templates/' + name + '.html';
       context = context || app;
@@ -110,12 +104,12 @@ if (!_.isUndefined(Backbone) && !_.isUndefined($.jsonp) && _.isFunction(Backbone
           }
         });
       }
-    };
+    },
     // Wrapper around getting a template
-    App.prototype.template = function(name) {
+    template: function(name) {
       var templatePath = 'js/templates/' + name + '.html';
       return this.templates[templatePath];
-    };
+    },
 
     /**
      * Data source handling.  For development, we can call
@@ -126,8 +120,8 @@ if (!_.isUndefined(Backbone) && !_.isUndefined($.jsonp) && _.isFunction(Backbone
      *
      * Returns jQuery's defferred object.
      */
-    App.prototype.data = {};
-    App.prototype.getLocalData = function(name) {
+    data: {},
+    getLocalData: function(name) {
       var thisApp = this;
       var proxyPrefix = this.options.jsonpProxy;
       var useJSONP = false;
@@ -162,14 +156,14 @@ if (!_.isUndefined(Backbone) && !_.isUndefined($.jsonp) && _.isFunction(Backbone
       });
 
       return $.when.apply($, defers);
-    };
+    },
 
     /**
      * Get remote data.  Provides a wrapper around
      * getting a remote data source, to use a proxy
      * if needed, such as using a cache.
      */
-    App.prototype.getRemoteData = function(options) {
+    getRemoteData: function(options) {
       if (this.options.remoteProxy) {
         options.url = options.url + '&callback=proxied_jqjsp';
         options.url = app.options.remoteProxy + encodeURIComponent(options.url);
@@ -181,12 +175,10 @@ if (!_.isUndefined(Backbone) && !_.isUndefined($.jsonp) && _.isFunction(Backbone
       }
 
       return $.jsonp(options);
-    };
+    },
 
     // Placeholder start
-    App.prototype.start = function() {
-    };
-
-    return App;
-  })();
+    start: function() {
+    }
+  });
 })(jQuery);
