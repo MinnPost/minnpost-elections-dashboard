@@ -31,8 +31,17 @@
     // Single contest route.  Creates contest model, fetches it
     // and renders view into application container.
     routeContest: function(contest) {
+      // Tear down old ones
+      if (_.isObject(this.app.contest)) {
+        this.app.contest.stopListening();
+        this.app.contest.disconnect();
+      }
+      if (_.isObject(this.app.contestView)) {
+        this.app.contestView.teardown();
+      }
+
+      // Create new objects
       this.app.contest = new this.app.ContestModel({ id: contest }, { app: this.app });
-      this.app.contest.fetch();
       this.app.contestView = new this.app.ContestView({
         el: this.app.$el.find('.content-container'),
         template: this.app.template('template-contest'),

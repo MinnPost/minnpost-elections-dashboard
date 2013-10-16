@@ -15,6 +15,7 @@
 
       // Make a map if boundary has been found
       this.observe('boundarySet', function(newValue, oldValue) {
+        var thisView = this;
         var layer;
 
         if (_.isObject(newValue) && _.isObject(newValue.simple_shape)) {
@@ -27,8 +28,13 @@
           this.map.addLayer(new L.tileLayer('//{s}.tiles.mapbox.com/v3/minnpost.map-wi88b700/{z}/{x}/{y}.png'));
           layer = new L.geoJson(newValue.simple_shape);
           this.map.addLayer(layer);
-          // Fit bounds breaks stuff
-          //this.map.fitBounds(layer.getBounds());
+          // Fit bounds breaks stuff because the geojson is not necessarily
+          // fully loaded in the map, so we wrap this timer around it, as
+          // Leaflet does not provide an sort of mechanism to allow us to know
+          // when the layer is fully loaded
+          window.setTimeout(function() {
+            thisView.map.fitBounds(layer.getBounds());
+          }, 500);
         }
       });
     }

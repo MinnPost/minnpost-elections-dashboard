@@ -17,6 +17,7 @@
     initialize: function(model, options) {
       this.app = options.app;
       this.on('change:title', this.contestUpdate);
+      this.connect();
     },
 
     // Construct API call
@@ -111,6 +112,21 @@
         thisModel.set('boundarySet', boundary);
         thisModel.fetchedBoundary = true;
       });
+    },
+
+    // Our API is pretty simple, so we do a basic time based
+    // polling.  Call right away as well.
+    connect: function() {
+      var thisModel = this;
+      this.fetch();
+      this.pollID = window.setInterval(function() {
+        thisModel.fetch();
+      }, 30000);
+    },
+
+    // Stop the polling
+    disconnect: function() {
+      window.clearInterval(this.pollID);
     }
   });
 
