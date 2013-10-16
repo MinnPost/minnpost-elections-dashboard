@@ -2,12 +2,21 @@
 
   <h3>{{ title }}</h3>
 
-  <p>Last updated at {{ updated.format('MMMM Do YYYY, h:mm:ss a') }}</p>
-  <p>{{ precincts_reporting }} of {{ total_effected_precincts }} reporting.</p>
+  <p>
+    Last updated at {{ updated.format('MMMM Do YYYY, h:mm:ss a') }} <br />
+    Number of seats: {{ seats }} <br />
+    Ranked-choiced race: {{ (ranked_choice == 1) ? 'Yes' : 'No' }} <br />
+    {{ precincts_reporting }} of {{ total_effected_precincts }} reporting.
+  </p>
 
   <table>
     <thead>
-      <tr><th>Candidate</th><th>Party</th><th>Votes</th><th>Percentage</th></tr>
+      {{#(ranked_choice == 1)}}
+        <tr><th>Candidate</th><th>Party</th><th>1st Choice Percentage</th><th>2nd Choice Percentage</th><th>3rd Choice Percentage</th><th>Final</th></tr>
+      {{/()}}
+      {{#(ranked_choice != 1)}}
+        <tr><th>Candidate</th><th>Party</th><th>Votes</th><th>Percentage</th></tr>
+      {{/()}}
     </thead>
 
     <tbody>
@@ -15,8 +24,18 @@
         <tr>
           <td>{{ candidate }}</td>
           <td>{{ party_id }}</td>
-          <td>{{ votes_candidate }}</td>
-          <td>{{ percentage }}</td>
+
+          {{#(ranked_choice == 1)}}
+            <td>{{ ranked_choices.1.percentage }}</td>
+            <td>{{ ranked_choices.2.percentage }}</td>
+            <td>{{ ranked_choices.3.percentage }}</td>
+            <td>{{ ranked_choices.100.percentage }}</td>
+          {{/()}}
+
+          {{#(ranked_choice != 1)}}
+            <td>{{ votes_candidate }}</td>
+            <td>{{ percentage }}</td>
+          {{/()}}
         </tr>
       {{/results}}
     </tbody>
