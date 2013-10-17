@@ -320,13 +320,20 @@ class ElectionScraper:
     # id for wards is the actual name of the city and the ward number due to the
     # face that the original boundary data did not have mcd codes in it.
     #
-    # And there is also just wrong data occassionaly
+    # There are also minneapolis park and recs commissioner which is its own
+    # thing.
+    #
+    # And there is also just wrong data occassionaly.
     if parsed_row['results_group'] == 'municipal_results':
-
-      # Check for sub municipal
+      # Checks
       wards_matched = re.compile('.*(Council Member Ward|Council Member District) ([0-9]+).*\((((?!elect).)*)\).*', re.IGNORECASE).match(parsed_row['office_name'])
+      mpls_parks_matched = re.compile('.*Park and Recreation Commissioner District ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
+
+      # Check for sub municpal parts first
       if wards_matched is not None:
         boundary = self.slugify(wards_matched.group(3)) + '-w-' + '{0:02d}'.format(int(wards_matched.group(2))) + '-ward-2012'
+      elif mpls_parks_matched is not None:
+        boundary = mpls_parks_matched.group(1) + '-minneapolis-parks-and-recreation-district-2014'
       else:
         if parsed_row['county_id']:
           boundary = self.boundary_make_mcd(parsed_row['county_id'], parsed_row['district_code'])
