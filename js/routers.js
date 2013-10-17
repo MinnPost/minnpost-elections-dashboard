@@ -70,11 +70,11 @@
         this.app.contestView.teardown();
       }
       if (_.isObject(this.app.contestsSearch)) {
-        this.app.contest.stopListening();
-        this.app.contest.disconnect();
+        this.app.contestsSearch.stopListening();
+        this.app.contestsSearch.disconnect();
       }
       if (_.isObject(this.app.contestsSearchView)) {
-        this.app.contestView.teardown();
+        this.app.contestsSearchView.teardown();
       }
     }
   });
