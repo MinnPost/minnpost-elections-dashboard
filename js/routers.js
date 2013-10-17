@@ -25,23 +25,29 @@
     },
     routeDashboard: function() {
     },
-    routeSearch: function() {
+    routeSearch: function(term) {
+      this.teardownObjects();
+
+      this.app.contestsSearch = new this.app.ContestsCollection([], {
+        app: this.app,
+        search: term
+      });
+      this.app.contestsSearch.connect();
+      this.app.contestsSearchView = new this.app.ContestsView({
+        el: this.app.$el.find('.content-container'),
+        template: this.app.template('template-contests'),
+        data: this.app.contestsSearch,
+        adaptors: [ 'Backbone' ]
+      });
     },
 
     // Single contest route.  Creates contest model, fetches it
     // and renders view into application container.
     routeContest: function(contest) {
-      // Tear down old ones
-      if (_.isObject(this.app.contest)) {
-        this.app.contest.stopListening();
-        this.app.contest.disconnect();
-      }
-      if (_.isObject(this.app.contestView)) {
-        this.app.contestView.teardown();
-      }
+      this.teardownObjects();
 
-      // Create new objects
       this.app.contest = new this.app.ContestModel({ id: contest }, { app: this.app });
+      this.app.contest.connect();
       this.app.contestView = new this.app.ContestView({
         el: this.app.$el.find('.content-container'),
         template: this.app.template('template-contest'),
@@ -51,6 +57,25 @@
     },
 
     routeContests: function() {
+    },
+
+    // Tear down any existing objects
+    teardownObjects: function() {
+      // Tear down old ones
+      if (_.isObject(this.app.contest)) {
+        this.app.contest.stopListening();
+        this.app.contest.disconnect();
+      }
+      if (_.isObject(this.app.contestView)) {
+        this.app.contestView.teardown();
+      }
+      if (_.isObject(this.app.contestsSearch)) {
+        this.app.contest.stopListening();
+        this.app.contest.disconnect();
+      }
+      if (_.isObject(this.app.contestsSearchView)) {
+        this.app.contestView.teardown();
+      }
     }
   });
 })(mpApps['minnpost-elections-dashboard'], jQuery);

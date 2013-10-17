@@ -15,9 +15,11 @@
 
     // Initializer
     initialize: function(model, options) {
+      this.options = options || {};
       this.app = options.app;
+
+      // Changes that should come in from the API
       this.on('change:title', this.contestUpdate);
-      this.connect();
     },
 
     // Construct API call

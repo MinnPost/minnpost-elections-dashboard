@@ -3,39 +3,27 @@
  */
 (function(App, $, undefined) {
   _.extend(App.prototype, {
-    // Get templates.  The get template method should be updated
-    // to handle multiple templates.
-    getTemplates: function(done, context) {
-      this.getTemplate('template-application', function(compiledTemplate) {
-        this.getTemplate('template-footnote', function(compiledTemplate) {
-          this.getTemplate('template-loading', function(compiledTemplate) {
-            this.getTemplate('template-contest', function(compiledTemplate) {
-              done.apply(context, []);
-            }, this);
-          }, this);
-        }, this);
-      }, this);
-    },
-
     // Start function that starts the application.
     start: function() {
       var thisApp = this;
+      var templates = ['template-application', 'template-footnote', 'template-loading', 'template-contest', 'template-contests'];
 
-      this.getTemplates(function() {
-        this.applicationView = new this.ApplicationView({
-          el: this.$el,
-          template: this.template('template-application')
+      this.getTemplates(templates).done(function() {
+        // Render the container and "static" templates.
+        thisApp.applicationView = new thisApp.ApplicationView({
+          el: thisApp.$el,
+          template: thisApp.template('template-application')
         });
-        this.footnoteView = new this.FootnoteView({
-          el: this.$el.find('.footnote-container'),
-          template: this.template('template-footnote')
+        thisApp.footnoteView = new thisApp.FootnoteView({
+          el: thisApp.$el.find('.footnote-container'),
+          template: thisApp.template('template-footnote')
         });
 
         // Create router which will handle most of the high
         // level logic
-        this.router = new this.DashboardRouter(_.extend(this.options, { app: this }));
-        this.router.start();
-      }, this);
+        thisApp.router = new thisApp.DashboardRouter(_.extend(thisApp.options, { app: thisApp }));
+        thisApp.router.start();
+      });
     }
   });
 })(mpApps['minnpost-elections-dashboard'], jQuery);

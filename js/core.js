@@ -85,26 +85,35 @@ _.mixin({
      * Expects callback like: function(compiledTemplate) {  }
      */
     templates: appTemplates,
-    getTemplate: function(name, callback, context) {
+    getTemplates: function(names) {
       var thisApp = this;
-      var templatePath = 'js/templates/' + name + '.html';
-      context = context || app;
+      var defers = [];
 
-      if (!_.isUndefined(this.templates[templatePath])) {
-        callback.apply(context, [ this.templates[templatePath] ]);
-      }
-      else {
-        $.ajax({
-          url: templatePath,
-          method: 'GET',
-          async: false,
-          contentType: 'text',
-          success: function(data) {
-            thisApp.templates[templatePath] = data;
-            callback.apply(context, [ thisApp.templates[templatePath] ]);
-          }
-        });
-      }
+      names = _.isArray(names) ? names : [names];
+      names = _.map(names, function(name) {
+        return 'js/templates/' + name + '.html';
+      });
+
+      // Go through each file and add to defers
+      _.each(names, function(n) {
+        var defer;
+
+        if (_.isUndefined(thisApp.templates[n])) {
+          defer = $.ajax({
+            url: n,
+            method: 'GET',
+            async: false,
+            contentType: 'text'
+          });
+
+          $.when(defer).done(function(data) {
+            thisApp.templates[n] = data;
+          });
+          defers.push(defer);
+        }
+      });
+
+      return $.when.apply($, defers);
     },
     // Wrapper around getting a template
     template: function(name) {

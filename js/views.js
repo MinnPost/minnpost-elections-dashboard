@@ -40,4 +40,10 @@
     }
   });
 
+  App.prototype.ContestsView = Ractive.extend({
+    init: function() {
+
+    }
+  });
+
 })(mpApps['minnpost-elections-dashboard'], jQuery);
