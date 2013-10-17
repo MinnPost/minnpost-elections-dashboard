@@ -36,7 +36,12 @@
       this.app.contestsSearchView = new this.app.ContestsView({
         el: this.app.$el.find('.content-container'),
         template: this.app.template('template-contests'),
-        data: this.app.contestsSearch,
+        data: {
+          models: this.app.contestsSearch
+        },
+        partials: {
+          contest: this.app.template('template-contest')
+        },
         adaptors: [ 'Backbone' ]
       });
     },
