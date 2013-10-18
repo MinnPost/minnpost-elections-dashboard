@@ -54,12 +54,12 @@ _.mixin({
  * used more than once.
  */
 (function($, undefined) {
-  var appTemplates = mpTemplates['minnpost-elections-dashboard'] || {};
-
   // Create "class"
   App = mpApps['minnpost-elections-dashboard'] = function(options) {
     this.options = _.extend(this.defaultOptions, options);
     this.$el = $(this.options.el);
+    this.templates = mpTemplates['minnpost-elections-dashboard'] || {};
+    this.data = this.data || {};
   };
 
   _.extend(App.prototype, {
@@ -84,23 +84,19 @@ _.mixin({
      *
      * Expects callback like: function(compiledTemplate) {  }
      */
-    templates: appTemplates,
     getTemplates: function(names) {
       var thisApp = this;
       var defers = [];
-
       names = _.isArray(names) ? names : [names];
-      names = _.map(names, function(name) {
-        return 'js/templates/' + name + '.html';
-      });
 
       // Go through each file and add to defers
       _.each(names, function(n) {
         var defer;
+        var path = 'js/templates/' + n + '.mustache';
 
         if (_.isUndefined(thisApp.templates[n])) {
           defer = $.ajax({
-            url: n,
+            url: path,
             method: 'GET',
             async: false,
             contentType: 'text'
@@ -117,8 +113,7 @@ _.mixin({
     },
     // Wrapper around getting a template
     template: function(name) {
-      var templatePath = 'js/templates/' + name + '.html';
-      return this.templates[templatePath];
+      return this.templates[name];
     },
 
     /**
@@ -130,7 +125,6 @@ _.mixin({
      *
      * Returns jQuery's defferred object.
      */
-    data: {},
     getLocalData: function(name) {
       var thisApp = this;
       var proxyPrefix = this.options.jsonpProxy;

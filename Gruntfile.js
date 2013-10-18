@@ -62,13 +62,14 @@ module.exports = function(grunt) {
     clean: {
       folder: 'dist/'
     },
-    jst: {
-      compile: {
+    mustache: {
+      templates: {
+        src: 'js/templates/',
+        dest: 'dist/templates.js',
         options: {
-          namespace: 'mpApp.<%= pkg.name %>.templates'
-        },
-        files: {
-          'dist/templates.js': ['js/templates/*.html']
+          prefix: 'mpTemplates = mpTemplates || {}; mpTemplates[\'<%= pkg.name %>\'] = ',
+          postfix: ';',
+          verbose: true
         }
       }
     },
@@ -79,7 +80,8 @@ module.exports = function(grunt) {
       // JS application
       dist: {
         src: ['js/core.js', 'dist/data.js', 'dist/templates.js',
-          'js/app.js', 'js/*.js'],
+          'js/app.js', 'js/models.js', 'js/collections.js', 'js/views.js',
+          'js/routers.js', 'js/*.js'],
         dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.js'
       },
       dist_latest: {
@@ -110,7 +112,11 @@ module.exports = function(grunt) {
           'bower_components/jquery/jquery.min.js',
           'bower_components/jquery-jsonp/src/jquery.jsonp.js',
           'bower_components/underscore/underscore-min.js',
-          'bower_components/backbone/backbone-min.js'
+          'bower_components/backbone/backbone-min.js',
+          'bower_components/ractive/build/Ractive.min.js',
+          'bower_components/ractive/plugins/adaptors/Backbone.js',
+          'bower_components/momentjs/min/moment.min.js',
+          'bower_components/leaflet/dist/leaflet.js'
         ],
         dest: 'dist/<%= pkg.name %>.libs.js',
         options: {
@@ -120,12 +126,14 @@ module.exports = function(grunt) {
       // CSS libs
       libs_css: {
         src: [
-
+          'bower_components/leaflet/dist/leaflet.css'
         ],
         dest: 'dist/<%= pkg.name %>.libs.css'
       },
       libs_css_ie: {
-        src: [],
+        src: [
+          'bower_components/leaflet/dist/leaflet.ie.css'
+        ],
         dest: 'dist/<%= pkg.name %>.libs.ie.css'
       }
     },
@@ -151,7 +159,8 @@ module.exports = function(grunt) {
             filter: 'isFile',
             src: ['*'],
             dest: 'dist/images/'
-          },
+          }
+          /*
           {
             cwd: '<%= compass.options.generatedImagesDir %>',
             expand: true,
@@ -159,6 +168,7 @@ module.exports = function(grunt) {
             src: ['*'],
             dest: 'dist/images/'
           }
+          */
         ]
       },
       data: {
@@ -226,10 +236,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-compass');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-jst');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-mustache');
   grunt.loadNpmTasks('grunt-s3');
 
 
@@ -252,7 +262,7 @@ module.exports = function(grunt) {
   });
 
   // Default build task
-  grunt.registerTask('default', ['jshint', 'compass:dist', 'clean', 'data_embed', 'jst', 'concat', 'uglify', 'copy']);
+  grunt.registerTask('default', ['jshint', 'compass:dist', 'clean', 'data_embed', 'mustache', 'concat', 'uglify', 'copy']);
 
   // Watch tasks
   grunt.registerTask('lint-watch', ['jshint', 'compass:dev']);
