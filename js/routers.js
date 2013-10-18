@@ -12,7 +12,6 @@
       'dashboard': 'routeDashboard',
       'search/:term': 'routeSearch',
       'contest/:contest': 'routeContest',
-      'contests/:contests': 'routeContests',
       '*default': 'routeDefault'
     },
 
@@ -23,8 +22,23 @@
     routeDefault: function() {
       this.navigate('/dashboard', { trigger: true, replace: true });
     },
+
     routeDashboard: function() {
+      this.teardownObjects();
+
+      // Get races objects
+      this.app.dashboardView = new this.app.DashboardView({
+        el: this.app.$el.find('.content-container'),
+        template: this.app.template('template-dashboard'),
+        data: {
+        },
+        partials: {
+          loading: this.app.template('template-loading')
+        },
+        adaptors: [ 'Backbone' ]
+      });
     },
+
     routeSearch: function(term) {
       this.teardownObjects();
 
@@ -63,9 +77,6 @@
         },
         adaptors: [ 'Backbone' ]
       });
-    },
-
-    routeContests: function() {
     },
 
     // Tear down any existing objects

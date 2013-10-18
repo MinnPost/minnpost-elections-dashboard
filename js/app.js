@@ -6,7 +6,7 @@
     // Start function that starts the application.
     start: function() {
       var thisApp = this;
-      var templates = ['template-application', 'template-footnote', 'template-loading', 'template-contest', 'template-contests'];
+      var templates = ['template-application', 'template-footnote', 'template-dashboard', 'template-loading', 'template-contest', 'template-contests'];
 
       this.getTemplates(templates).done(function() {
         // Render the container and "static" templates.

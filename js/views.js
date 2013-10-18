@@ -48,6 +48,11 @@
     }
   });
 
+  App.prototype.DashboardView = App.prototype.ContestBaseView.extend({
+    init: function() {
+    }
+  });
+
   App.prototype.ContestView = App.prototype.ContestBaseView.extend({
     init: function() {
       this.set('classes', 'contest-view');
