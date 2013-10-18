@@ -12,18 +12,28 @@
 
   <table>
     <thead>
-      {{#(ranked_choice == 1)}}
-        <tr><th>Candidate</th><th>Party</th><th>1st Choice Percentage</th><th>2nd Choice Percentage</th><th>3rd Choice Percentage</th><th>Final</th></tr>
-      {{/()}}
-      {{#(ranked_choice != 1)}}
-        <tr><th>Candidate</th><th>Party</th><th>Votes</th><th>Percentage</th></tr>
-      {{/()}}
+      <tr>
+        <th>Candidate</th>
+        <th>Incumbent</th>
+        <th>Party</th>
+        {{#(ranked_choice == 1)}}
+          <th>1st Choice Percentage</th>
+          <th>2nd Choice Percentage</th>
+          <th>3rd Choice Percentage</th>
+          <th>Final</th>
+        {{/()}}
+        {{#(ranked_choice != 1)}}
+          <th>Votes</th>
+          <th>Percentage</th>
+        {{/()}}
+      </tr>
     </thead>
 
     <tbody>
       {{#results:r}}
         <tr>
           <td>{{ candidate }}</td>
+          <td>{{ incumbent_code }}</td>
           <td>{{ party_id }}</td>
 
           {{#(ranked_choice == 1)}}
