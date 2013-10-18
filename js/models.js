@@ -78,12 +78,6 @@
         });
 
         parsed.results = _.values(groupedResults);
-
-        // TODO: Check who won.  This will have to be manually created and
-        // has yet to be determined yet
-      }
-      else {
-        // See who won by checking number of seats.
       }
 
       // Put results in a basic order.
@@ -91,6 +85,24 @@
       parsed.results = _.sortBy(parsed.results, function(r) {
         return r.percentage * -1;
       });
+
+
+      // Mark who won.  For ranked-choice, this is complicated and we might not
+      // even have that data, otherwise we need to make sure the number of
+      // precincts reporting is full and check the number of seats available.
+      if (parsed.precincts_reporting === parsed.total_effected_precincts) {
+        if (parsed.ranked_choice) {
+        }
+        else {
+          parsed.results = _.map(parsed.results, function(r, i) {
+            r.winner = false;
+            if (i < parsed.seats) {
+              r.winner = true;
+            }
+            return r;
+          });
+        }
+      }
 
       // Further formatting
       parsed.updated = moment.unix(parsed.updated);

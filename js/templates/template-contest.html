@@ -18,6 +18,7 @@
   <table>
     <thead>
       <tr>
+        <th>Winner</th>
         <th>Candidate</th>
         <th>Incumbent</th>
         <th>Party</th>
@@ -37,6 +38,7 @@
     <tbody>
       {{#results:r}}
         <tr>
+          <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}}</td>
           <td>{{ candidate }}</td>
           <td>{{ incumbent_code }}</td>
           <td>{{ party_id }}</td>
