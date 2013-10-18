@@ -40,7 +40,8 @@
           models: this.app.contestsSearch
         },
         partials: {
-          contest: this.app.template('template-contest')
+          contest: this.app.template('template-contest'),
+          loading: this.app.template('template-loading')
         },
         adaptors: [ 'Backbone' ]
       });
@@ -57,6 +58,9 @@
         el: this.app.$el.find('.content-container'),
         template: this.app.template('template-contest'),
         data: this.app.contest,
+        partials: {
+          loading: this.app.template('template-loading')
+        },
         adaptors: [ 'Backbone' ]
       });
     },

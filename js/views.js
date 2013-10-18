@@ -45,7 +45,6 @@
       window.setTimeout(function() {
         thisView.map.fitBounds(featureGroup.getBounds());
       }, 500);
-
     }
   });
 

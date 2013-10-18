@@ -1,4 +1,9 @@
 <div class="contest {{ classes }}">
+  <div>
+    {{#(title == undefined)}}
+      {{>loading}}
+    {{/())}}
+  </div>
 
   <h3>{{ title }}</h3>
   <a href="#contest/{{ contest_id }}">link</a>

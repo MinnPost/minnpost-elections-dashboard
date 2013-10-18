@@ -1,4 +1,9 @@
 <div class="contests">
+  <div>
+    {{#(models.length == 0)}}
+      {{>loading}}
+    {{/())}}
+  </div>
 
   <h3>Contests</h3>
 
