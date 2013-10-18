@@ -66,21 +66,28 @@
 
     // Tear down any existing objects
     teardownObjects: function() {
-      // Tear down old ones
-      if (_.isObject(this.app.contest)) {
-        this.app.contest.stopListening();
-        this.app.contest.disconnect();
-      }
-      if (_.isObject(this.app.contestView)) {
-        this.app.contestView.teardown();
-      }
-      if (_.isObject(this.app.contestsSearch)) {
-        this.app.contestsSearch.stopListening();
-        this.app.contestsSearch.disconnect();
-      }
-      if (_.isObject(this.app.contestsSearchView)) {
-        this.app.contestsSearchView.teardown();
-      }
+      var thisRouter = this;
+      var views = ['contestView', 'contestsSearchView'];
+      var models = ['contest', 'contestsSearch'];
+
+      // Handle backbone objects
+      _.each(models, function(m) {
+        if (_.isObject(thisRouter.app[m])) {
+          thisRouter.app[m].stopListening();
+          thisRouter.app[m].disconnect();
+        }
+      });
+      // Handle ractive objects
+      _.each(views, function(v) {
+        if (_.isObject(thisRouter.app[v])) {
+          if (_.isObject(thisRouter.app[v].map)) {
+            // Not sure why, but removing the map fails most of the time
+            // and really screws things up
+            //thisRouter.app[v].map.remove();
+          }
+          thisRouter.app[v].teardown();
+        }
+      });
     }
   });
 })(mpApps['minnpost-elections-dashboard'], jQuery);
