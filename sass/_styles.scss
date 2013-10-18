@@ -21,6 +21,7 @@ body .node-unpublished {
   max-width: 960px;
   margin: 0 auto;
   padding-top: 1em;
+  font-family: $sans-serif-font;
 
   .clear {
     clear: both;
@@ -80,5 +81,9 @@ body .node-unpublished {
 
   .contest-view .contest-map {
     height: 30em;
+  }
+
+  table {
+    width: 100%;
   }
 }
