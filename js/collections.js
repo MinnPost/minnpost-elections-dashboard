@@ -96,4 +96,75 @@
     }
   });
 
+  // A collection based a location
+  App.prototype.ContestsLocationCollection = App.prototype.ContestsCollection.extend({
+
+    // Base query for the contest
+    query: "SELECT * FROM contests AS c LEFT JOIN results AS r " +
+      "ON c.contest_id = r.contest_id WHERE boundary IN (%CONTEST_SEARCH%) " +
+      "ORDER BY c.contest_id, r.percentage ASC LIMIT 400",
+
+    // Construct API call
+    url: function() {
+      return this.app.options.electionsAPI +
+        encodeURIComponent(this.query.replace('%CONTEST_SEARCH%',
+          "'" + this.boundaries.join("','") + "'"));
+    },
+
+    initialize: function(models, options) {
+      // Call parent intializer
+      App.prototype.ContestsLocationCollection.__super__.initialize.apply(this, arguments);
+
+      this.on('fetchedBoundary', function() {
+        this.connect();
+      });
+    },
+
+    // Override this, as we actually get the boundaries first
+    contestUpdate: function() {
+      // Only handle once
+      if (!this.matchedBoundary) {
+        this.matchBoundary();
+      }
+    },
+
+    // Match the already recieved boundaries
+    matchBoundary: function() {
+      var thisCollection = this;
+      _.each(this.fullBoundaries, function(b) {
+        _.each(thisCollection.where({ boundary: b.slug }), function(m) {
+          m.set('boundarySets', [b]);
+        });
+      });
+
+      // Since Ractive's backbone adaptor does not seem to
+      // react to properties that are not attributes of a model
+      // or a model in a collection
+      this.each(function(m) {
+        m.set('fetchedBoundary', true);
+      });
+
+      this.matchedBoundary = true;
+    },
+
+    // Get Bundaries from coordinates
+    fetchBoundaryFromCoordinates: function() {
+      var thisCollection = this;
+
+      $.jsonp({
+        url: this.app.options.boundaryAPI + 'boundary/?contains=' +
+          encodeURIComponent(this.options.lonlat[1]) + ',' +
+          encodeURIComponent(this.options.lonlat[0]) + '&sets=' +
+          encodeURIComponent(this.app.options.boundarySets.join(',')) + '&callback=?'
+      })
+      .done(function(response) {
+        if (_.isArray(response.objects)) {
+          thisCollection.fullBoundaries = response.objects;
+          thisCollection.boundaries = _.pluck(response.objects, 'slug');
+          thisCollection.trigger('fetchedBoundary');
+        }
+      });
+    }
+  });
+
 })(mpApps['minnpost-elections-dashboard'], jQuery);

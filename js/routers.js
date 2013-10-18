@@ -12,6 +12,7 @@
       'dashboard': 'routeDashboard',
       'search/:term': 'routeSearch',
       'contest/:contest': 'routeContest',
+      'location': 'routeGeolocate',
       '*default': 'routeDefault'
     },
 
@@ -77,6 +78,46 @@
         },
         adaptors: [ 'Backbone' ]
       });
+    },
+
+    // Route based on geolocation, return a promise
+    routeGeolocate: function() {
+      var thisRouter = this;
+
+      this.geolocate().done(function(lonlat) {
+        this.app.locationContests = new this.app.ContestsLocationCollection(
+          [], {
+            app: this.app,
+            lonlat: lonlat
+          });
+        this.app.locationContests.fetchBoundaryFromCoordinates();
+        this.app.contestsSearchView = new this.app.ContestsView({
+          el: this.app.$el.find('.content-container'),
+          template: this.app.template('template-contests'),
+          data: {
+            models: this.app.locationContests
+          },
+          partials: {
+            contest: this.app.template('template-contest'),
+            loading: this.app.template('template-loading')
+          },
+          adaptors: [ 'Backbone' ]
+        });
+      });
+    },
+
+    // Route based on geolocation, return a promise
+    geolocate: function() {
+      var thisRouter = this;
+      var defer = $.Deferred();
+
+      navigator.geolocation.getCurrentPosition(function(position) {
+        defer.resolveWith(thisRouter, [[ position.coords.longitude, position.coords.latitude ]]);
+      }, function(err) {
+        defer.rejectwith(thisRouter, [{ 'message' : 'Issue retrieving current position.' }]);
+      });
+
+      return defer.promise();
     },
 
     // Tear down any existing objects
