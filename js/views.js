@@ -60,6 +60,30 @@
 
   App.prototype.DashboardView = App.prototype.ContestBaseView.extend({
     init: function() {
+      var thisView = this;
+      var $contestSearch = $(this.el).find('#contest-search');
+      var query = "http://ec2-54-221-171-99.compute-1.amazonaws.com/?box=ubuntu&callback=?&q=" +
+        "SELECT * FROM contests AS c WHERE c.title LIKE '%%QUERY%' ORDER BY title LIMIT 20";
+
+      // Make typeahead functionality for search
+      $contestSearch.typeahead({
+        name: 'Contests',
+        remote: {
+          url: query,
+          dataType: 'jsonp'
+        },
+        valueKey: 'title'
+      });
+
+      // Handle search selected
+      $contestSearch.on('typeahead:selected', function(e, data, name) {
+        thisView.app.router.navigate('/search/' + data.title, { trigger: true });
+      });
+
+      // Teardown event to remove typeahead gracefully
+      this.on('teardown', function() {
+        $contestSearch.typeahead('destroy');
+      });
     }
   });
 

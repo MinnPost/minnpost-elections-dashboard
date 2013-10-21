@@ -116,7 +116,8 @@ module.exports = function(grunt) {
           'bower_components/ractive/build/Ractive.min.js',
           'bower_components/ractive/plugins/adaptors/Backbone.js',
           'bower_components/momentjs/min/moment.min.js',
-          'bower_components/leaflet/dist/leaflet.js'
+          'bower_components/leaflet/dist/leaflet.js',
+          'bower_components/typeahead.js/dist/typeahead.min.js'
         ],
         dest: 'dist/<%= pkg.name %>.libs.js',
         options: {

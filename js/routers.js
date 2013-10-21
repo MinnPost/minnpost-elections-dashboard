@@ -39,6 +39,7 @@
         },
         adaptors: [ 'Backbone' ]
       });
+      this.app.dashboardView.app = this.app;
       this.app.dashboardView.on('addresssSearch', function(e) {
         e.original.preventDefault();
         thisRouter.navigate('/location/' + 
