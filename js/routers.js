@@ -12,7 +12,7 @@
       'dashboard': 'routeDashboard',
       'search/:term': 'routeSearch',
       'contest/:contest': 'routeContest',
-      'location': 'routeGeolocate',
+      'location(/:place)': 'routeLocation',
       '*default': 'routeDefault'
     },
 
@@ -25,6 +25,7 @@
     },
 
     routeDashboard: function() {
+      var thisRouter = this;
       this.teardownObjects();
 
       // Get races objects
@@ -37,6 +38,11 @@
           loading: this.app.template('template-loading')
         },
         adaptors: [ 'Backbone' ]
+      });
+      this.app.dashboardView.on('addresssSearch', function(e) {
+        e.original.preventDefault();
+        thisRouter.navigate('/location/' + 
+          $(this.el).find('#address-search').val(), { trigger: true });
       });
     },
 
@@ -52,7 +58,8 @@
         el: this.app.$el.find('.content-container'),
         template: this.app.template('template-contests'),
         data: {
-          models: this.app.contestsSearch
+          models: this.app.contestsSearch,
+          title: 'Search: ' + term
         },
         partials: {
           contest: this.app.template('template-contest'),
@@ -80,33 +87,52 @@
       });
     },
 
-    // Route based on geolocation, return a promise
-    routeGeolocate: function() {
+    // Route based different places.  If no place, then geolocate user,
+    // if lat,lon, then handle that, otherwise assume an address.
+    routeLocation: function(place) {
       var thisRouter = this;
+      this.teardownObjects();
 
-      this.geolocate().done(function(lonlat) {
-        this.app.locationContests = new this.app.ContestsLocationCollection(
+      // Handle location
+      function handleLocation(lonlat) {
+        thisRouter.app.locationContests = new thisRouter.app.ContestsLocationCollection(
           [], {
-            app: this.app,
+            app: thisRouter.app,
             lonlat: lonlat
           });
-        this.app.locationContests.fetchBoundaryFromCoordinates();
-        this.app.contestsSearchView = new this.app.ContestsView({
-          el: this.app.$el.find('.content-container'),
-          template: this.app.template('template-contests'),
+        thisRouter.app.locationContests.fetchBoundaryFromCoordinates();
+        thisRouter.app.contestsLocationView = new thisRouter.app.ContestsView({
+          el: thisRouter.app.$el.find('.content-container'),
+          template: thisRouter.app.template('template-contests'),
           data: {
-            models: this.app.locationContests
+            models: thisRouter.app.locationContests,
+            title: (place) ? 'Location: ' + place : 'Your location'
           },
           partials: {
-            contest: this.app.template('template-contest'),
-            loading: this.app.template('template-loading')
+            contest: thisRouter.app.template('template-contest'),
+            loading: thisRouter.app.template('template-loading')
           },
           adaptors: [ 'Backbone' ]
         });
-      });
+      }
+
+      // Check for place format
+      if (!place) {
+        this.geolocate().done(function(lonlat) {
+          handleLocation(lonlat);
+        });
+      }
+      else if (!_.isNaN(parseFloat(place.split(',')[0])) && !_.isNaN(parseFloat(place.split(',')[1]))) {
+        handleLocation([parseFloat(place.split(',')[0]), parseFloat(place.split(',')[1])]);
+      }
+      else {
+        this.addressLocate(place).done(function(lonlat) {
+          handleLocation(lonlat);
+        });
+      }
     },
 
-    // Route based on geolocation, return a promise
+    // Find location based on browser, returns promise.
     geolocate: function() {
       var thisRouter = this;
       var defer = $.Deferred();
@@ -114,8 +140,35 @@
       navigator.geolocation.getCurrentPosition(function(position) {
         defer.resolveWith(thisRouter, [[ position.coords.longitude, position.coords.latitude ]]);
       }, function(err) {
-        defer.rejectwith(thisRouter, [{ 'message' : 'Issue retrieving current position.' }]);
+        defer.rejectWith(thisRouter, [{ 'message' : 'Issue retrieving current position.' }]);
       });
+
+      return defer.promise();
+    },
+
+    // Find location based on address, returns promise.
+    addressLocate: function(address) {
+      var thisRouter = this;
+      var defer = $.Deferred();
+      var url = this.app.options.mapQuestQuery.replace('[[[KEY]]]', this.app.options.mapQuestKey)
+        .replace('[[[ADDRESS]]]', encodeURIComponent(address));
+
+      $.jsonp({ url: url })
+        .done(function(response) {
+          var latlng;
+
+          if (_.size(response.results[0].locations) > 0 &&
+            _.isObject(response.results[0].locations[0].latLng)) {
+            latlng = response.results[0].locations[0].latLng;
+            defer.resolveWith(thisRouter, [[latlng.lng, latlng.lat]]);
+          }
+          else {
+            defer.rejectWith(thisRouter,  [{ 'message' : 'Issue retrieving position from address.' }]);
+          }
+        })
+        .fail(function() {
+          defer.rejectWith(thisRouter, arguments);
+        });
 
       return defer.promise();
     },
@@ -123,8 +176,8 @@
     // Tear down any existing objects
     teardownObjects: function() {
       var thisRouter = this;
-      var views = ['contestView', 'contestsSearchView'];
-      var models = ['contest', 'contestsSearch'];
+      var views = ['contestView', 'contestsSearchView', 'contestsLocationView'];
+      var models = ['contest', 'contestsSearch', 'locationContests'];
 
       // Handle backbone objects
       _.each(models, function(m) {
