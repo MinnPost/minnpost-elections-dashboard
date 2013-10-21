@@ -51,7 +51,7 @@
     observeTitle: function(originalTitle) {
       this.observe('title', function(newValue, oldValue) {
         if (newValue) {
-          document.title = (originalTitle) ? originalTitle + ' | ' + newValue :
+          document.title = (originalTitle) ? newValue + ' | ' + originalTitle :
             newValue;
         }
       });
