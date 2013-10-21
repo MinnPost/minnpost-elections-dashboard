@@ -44,6 +44,7 @@
         thisRouter.navigate('/location/' + 
           $(this.el).find('#address-search').val(), { trigger: true });
       });
+      this.app.dashboardView.observeTitle(this.app.options.originalTitle);
     },
 
     routeSearch: function(term) {
@@ -67,6 +68,7 @@
         },
         adaptors: [ 'Backbone' ]
       });
+      this.app.contestsSearchView.observeTitle(this.app.options.originalTitle);
     },
 
     // Single contest route.  Creates contest model, fetches it
@@ -85,6 +87,7 @@
         },
         adaptors: [ 'Backbone' ]
       });
+      this.app.contestView.observeTitle(this.app.options.originalTitle);
     },
 
     // Route based different places.  If no place, then geolocate user,
@@ -114,6 +117,7 @@
           },
           adaptors: [ 'Backbone' ]
         });
+        thisRouter.app.contestsLocationView.observeTitle(thisRouter.app.options.originalTitle);
       }
 
       // Check for place format

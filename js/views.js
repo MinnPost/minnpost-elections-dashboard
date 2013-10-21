@@ -45,6 +45,16 @@
       window.setTimeout(function() {
         thisView.map.fitBounds(featureGroup.getBounds());
       }, 500);
+    },
+
+    // Handle title change for document title
+    observeTitle: function(originalTitle) {
+      this.observe('title', function(newValue, oldValue) {
+        if (newValue) {
+          document.title = (originalTitle) ? originalTitle + ' | ' + newValue :
+            newValue;
+        }
+      });
     }
   });
 
