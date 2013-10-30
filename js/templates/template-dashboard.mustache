@@ -18,7 +18,9 @@
 
   <div class="grid-100 last-updated-section">
     {{#contestMinneapolisMayor.updated}}
-      Last updated at {{ contestMinneapolisMayor.updated.format('h:mm a') }}
+      <div intro="fade:{'duration':1000}">
+        Last updated at {{ contestMinneapolisMayor.updated.format('h:mm a') }}
+      </div>
     {{/contestMinneapolisMayor.updated}}
   </div>
 

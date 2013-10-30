@@ -194,6 +194,27 @@ body .node-unpublished {
     width: 95%;
   }
 
+  .dashboard .elections-search .twitter-typeahead {
+    width: 90%;
+  }
+
+  .dashboard .elections-search input[type=text] {
+    width: 100%;
+    display: block;
+    margin: 0;
+  }
+
+  .dashboard .elections-search label {
+    font-style: italic;
+    color: $color-medium-gray;
+    font-size: .85em;
+    margin: .5em 0;
+  }
+
+  .dashboard .elections-search .tt-dropdown-menu {
+    width: 100%;
+  }
+
   .dashboard .dashboard-contest .contest-link {
     display: block;
     text-align: right;
