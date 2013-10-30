@@ -62,22 +62,33 @@
     init: function() {
       var thisView = this;
       var $contestSearch = $(this.el).find('#contest-search');
-      var query = "http://ec2-54-221-171-99.compute-1.amazonaws.com/?box=ubuntu&callback=?&q=" +
-        "SELECT * FROM contests AS c WHERE c.title LIKE '%%QUERY%' ORDER BY title LIMIT 20";
+      // Query can be either a contest or candidate
+      var query = "http://ec2-54-221-171-99.compute-1.amazonaws.com/?box=ubuntu&q=" +
+        "SELECT title AS title, title AS search FROM contests AS c WHERE " +
+        "c.title LIKE '%%QUERY%' " +
+        "UNION " +
+        "SELECT r.candidate || ' (' || c.title || ')' AS title, c.title AS search " +
+        "FROM results AS r " +
+        "JOIN contests AS c ON r.contest_id = c.contest_id " +
+        "WHERE r.candidate LIKE '%%QUERY%' ORDER BY title LIMIT 20 ";
 
       // Make typeahead functionality for search
       $contestSearch.typeahead({
-        name: 'Contests',
+        name: 'Contests and Candidates',
         remote: {
           url: query,
-          dataType: 'jsonp'
+          dataType: 'jsonp',
+          jsonpCallback: 'mpServerSideCachingHelper',
+          replace: function(url, uriEncodedQuery) {
+            return url.replace(new RegExp(this.wildcard, 'g'), uriEncodedQuery);
+          }
         },
         valueKey: 'title'
       });
 
       // Handle search selected
       $contestSearch.on('typeahead:selected', function(e, data, name) {
-        thisView.app.router.navigate('/search/' + data.title, { trigger: true });
+        thisView.app.router.navigate('/search/' + data.search, { trigger: true });
       });
 
       // Teardown event to remove typeahead gracefully

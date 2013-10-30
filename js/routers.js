@@ -42,7 +42,7 @@
       this.app.dashboardView.app = this.app;
       this.app.dashboardView.on('addresssSearch', function(e) {
         e.original.preventDefault();
-        thisRouter.navigate('/location/' + 
+        thisRouter.navigate('/location/' +
           $(this.el).find('#address-search').val(), { trigger: true });
       });
       this.app.dashboardView.observeTitle(this.app.options.originalTitle);
@@ -121,13 +121,14 @@
         thisRouter.app.contestsLocationView.observeTitle(thisRouter.app.options.originalTitle);
       }
 
-      // Check for place format
+      // Check for place format.  If no place, use geolocation, otherwise look
+      // for a non-address and valid lat/lon, otherwise, assume address.
       if (!place) {
         this.geolocate().done(function(lonlat) {
           handleLocation(lonlat);
         });
       }
-      else if (!_.isNaN(parseFloat(place.split(',')[0])) && !_.isNaN(parseFloat(place.split(',')[1]))) {
+      else if (!/[a-zA-Z]+/.test(place) && !_.isNaN(parseFloat(place.split(',')[0])) && !_.isNaN(parseFloat(place.split(',')[1]))) {
         handleLocation([parseFloat(place.split(',')[0]), parseFloat(place.split(',')[1])]);
       }
       else {
@@ -158,8 +159,10 @@
       var url = this.app.options.mapQuestQuery.replace('[[[KEY]]]', this.app.options.mapQuestKey)
         .replace('[[[ADDRESS]]]', encodeURIComponent(address));
 
-      $.jsonp({ url: url })
-        .done(function(response) {
+      $.ajax({
+        dataType: 'jsonp',
+        url: url
+      }).done(function(response) {
           var latlng;
 
           if (_.size(response.results[0].locations) > 0 &&

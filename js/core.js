@@ -84,7 +84,7 @@ Backbone.ajax = function() {
     // Default options
     defaultOptions: {
       dataPath: './data/',
-      jsonpProxy: 'http://mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
+      jsonpProxy: 'http://mp-jsonproxy.herokuapp.com/proxy?url=',
       electionsAPI: 'http://ec2-54-221-171-99.compute-1.amazonaws.com/?box=ubuntu&q=',
       boundaryAPI: 'http://boundaries.minnpost.com/1.0/',
       boundarySets: [
@@ -97,7 +97,7 @@ Backbone.ajax = function() {
       ],
       // Please don't steal/abuse
       mapQuestKey: 'Fmjtd%7Cluub2d01ng%2C8g%3Do5-9ua20a',
-      mapQuestQuery: 'http://www.mapquestapi.com/geocoding/v1/address?key=[[[KEY]]]&outFormat=json&callback=?&countrycodes=us&maxResults=1&location=[[[ADDRESS]]]',
+      mapQuestQuery: 'http://www.mapquestapi.com/geocoding/v1/address?key=[[[KEY]]]&outFormat=json&countrycodes=us&maxResults=1&location=[[[ADDRESS]]]',
       originalTitle: document.title
     },
 
@@ -171,7 +171,8 @@ Backbone.ajax = function() {
         if (_.isUndefined(thisApp.data[d])) {
 
           if (useJSONP) {
-            defer = $.jsonp({
+            defer = $.ajax({
+              dataType: 'jsonp',
               url: proxyPrefix + encodeURI(thisApp.options.dataPath + d + '.json')
             });
           }
@@ -195,17 +196,16 @@ Backbone.ajax = function() {
      * if needed, such as using a cache.
      */
     getRemoteData: function(options) {
+      options.dataType = 'jsonp';
+
       if (this.options.remoteProxy) {
         options.url = options.url + '&callback=proxied_jqjsp';
         options.url = app.options.remoteProxy + encodeURIComponent(options.url);
         options.callback = 'proxied_jqjsp';
         options.cache = true;
       }
-      else {
-        options.url = options.url + '&callback=?';
-      }
 
-      return $.jsonp(options);
+      return $.ajax(options);
     },
 
     // Placeholder start
