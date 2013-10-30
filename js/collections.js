@@ -56,9 +56,7 @@
     fetchBoundary: function() {
       var thisCollection = this;
 
-      $.ajax({
-        dataType: 'jsonp',
-        jsonpCallback: 'mpServerSideCachingHelper',
+      this.app.jsonpRequest({
         url: this.app.options.boundaryAPI + 'boundary/?slug__in=' +
           encodeURIComponent(this.pluck('boundary').join(','))
       })
@@ -153,9 +151,7 @@
     fetchBoundaryFromCoordinates: function() {
       var thisCollection = this;
 
-      $.ajax({
-        dataType: 'jsonp',
-        jsonpCallback: 'mpServerSideCachingHelper',
+      this.app.jsonpRequest({
         url: this.app.options.boundaryAPI + 'boundary/?contains=' +
           encodeURIComponent(this.options.lonlat[1]) + ',' +
           encodeURIComponent(this.options.lonlat[0]) + '&sets=' +

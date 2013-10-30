@@ -1,0 +1,50 @@
+<div class="dashboard-contest {{ .classes }}">
+  <div>
+    {{#(results.length == 0 || results == undefined)}}
+      {{>loading}}
+    {{/())}}
+  </div>
+
+  <h4>{{ .title }}</h4>
+
+  <table>
+    <thead>
+      <tr class="table-first-heading">
+        <th>Candidate</th>
+        {{#(ranked_choice == 1)}}
+          <th>Round One</th>
+          <th>Final</th>
+        {{/()}}
+        {{#(ranked_choice != 1)}}
+          <th>Results</th>
+        {{/()}}
+      </tr>
+      <tr class="table-second-heading">
+        <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting</th>
+        {{#(ranked_choice == 1)}}
+          <th class="first-choice-heading">1st choice</th>
+        {{/()}}
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {{#results:r}}{{#(r < 2)}}
+        <tr class="{{ (r % 2 === 0) ? 'even' : 'odd' }}">
+          <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}} {{ candidate }}</td>
+
+          {{#(ranked_choice == 1)}}
+            <td>{{ ranked_choices.1.percentage }}</td>
+            <td>{{{ (ranked_choices.100.percentage) ? ranked_choices.100.percentage : '&mdash;' }}}</td>
+          {{/()}}
+
+          {{#(ranked_choice != 1)}}
+            <td>{{ percentage }}% ({{ votes_candidate }} votes)</td>
+          {{/()}}
+        </tr>
+      {{/()}}{{/results}}
+    </tbody>
+  </table>
+
+  <a href="#contest/{{ contest_id }}" class="contest-link">Full results</a>
+</div>

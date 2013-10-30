@@ -89,6 +89,23 @@ body .node-unpublished {
     width: 100%;
   }
 
+  table thead th {
+    padding-bottom: 0;
+  }
+
+  table thead tr.table-second-heading th {
+    padding-top: 0;
+    padding-bottom: .5em;
+    font-weight: normal;
+    font-style: italic;
+    color: $color-medium-gray;
+    font-size: .85em;
+  }
+
+  table tbody tr.even {
+    background-color: $color-lighter-gray;
+  }
+
   // Forms
   label {
     display: block;
@@ -173,5 +190,21 @@ body .node-unpublished {
   .dashboard .location-search-section input[type=text] {
     margin-bottom: .5em;
     width: 95%;
+  }
+
+  .dashboard .dashboard-contest .contest-link {
+    display: block;
+    text-align: right;
+  }
+
+  .dashboard .contest-minneapolis-council tr.table-first-heading {
+    display: none;
+  }
+
+  .dashboard .contest-minneapolis-council .dashboard-contest h4 {
+    font-family: $sans-serif-font;
+    margin: .25em 0 .5em 0;
+    font-size: .9em;
+    text-transform: uppercase;
   }
 }

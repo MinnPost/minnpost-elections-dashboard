@@ -123,9 +123,7 @@
     fetchBoundary: function() {
       var thisModel = this;
 
-      $.ajax({
-        dataType: 'jsonp',
-        jsonpCallback: 'mpServerSideCachingHelper',
+      this.app.jsonpRequest({
         url: this.app.options.boundaryAPI + 'boundary/?slug__in=' +
           encodeURIComponent(this.get('boundary'))
       })
@@ -139,8 +137,10 @@
 
     // Our API is pretty simple, so we do a basic time based
     // polling.  Call right away as well.
-    connect: function() {
+    connect: function(fetchBoundary) {
       var thisModel = this;
+
+      this.set('fetchedBoundary', (fetchBoundary !== false) ? false : true);
       this.fetch();
       this.pollID = window.setInterval(function() {
         thisModel.fetch();

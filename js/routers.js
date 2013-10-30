@@ -26,20 +26,44 @@
 
     routeDashboard: function() {
       var thisRouter = this;
+      var data = {};
       this.teardownObjects();
 
       // Get races objects
+      this.app.dashboardContests = {
+        contestMinneapolisMayor: 'id-MN---43000-2001',
+        contestMinneapolisCouncil3: 'id-MN---43000-2121',
+        contestMinneapolisCouncil6: 'id-MN---43000-2151',
+        contestMinneapolisCouncil10: 'id-MN---43000-2191',
+        contestMinneapolisCouncil5: 'id-MN---43000-2141',
+        contestMinneapolisCouncil9: 'id-MN---43000-2181',
+        contestMinneapolisCouncil12: 'id-MN---43000-2211',
+        contestMinneapolisCouncil13: 'id-MN---43000-2221',
+        contestStPaulMayor: 'id-MN---58000-2001',
+        contestStPaulCouncil: 'id-MN---58000-2101'
+      };
+      _.each(this.app.dashboardContests, function(c, ci) {
+        thisRouter.app[ci] = new thisRouter.app.ContestModel({ id: c }, { app: thisRouter.app });
+        thisRouter.app[ci].connect(false);
+        data[ci] = thisRouter.app[ci];
+      });
+
+      // Create dashboard view
+      data.title = 'Dashboard';
       this.app.dashboardView = new this.app.DashboardView({
         el: this.app.$el.find('.content-container'),
         template: this.app.template('template-dashboard'),
-        data: {
-        },
+        data: data,
         partials: {
+          dashboardContest: this.app.template('template-dashboard-contest'),
           loading: this.app.template('template-loading')
         },
         adaptors: [ 'Backbone' ]
       });
       this.app.dashboardView.app = this.app;
+
+      // Handle address search hear as we have an easy reference
+      // to the router.
       this.app.dashboardView.on('addresssSearch', function(e) {
         e.original.preventDefault();
         thisRouter.navigate('/location/' +
@@ -186,6 +210,11 @@
       var thisRouter = this;
       var views = ['contestView', 'contestsSearchView', 'contestsLocationView'];
       var models = ['contest', 'contestsSearch', 'locationContests'];
+
+      // Merge in dashboard contests
+      if (_.isObject(this.app.dashboardContests)) {
+        models = _.union(models, _.keys(this.app.dashboardContests));
+      }
 
       // Handle backbone objects
       _.each(models, function(m) {

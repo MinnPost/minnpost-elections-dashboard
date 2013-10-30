@@ -46,6 +46,16 @@ _.mixin({
    */
   formatPercentChange: function(num) {
     return ((num > 0) ? '+' : '') + _.formatPercent(num);
+  },
+
+  /**
+   * Converts string into a hash (very basically).
+   */
+  hash: function(str) {
+    return Math.abs(_.reduce(str.split(''), function(a, b) {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0));
   }
 });
 
@@ -59,7 +69,8 @@ Backbone.ajax = function() {
 
   if (options[0].dataTypeForce !== true) {
     options[0].dataType = 'jsonp';
-    options[0].jsonpCallback = 'mpServerSideCachingHelper';
+    options[0].jsonpCallback = 'mpServerSideCachingHelper' +
+      _.hash(options[0].url);
   }
   return Backbone.$.ajax.apply(Backbone.$, options);
 };
@@ -99,6 +110,18 @@ Backbone.ajax = function() {
       mapQuestKey: 'Fmjtd%7Cluub2d01ng%2C8g%3Do5-9ua20a',
       mapQuestQuery: 'http://www.mapquestapi.com/geocoding/v1/address?key=[[[KEY]]]&outFormat=json&countrycodes=us&maxResults=1&location=[[[ADDRESS]]]',
       originalTitle: document.title
+    },
+
+    /**
+     * JSONP request
+     */
+    jsonpRequest: function() {
+      var options = arguments[0];
+
+      options.dataType = 'jsonp';
+      options.jsonpCallback = 'mpServerSideCachingHelper' +
+        _.hash(options.url);
+      return $.ajax.apply($, [options]);
     },
 
     /**
@@ -171,8 +194,7 @@ Backbone.ajax = function() {
         if (_.isUndefined(thisApp.data[d])) {
 
           if (useJSONP) {
-            defer = $.ajax({
-              dataType: 'jsonp',
+            defer = this.jsonpRequest({
               url: proxyPrefix + encodeURI(thisApp.options.dataPath + d + '.json')
             });
           }

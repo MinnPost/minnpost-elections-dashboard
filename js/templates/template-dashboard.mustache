@@ -17,20 +17,66 @@
   </div>
 
   <div class="grid-50">
-    <div class="contest-minneapolis-mayor">
-      <h4>Minnesapolis Mayor</h4>
-
+    <div class="contest-minneapolis-mayor dashboard-section">
+      {{#contestMinneapolisMayor}}
+        {{>dashboardContest}}
+      {{/contestMinneapolisMayor}}
     </div>
-  </div>
 
-  <div class="grid-50">
-    <div class="location-search">
-      <h4>Elections search</h4>
+    <div class="contest-st-paul-mayor dashboard-section">
+      {{#contestStPaulMayor}}
+        {{>dashboardContest}}
+      {{/contestStPaulMayor}}
+    </div>
+
+    <div class="contest-st-paul-council dashboard-section">
+      {{#contestStPaulCouncil}}
+        {{>dashboardContest}}
+      {{/contestStPaulCouncil}}
+    </div>
+
+    <div class="elections-search dashboard-section">
+      <h4>Other elections</h4>
 
       <form>
         <label for="contest-search">Search contests by title or candidate.  Start typing to see suggestions. <br /></label>
         <input type="text" id="contest-search" />
       </form>
+    </div>
+  </div>
+
+  <div class="grid-50">
+    <div class="contest-minneapolis-council dashboard-section">
+      <h4>Minnesapolis City Council</h4>
+
+      {{#contestMinneapolisCouncil3}}
+        {{>dashboardContest}}
+      {{/contestMinneapolisCouncil3}}
+
+      {{#contestMinneapolisCouncil6}}
+        {{>dashboardContest}}
+      {{/contestMinneapolisCouncil6}}
+
+      {{#contestMinneapolisCouncil10}}
+        {{>dashboardContest}}
+      {{/contestMinneapolisCouncil10}}
+
+      {{#contestMinneapolisCouncil5}}
+        {{>dashboardContest}}
+      {{/contestMinneapolisCouncil5}}
+
+      {{#contestMinneapolisCouncil9}}
+        {{>dashboardContest}}
+      {{/contestMinneapolisCouncil9}}
+
+      {{#contestMinneapolisCouncil12}}
+        {{>dashboardContest}}
+      {{/contestMinneapolisCouncil12}}
+
+      {{#contestMinneapolisCouncil13}}
+        {{>dashboardContest}}
+      {{/contestMinneapolisCouncil13}}
+
     </div>
   </div>
 </div>
