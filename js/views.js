@@ -95,6 +95,9 @@
       this.on('teardown', function() {
         $contestSearch.typeahead('destroy');
       });
+
+      // Mark if geolocation is availablle
+      this.set('geolocationEnabled', (_.isObject(navigator) && _.isObject(navigator.geolocation)));
     }
   });
 

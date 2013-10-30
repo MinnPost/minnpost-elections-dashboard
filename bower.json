@@ -15,6 +15,8 @@
     "ractive": "~0.3.7",
     "momentjs": "~2.3.1",
     "leaflet": "~0.6.4",
-    "typeahead.js": "~0.9.3"
+    "typeahead.js": "~0.9.3",
+    "unsemantic": "https://github.com/nathansmith/unsemantic.git",
+    "Placeholders.js": "~3.0.0"
   }
 }

@@ -1,30 +1,36 @@
-<div class="dashboard {{ classes }}">
+<div class="dashboard cf grid-parent {{ classes }}">
 
-  <h3>Dashboard</h3>
+  <div class="grid-100 location-search-section">
+      <form>
+        <div class="location-search-group">
+          <input type="text" id="address-search" placeholder="Search election results by address" />
 
-  <ul>
-    <li><a href="#search/minneapolis+mayor">Minneapolis mayor</a></li>
-    <li><a href="#search/minneapolis+ward">Minneapolis council races</a></li>
-    <li><a href="#search/duluth">Duluth races</a></li>
-  </ul>
+          {{#geolocationEnabled}}
+            <div class="geolocation">
+              <a href="#location">Or view contests at your current location</a>
+            </div>
+          {{/geolocationEnabled}}
+        </div>
 
-  <h4>Search Location</h4>
+        <input on-tap="addresssSearch" type="submit" value="Go" class="address-search-submit" />
+      </form>
+  </div>
 
-  <ul>
-    <li><a href="#location">Your location</a></li>
-  </ul>
+  <div class="grid-50">
+    <div class="contest-minneapolis-mayor">
+      <h4>Minnesapolis Mayor</h4>
 
-  <form>
-    <label for="address-search">Search address:</label>
-    <input type="text" id="address-search" />
-    <input on-tap="addresssSearch" type="submit" class="address-search-submit" />
-  </form>
+    </div>
+  </div>
 
-  <h4>Search</h4>
+  <div class="grid-50">
+    <div class="location-search">
+      <h4>Elections search</h4>
 
-  <form>
-    <label for="contest-search">Search contests by title or candidate.  Start typing to see suggestions. <br /></label>
-    <input type="text" id="contest-search" />
-  </form>
-
+      <form>
+        <label for="contest-search">Search contests by title or candidate.  Start typing to see suggestions. <br /></label>
+        <input type="text" id="contest-search" />
+      </form>
+    </div>
+  </div>
 </div>

@@ -76,16 +76,17 @@ addthis_config = Drupal.settings.addthis.config_default; addthis_share = Drupal.
   <div class="node-body fieldlayout node-field-body">
     <!-- Library or external CSS files -->
     <style type="text/css">
-
+      @import url('./bower_components/unsemantic/assets/stylesheets/unsemantic-grid-responsive-tablet.css');
+      @import url('./bower_components/leaflet/dist/leaflet.css');
     </style>
 
     <!-- Application CSS -->
     <style type="text/css">
-      @import url('./bower_components/leaflet/dist/leaflet.css');
       @import url('./.tmp/css/main.css');
     </style>
     <!--[if lte IE 8]>
       <style type="text/css">
+        @import url('./bower_components/unsemantic/assets/stylesheets/ie.css');
         @import url('./bower_components/leaflet/dist/leaflet.ie.css');
         @import url('./.tmp/css/main.ie.css');
       </style>
@@ -151,6 +152,7 @@ addthis_config = Drupal.settings.addthis.config_default; addthis_share = Drupal.
     <script type="text/javascript" src="./bower_components/momentjs/min/moment.min.js"></script>
     <script type="text/javascript" src="./bower_components/leaflet/dist/leaflet.js"></script>
     <script type="text/javascript" src="./bower_components/typeahead.js/dist/typeahead.min.js"></script>
+    <script type="text/javascript" src="./bower_components/Placeholders.js/build/placeholders.jquery.min.js"></script>
 
     <script type="text/javascript" src="./js/core.js"></script>
     <script type="text/javascript" src="./js/models.js"></script>

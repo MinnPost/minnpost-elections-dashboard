@@ -116,7 +116,8 @@ module.exports = function(grunt) {
           'bower_components/ractive/plugins/adaptors/Backbone.js',
           'bower_components/momentjs/min/moment.min.js',
           'bower_components/leaflet/dist/leaflet.js',
-          'bower_components/typeahead.js/dist/typeahead.min.js'
+          'bower_components/typeahead.js/dist/typeahead.min.js',
+          'bower_components/Placeholders.js/build/placeholders.jquery.min.js'
         ],
         dest: 'dist/<%= pkg.name %>.libs.js',
         options: {
@@ -126,12 +127,14 @@ module.exports = function(grunt) {
       // CSS libs
       libs_css: {
         src: [
+          'bower_components/unsemantic/assets/stylesheets/unsemantic-grid-responsive-tablet.css',
           'bower_components/leaflet/dist/leaflet.css'
         ],
         dest: 'dist/<%= pkg.name %>.libs.css'
       },
       libs_css_ie: {
         src: [
+          'bower_components/unsemantic/assets/stylesheets/ie.css',
           'bower_components/leaflet/dist/leaflet.ie.css'
         ],
         dest: 'dist/<%= pkg.name %>.libs.ie.css'

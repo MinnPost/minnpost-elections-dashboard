@@ -37,6 +37,7 @@ Get the code for this project and install the necessary dependency libraries and
 1. Install NodeJS packages: `npm install`
 1. Install Bower components: `bower install`
 1. Because Leaflet comes unbuilt, we need to build it: `cd bower_components/leaflet/ && npm install && jake; cd -;`
+1. Because Placeholders.js comes unbuilt, we need to build it: `cd bower_components/Placeholders.js/ && npm install && grunt; cd -;`
 
 ### Running
 
