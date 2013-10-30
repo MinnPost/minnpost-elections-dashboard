@@ -110,7 +110,6 @@ module.exports = function(grunt) {
       libs: {
         src: [
           'bower_components/jquery/jquery.min.js',
-          'bower_components/jquery-jsonp/src/jquery.jsonp.js',
           'bower_components/underscore/underscore-min.js',
           'bower_components/backbone/backbone-min.js',
           'bower_components/ractive/build/Ractive.min.js',

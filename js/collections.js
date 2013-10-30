@@ -56,9 +56,10 @@
     fetchBoundary: function() {
       var thisCollection = this;
 
-      $.jsonp({
+      $.ajax({
+        dataType: 'jsonp',
         url: this.app.options.boundaryAPI + 'boundary/?slug__in=' +
-          encodeURIComponent(this.pluck('boundary').join(',')) + '&callback=?'
+          encodeURIComponent(this.pluck('boundary').join(','))
       })
       .done(function(response) {
         if (_.isArray(response.objects)) {
@@ -151,11 +152,12 @@
     fetchBoundaryFromCoordinates: function() {
       var thisCollection = this;
 
-      $.jsonp({
+      $.ajax({
+        dataType: 'jsonp',
         url: this.app.options.boundaryAPI + 'boundary/?contains=' +
           encodeURIComponent(this.options.lonlat[1]) + ',' +
           encodeURIComponent(this.options.lonlat[0]) + '&sets=' +
-          encodeURIComponent(this.app.options.boundarySets.join(',')) + '&callback=?'
+          encodeURIComponent(this.app.options.boundarySets.join(','))
       })
       .done(function(response) {
         if (_.isArray(response.objects)) {

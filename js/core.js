@@ -50,6 +50,18 @@ _.mixin({
 });
 
 /**
+ * Override Backbone's ajax call to use JSONP by default.
+ */
+Backbone.ajax = function() {
+  var options = arguments;
+
+  if (options[0].dataTypeForce !== true) {
+    options[0].dataType = 'jsonp';
+  }
+  return Backbone.$.ajax.apply(Backbone.$, options);
+};
+
+/**
  * Create "class" for the main application.  This way it could be
  * used more than once.
  */

@@ -123,9 +123,10 @@
     fetchBoundary: function() {
       var thisModel = this;
 
-      $.jsonp({
+      $.ajax({
+        dataType: 'jsonp',
         url: this.app.options.boundaryAPI + 'boundary/?slug__in=' +
-          encodeURIComponent(this.get('boundary')) + '&callback=?'
+          encodeURIComponent(this.get('boundary'))
       })
       .done(function(response) {
         if (_.isArray(response.objects)) {
