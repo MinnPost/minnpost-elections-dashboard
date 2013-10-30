@@ -50,13 +50,16 @@ _.mixin({
 });
 
 /**
- * Override Backbone's ajax call to use JSONP by default.
+ * Override Backbone's ajax call to use JSONP by default as well
+ * as force a specific callback to ensure that server side
+ * caching is effective.
  */
 Backbone.ajax = function() {
   var options = arguments;
 
   if (options[0].dataTypeForce !== true) {
     options[0].dataType = 'jsonp';
+    options[0].jsonpCallback = 'mpServerSideCachingHelper';
   }
   return Backbone.$.ajax.apply(Backbone.$, options);
 };

@@ -58,6 +58,7 @@
 
       $.ajax({
         dataType: 'jsonp',
+        jsonpCallback: 'mpServerSideCachingHelper',
         url: this.app.options.boundaryAPI + 'boundary/?slug__in=' +
           encodeURIComponent(this.pluck('boundary').join(','))
       })
@@ -154,6 +155,7 @@
 
       $.ajax({
         dataType: 'jsonp',
+        jsonpCallback: 'mpServerSideCachingHelper',
         url: this.app.options.boundaryAPI + 'boundary/?contains=' +
           encodeURIComponent(this.options.lonlat[1]) + ',' +
           encodeURIComponent(this.options.lonlat[0]) + '&sets=' +

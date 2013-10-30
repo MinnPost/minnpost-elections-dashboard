@@ -125,6 +125,7 @@
 
       $.ajax({
         dataType: 'jsonp',
+        jsonpCallback: 'mpServerSideCachingHelper',
         url: this.app.options.boundaryAPI + 'boundary/?slug__in=' +
           encodeURIComponent(this.get('boundary'))
       })
