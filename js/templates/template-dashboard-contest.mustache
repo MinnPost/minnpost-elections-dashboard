@@ -34,7 +34,7 @@
           <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}} {{ candidate }}</td>
 
           {{#(ranked_choice == 1)}}
-            <td>{{ ranked_choices.1.percentage }}</td>
+            <td>{{ ranked_choices.1.percentage }}% ({{ votes_candidate }} votes)</td>
             <td>{{{ (ranked_choices.100.percentage) ? ranked_choices.100.percentage : '&mdash;' }}}</td>
           {{/()}}
 

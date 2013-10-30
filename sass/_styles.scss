@@ -176,8 +176,10 @@ body .node-unpublished {
   }
 
   .dashboard .location-search-section {
+    padding-bottom: 1em;
     margin-bottom: 2em;
     text-align: center;
+    border-bottom: 1px solid $color-light-gray;
   }
 
   .dashboard .location-search-group {
@@ -206,5 +208,13 @@ body .node-unpublished {
     margin: .25em 0 .5em 0;
     font-size: .9em;
     text-transform: uppercase;
+  }
+
+  .dashboard .last-updated-section {
+    min-height: 1.5em;
+    margin-bottom: 2em;
+    text-align: center;
+    font-weight: bold;
+    color: $color-medium-gray;
   }
 }
