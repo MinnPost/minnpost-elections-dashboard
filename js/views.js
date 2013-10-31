@@ -72,6 +72,9 @@
         "JOIN contests AS c ON r.contest_id = c.contest_id " +
         "WHERE r.candidate LIKE '%%QUERY%' ORDER BY title LIMIT 20 ";
 
+      // Attach formatters
+      this.set('fNum', _.formatNumber);
+
       // Make typeahead functionality for search
       $contestSearch.typeahead({
         name: 'Contests and Candidates',
@@ -105,6 +108,9 @@
     init: function() {
       this.set('classes', 'contest-view');
 
+      // Attach formatters
+      this.set('fNum', _.formatNumber);
+
       // Make a map if boundary has been found
       this.observe('boundarySets', function(newValue, oldValue) {
         if (_.isArray(newValue) && _.isObject(newValue[0])) {
@@ -119,6 +125,10 @@
       var thisView = this;
       var shapes = [];
 
+      // Attach formatters
+      this.set('fNum', _.formatNumber);
+
+      // React to boundary update
       this.observe('models.0.fetchedBoundary', function(newValue, oldValue) {
         var testModel = this.get('models.0.boundarySets');
         if (_.isArray(testModel) && _.isObject(testModel[0])) {

@@ -170,6 +170,29 @@ body .node-unpublished {
     margin: 0;
   }
 
+  // General
+  .contest-link {
+    display: block;
+    text-align: right;
+    margin-bottom: 1em;
+  }
+
+  // Contest
+  .contest .dashboard-link {
+    display: block;
+    margin-bottom: 1em;
+  }
+
+  .contest .last-updated {
+    min-height: 1.5em;
+    font-weight: bold;
+    color: $color-medium-gray;
+    margin-bottom: 1em;
+  }
+
+  // Contests
+
+
   // Dashboard
   .dashboard .dashboard-section {
     margin-bottom: 2em;
@@ -213,11 +236,6 @@ body .node-unpublished {
 
   .dashboard .elections-search .tt-dropdown-menu {
     width: 100%;
-  }
-
-  .dashboard .dashboard-contest .contest-link {
-    display: block;
-    text-align: right;
   }
 
   .dashboard .contest-minneapolis-council tr.table-first-heading {

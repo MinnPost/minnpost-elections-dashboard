@@ -1,63 +1,71 @@
 <div class="contest {{ classes }}">
+  <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>
+
   <div>
-    {{#(title == undefined)}}
+    {{#(results.length == 0 || results == undefined)}}
       {{>loading}}
     {{/())}}
   </div>
 
-  <h3>{{ title }}</h3>
-  <a href="#contest/{{ contest_id }}">link</a>
+  <h3 intro="fade">{{ title }}</h3>
 
-  <p>
-    Last updated at {{ updated.format('MMMM Do YYYY, h:mm:ss a') }} <br />
-    Number of seats: {{ seats }} <br />
-    Ranked-choiced race: {{ (ranked_choice == 1) ? 'Yes' : 'No' }} <br />
-    {{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.
-  </p>
+  <div class="last-updated">Last updated at {{ updated.format('h:mm a') }}</div>
 
   <table>
     <thead>
-      <tr>
-        <th>Winner</th>
+      <tr class="table-first-heading">
         <th>Candidate</th>
-        <th>Incumbent</th>
         <th>Party</th>
         {{#(ranked_choice == 1)}}
-          <th>1st Choice Percentage</th>
-          <th>2nd Choice Percentage</th>
-          <th>3rd Choice Percentage</th>
+          <th>Results</th>
+          <th></th>
+          <th></th>
           <th>Final</th>
         {{/()}}
         {{#(ranked_choice != 1)}}
-          <th>Votes</th>
           <th>Percentage</th>
+          <th>Votes</th>
+        {{/()}}
+      </tr>
+      <tr class="table-second-heading">
+        <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>
+        <th></th>
+        {{#(ranked_choice == 1)}}
+          <th class="first-choice-heading">1st choice</th>
+          <th class="second-choice-heading">2nd choice</th>
+          <th class="third-choice-heading">3rd choice</th>
+          <th></th>
+        {{/()}}
+        {{#(ranked_choice != 1)}}
+          <th></th>
+          <th></th>
         {{/()}}
       </tr>
     </thead>
 
     <tbody>
       {{#results:r}}
-        <tr>
-          <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}}</td>
-          <td>{{ candidate }}</td>
-          <td>{{ incumbent_code }}</td>
+        <tr class="{{ (r % 2 === 0) ? 'even' : 'odd' }}">
+          <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}} {{ candidate }}</td>
           <td>{{ party_id }}</td>
 
           {{#(ranked_choice == 1)}}
-            <td>{{ ranked_choices.1.percentage }}</td>
-            <td>{{ ranked_choices.2.percentage }}</td>
-            <td>{{ ranked_choices.3.percentage }}</td>
-            <td>{{ ranked_choices.100.percentage }}</td>
+            <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }} votes)</td>
+            <td>{{ fNum(ranked_choices.2.percentage) }}% ({{ fNum(ranked_choices.2.votes_candidate, 0) }} votes)</td>
+            <td>{{ fNum(ranked_choices.3.percentage) }}% ({{ fNum(ranked_choices.3.votes_candidate, 0) }} votes)</td>
+            <td>{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }} votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
           {{/()}}
 
           {{#(ranked_choice != 1)}}
-            <td>{{ votes_candidate }}</td>
-            <td>{{ percentage }}</td>
+            <td>{{ fNum(percentage) }}%</td>
+            <td>{{ fNum(votes_candidate, 0) }}</td>
           {{/()}}
         </tr>
       {{/results}}
     </tbody>
   </table>
+
+  <a href="#contest/{{ contest_id }}" class="contest-link">Full results</a>
 
   <div class="contest-map" id="contest-map-{{ id }}">
   </div>
