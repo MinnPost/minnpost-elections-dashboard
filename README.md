@@ -19,6 +19,7 @@ Something to the following commands.
 * Scrape areas: `python code/scraper.py scrape areas 20131105`
 * Scrape just the results: `python code/scraper.py scrape results 20131105`
 * Aggregate the results for higher level querying: `python code/scraper.py aggregate_results`
+* Supplement aggregate contests table: `python code/scraper.py supplement contests 20131105`
 
 ## Local setup and development
 

@@ -2,3 +2,4 @@ scraperwiki
 lxml
 datetime
 flask
+gdata

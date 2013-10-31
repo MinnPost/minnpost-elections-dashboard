@@ -13,6 +13,7 @@ import calendar
 import logger
 import json
 import requests
+from gdata.spreadsheet.service import SpreadsheetsService
 
 
 class ElectionScraper:
@@ -111,6 +112,24 @@ class ElectionScraper:
 
           # Log
           self.log.info('[%s] Scraped rows for %s: %s' % (s['type'], i, count))
+
+
+  def supplement(self, type, year):
+    """
+    Handles running supplement methods that pull data from stuctured data
+    sources.
+    """
+    if year not in self.sources:
+      return
+
+    for i in self.sources[year]:
+      s = self.sources[year][i]
+
+      if 'supplemental_' + type == i:
+        # Ensure we have a valid method
+        supplement_method = getattr(self, type + '_supplement', None)
+        if callable(supplement_method):
+          supplement_method(s['spreadsheet_id'], s['worksheet_id'])
 
 
   def parser_areas(self, row, group, table):
@@ -279,7 +298,7 @@ class ElectionScraper:
       scraperwiki.sqlite.save_var('total_effected_precincts', state_contest[0]['total_effected_precincts'])
 
 
-  def boundary_match_results(self, parsed_row):
+  def boundary_match_contests(self, parsed_row):
     """
     Logic to figure out what boundary the contest is for.  This will get messy.
     """
@@ -371,7 +390,7 @@ class ElectionScraper:
     every update of results.
     """
     index_created = False
-    results = scraperwiki.sqlite.select("DISTINCT contest_id, office_name, county_id, precinct_id, district_code, results_group FROM results")
+    results = scraperwiki.sqlite.select("DISTINCT contest_id, office_name, county_id, precinct_id, district_code, results_group, question_body FROM results")
 
     for r in results:
       # The only way to know if there are multiple seats is look at the office
@@ -401,7 +420,7 @@ class ElectionScraper:
       r['title'] = r['title'].rstrip()
 
       # Match to a boundary or boundaries keys
-      r['boundary'] = self.boundary_match_results(r)
+      r['boundary'] = self.boundary_match_contests(r)
 
       # Remove office
       del r['office_name']
@@ -419,6 +438,54 @@ class ElectionScraper:
       except Exception, err:
         self.log.exception('[%s] Error thrown while saving to table: %s' % ('contests', r))
         raise
+
+
+  def contests_supplement(self, spreadsheet_id, worksheet_id, *args):
+    """
+    Supplement contests table with Google Spreadsheet data.
+    """
+    client = SpreadsheetsService()
+    feed = client.GetWorksheetsFeed(spreadsheet_id, visibility='public', projection='basic')
+
+    # We know that the contests spreadsheet is the second one and this
+    # gets the id from the URL (something like od7)
+    worksheet_id = feed.entry[worksheet_id].id.text.rsplit('/', 1)[1]
+
+    # Get data from spreadsheet
+    rows = client.GetListFeed(key=spreadsheet_id, wksht_id=worksheet_id, visibility='public', projection='values').entry
+
+    # translare filed names gsheet => sql
+    translations = {
+      'title': 'title',
+      'questionhelp': 'question_help',
+      'questionbody': 'question_body'
+    }
+
+    # Go through each row
+    saved = 0
+    for r in rows:
+      row = r.custom
+      contest_id = row['contestid'].text
+
+      # Ensure that there is a contest already
+      results = scraperwiki.sqlite.select("* FROM contests WHERE contest_id = '%s'" % (contest_id))
+      if results[0]['contest_id'] is not None:
+        to_update = results[0]
+
+        # Only add data that has values
+        for field in translations:
+          if field in row and row[field].text is not None:
+            to_update[translations[field]] = row[field].text
+
+        # Save
+        try:
+          scraperwiki.sqlite.save(unique_keys = ['contest_id'], data = to_update, table_name = 'contests')
+          saved = saved + 1
+        except Exception, err:
+          self.log.exception('[%s] Error thrown while saving supplement data to table: %s' % ('contests', to_update))
+          raise
+
+    self.log.info('[%s] Supplemented contest data with rows: %s' % ('contests', saved))
 
 
   def check_boundaries(self, *args):
