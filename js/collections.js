@@ -8,7 +8,7 @@
     // Base query for the contest
     query: "SELECT * FROM contests AS c LEFT JOIN results AS r " +
       "ON c.contest_id = r.contest_id WHERE (%CONTEST_SEARCH%) " +
-      "ORDER BY c.contest_id, r.percentage ASC LIMIT 400",
+      "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
 
     // Construct API call
     url: function() {
@@ -102,7 +102,7 @@
     // Base query for the contest
     query: "SELECT * FROM contests AS c LEFT JOIN results AS r " +
       "ON c.contest_id = r.contest_id WHERE boundary IN (%CONTEST_SEARCH%) " +
-      "ORDER BY c.contest_id, r.percentage ASC LIMIT 400",
+      "ORDER BY  c.title, r.percentage, r.candidate ASC LIMIT 400",
 
     // Construct API call
     url: function() {

@@ -34,12 +34,12 @@
           <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}} {{ candidate }}</td>
 
           {{#(ranked_choice == 1)}}
-            <td>{{ ranked_choices.1.percentage }}% ({{ votes_candidate }} votes)</td>
-            <td>{{{ (ranked_choices.100.percentage) ? ranked_choices.100.percentage : '&mdash;' }}}</td>
+            <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(votes_candidate, 0) }} votes)</td>
+            <td>{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }} votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
           {{/()}}
 
           {{#(ranked_choice != 1)}}
-            <td>{{ percentage }}% ({{ votes_candidate }} votes)</td>
+            <td>{{ fNum(percentage) }}% ({{ fNum(votes_candidate, 0) }} votes)</td>
           {{/()}}
         </tr>
       {{/()}}{{/results}}
