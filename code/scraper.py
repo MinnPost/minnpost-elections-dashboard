@@ -65,7 +65,7 @@ class ElectionScraper:
     for i in self.sources[year]:
       s = self.sources[year][i]
 
-      if s['type'] == type:
+      if 'type' in s and s['type'] == type:
         # Ensure we have a valid parser for this type
         parser = 'parser_' + s['type']
         parser_method = getattr(self, parser, None)
@@ -469,7 +469,7 @@ class ElectionScraper:
 
       # Ensure that there is a contest already
       results = scraperwiki.sqlite.select("* FROM contests WHERE contest_id = '%s'" % (contest_id))
-      if results[0]['contest_id'] is not None:
+      if results != [] and results[0]['contest_id'] is not None:
         to_update = results[0]
 
         # Only add data that has values
@@ -486,6 +486,70 @@ class ElectionScraper:
           raise
 
     self.log.info('[%s] Supplemented contest data with rows: %s' % ('contests', saved))
+
+
+  def results_supplement(self, spreadsheet_id, worksheet_id, *args):
+    """
+    Supplement results table with Google Spreadsheet data.
+    """
+    client = SpreadsheetsService()
+    feed = client.GetWorksheetsFeed(spreadsheet_id, visibility='public', projection='basic')
+    timestamp = calendar.timegm(datetime.datetime.utcnow().utctimetuple())
+
+    # We know that the contests spreadsheet is the second one and this
+    # gets the id from the URL (something like od7)
+    worksheet_id = feed.entry[worksheet_id].id.text.rsplit('/', 1)[1]
+
+    # Get data from spreadsheet
+    rows = client.GetListFeed(key=spreadsheet_id, wksht_id=worksheet_id, visibility='public', projection='values').entry
+
+    # Go through each row
+    saved = 0
+    for r in rows:
+      row = r.custom
+      row_id = row['id'].text
+      percentage = float(row['percentage'].text) if row['percentage'].text is not None else None
+      votes_candidate = int(row['votescandidate'].text) if row['votescandidate'].text is not None else None
+
+      # Ensure that we have good data
+      if percentage > 0 and row_id is not None:
+        to_update = {}
+
+        # Check if data already exists
+        results = scraperwiki.sqlite.select("* FROM results WHERE id = '%s'" % (id))
+
+        if results != []:
+          # Update existing
+          to_update = results[0]
+          to_update['percentage'] = percentage
+          to_update['votes_candidate'] = votes_candidate
+          to_update['updated'] = int(timestamp)
+        else:
+          candidate_id = row_id.rsplit('-', 1)[1]
+
+          # Create new row
+          to_update = {
+            'id': row_id,
+            'results_group': 'supplemental_results',
+            'office_name': row['officename'].text,
+            'candidate': row['candidate'].text,
+            'votes_candidate': votes_candidate,
+            'percentage': percentage,
+            'contest_id': row['contestid'].text,
+            'updated': int(timestamp),
+            'candidate_id': candidate_id
+          }
+
+        # Save
+        try:
+          scraperwiki.sqlite.save(unique_keys = ['id'], data = to_update, table_name = 'results')
+          saved = saved + 1
+        except Exception, err:
+          self.log.exception('[%s] Error thrown while saving supplement data to table: %s' % ('results', to_update))
+          raise
+
+    self.log.info('[%s] Supplemented data with rows: %s' % ('contests', saved))
+
 
 
   def check_boundaries(self, *args):
