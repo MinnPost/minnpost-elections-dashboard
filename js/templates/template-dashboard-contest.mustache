@@ -29,7 +29,7 @@
     </thead>
 
     <tbody>
-      {{#results:r}}{{#(r < 2)}}
+      {{#results:r}}{{#(r < 2 || (rows != undefined && r < rows))}}
         <tr class="{{ (r % 2 === 0) ? 'even' : 'odd' }}">
           <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}} {{ candidate }}</td>
 

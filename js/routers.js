@@ -48,6 +48,10 @@
         data[ci] = thisRouter.app[ci];
       });
 
+      // Partials don't take arguments, so we have to set some things here
+      data.contestMinneapolisMayor.set('rows', 5);
+      data.contestStPaulMayor.set('rows', 3);
+
       // Create dashboard view
       data.title = 'Dashboard';
       this.app.dashboardView = new this.app.DashboardView({
