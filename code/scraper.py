@@ -505,18 +505,20 @@ class ElectionScraper:
 
     # Go through each row
     saved = 0
+    deleted = 0
     for r in rows:
       row = r.custom
       row_id = row['id'].text
+      delete = row['delete'].text
       percentage = float(row['percentage'].text) if row['percentage'].text is not None else None
       votes_candidate = int(row['votescandidate'].text) if row['votescandidate'].text is not None else None
 
-      # Ensure that we have good data
-      if percentage > 0 and row_id is not None:
+      # If we have real data, then update, otherwise check for delete
+      if delete != 'delete' and percentage > 0 and row_id is not None:
         to_update = {}
 
         # Check if data already exists
-        results = scraperwiki.sqlite.select("* FROM results WHERE id = '%s'" % (id))
+        results = scraperwiki.sqlite.select("* FROM results WHERE id = '%s'" % (row_id))
 
         if results != []:
           # Update existing
@@ -548,7 +550,18 @@ class ElectionScraper:
           self.log.exception('[%s] Error thrown while saving supplement data to table: %s' % ('results', to_update))
           raise
 
-    self.log.info('[%s] Supplemented data with rows: %s' % ('contests', saved))
+      elif delete == 'delete' and row_id is not None:
+        results = scraperwiki.sqlite.select("* FROM results WHERE id = '%s'" % (row_id))
+        if results != []:
+          try:
+            scraperwiki.sqlite.execute("DELETE FROM results WHERE id = '%s'" % (row_id))
+            scraperwiki.sql.commit()
+          except Exception, err:
+            self.log.exception('[%s] Error thrown while deleting supplement data to table: %s' % ('results', results[0]))
+            raise
+
+    self.log.info('[%s] Supplemented data with rows: %s' % ('results', saved))
+    self.log.info('[%s] Removed supplemented rows of data: %s' % ('results', deleted))
 
 
 
