@@ -49,7 +49,7 @@
       });
 
       // Partials don't take arguments, so we have to set some things here
-      data.contestMinneapolisMayor.set('rows', 5);
+      data.contestMinneapolisMayor.set('rows', 8);
       data.contestStPaulMayor.set('rows', 3);
 
       // Create dashboard view
@@ -138,7 +138,7 @@
           template: thisRouter.app.template('template-contests'),
           data: {
             models: thisRouter.app.locationContests,
-            title: (place) ? 'Location: ' + place : 'Your location'
+            title: (place) ? 'Contests for ' + place : 'Contests for your location'
           },
           partials: {
             contest: thisRouter.app.template('template-contest'),

@@ -71,6 +71,10 @@ body .node-unpublished {
     }
   }
 
+  h3 {
+    font-size: 2em;
+  }
+
   // Maps
   .contest-map {
     width: 100%;
@@ -177,12 +181,12 @@ body .node-unpublished {
     margin-bottom: 1em;
   }
 
-  // Contest
-  .contest .dashboard-link {
+  .dashboard-link {
     display: block;
     margin-bottom: 1em;
   }
 
+  // Contest
   .contest .last-updated {
     min-height: 1.5em;
     font-weight: bold;
@@ -190,7 +194,27 @@ body .node-unpublished {
     margin-bottom: 1em;
   }
 
+  .contest .contest-link {
+    display: none;
+  }
+
   // Contests
+  .contests .contests-title {
+    margin-bottom: 1em;
+  }
+
+  .contests .contest-list .dashboard-link {
+    display: none;
+  }
+
+  .contests .contest-list h3 {
+    font-size: 1.5em;
+    font-family: $sans-serif-font;
+  }
+
+  .contests .contest-list .contest-link {
+    display: block;
+  }
 
 
   // Dashboard

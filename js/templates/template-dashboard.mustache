@@ -1,7 +1,7 @@
 <div class="dashboard cf grid-parent {{ classes }}">
 
   <div class="grid-100 location-search-section">
-      <form>
+      <form on-submit="addresssSearch">
         <div class="location-search-group">
           <input type="text" id="address-search" placeholder="Search election results by address" />
 
@@ -12,7 +12,7 @@
           {{/geolocationEnabled}}
         </div>
 
-        <input on-tap="addresssSearch" type="submit" value="Go" class="address-search-submit" />
+        <input type="submit" value="Go" class="address-search-submit" on-submit="addresssSearch" />
       </form>
   </div>
 
