@@ -13,6 +13,9 @@
     // Ranked choice places
     rankedChoiceTranslations: { 'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5, 'sixth': 6, 'seventh': 7, 'eighth': 8, 'nineth': 9, 'tenth': 10, 'final': 100 },
 
+    // Non-Partisan parties
+    npParties: ['NP', 'WI'],
+
     // Contest id is model id
     //idAttribute: 'contest_id',
 
@@ -85,6 +88,11 @@
 
         parsed.results = _.values(groupedResults);
       }
+
+      // Partison by default, unless we find a party
+      parsed.partisan = (_.findWhere(parsed.results, function(r, ri) {
+        return (_.indexOf(thisModel.npParties, r.party) >= 0);
+      })) ? true : false;
 
       // Put results in a basic order.
       parsed.results = _.sortBy(parsed.results, 'candidate');

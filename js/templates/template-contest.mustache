@@ -19,9 +19,9 @@
     <thead>
       <tr class="table-first-heading">
         <th>Candidate</th>
-        {{#showParties}}
+        {{#partisan}}
           <th>Party</th>
-        {{/showParties}}
+        {{/partisan}}
         {{#(ranked_choice == 1)}}
           <th>Results</th>
           <th></th>
@@ -35,9 +35,9 @@
       </tr>
       <tr class="table-second-heading">
         <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>
-        {{#showParties}}
+        {{#partisan}}
           <th></th>
-        {{/showParties}}
+        {{/partisan}}
         {{#(ranked_choice == 1)}}
           <th class="first-choice-heading">1st choice</th>
           <th class="second-choice-heading">2nd choice</th>
@@ -56,9 +56,9 @@
         <tr class="{{ (r % 2 === 0) ? 'even' : 'odd' }}">
           <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}} {{ candidate }}</td>
 
-          {{#showParties}}
+          {{#partisan}}
             <td>{{ party_id }}</td>
-          {{/showParties}}
+          {{/partisan}}
 
           {{#(ranked_choice == 1)}}
             <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }} votes)</td>
