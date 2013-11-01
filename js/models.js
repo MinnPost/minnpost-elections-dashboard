@@ -120,6 +120,7 @@
 
       // Further formatting
       parsed.updated = moment.unix(parsed.updated);
+      parsed.id = parsed.contest_id;
       return parsed;
     },
 

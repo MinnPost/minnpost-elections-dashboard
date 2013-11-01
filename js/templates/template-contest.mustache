@@ -15,70 +15,76 @@
     <p>{{{ question_body }}}</p>
   {{/question_body}}
 
-  <table>
-    <thead>
-      <tr class="table-first-heading">
-        <th>Candidate</th>
-        {{#partisan}}
-          <th>Party</th>
-        {{/partisan}}
-        {{#(ranked_choice == 1)}}
-          <th>Results</th>
-          <th></th>
-          <th></th>
-          <th>Final</th>
-        {{/()}}
-        {{#(ranked_choice != 1)}}
-          <th>Percentage</th>
-          <th>Votes</th>
-        {{/()}}
-      </tr>
-      <tr class="table-second-heading">
-        <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>
-        {{#partisan}}
-          <th></th>
-        {{/partisan}}
-        {{#(ranked_choice == 1)}}
-          <th class="first-choice-heading">1st choice</th>
-          <th class="second-choice-heading">2nd choice</th>
-          <th class="third-choice-heading">3rd choice</th>
-          <th></th>
-        {{/()}}
-        {{#(ranked_choice != 1)}}
-          <th></th>
-          <th></th>
-        {{/()}}
-      </tr>
-    </thead>
+  <div class="grid-container grid-parent cf">
+    <div class="grid-70 tablet-grid-70 mobile-grid-100 grid-parent inner-column-left">
+      <table>
+        <thead>
+          <tr class="table-first-heading">
+            <th>Candidate</th>
+            {{#partisan}}
+              <th>Party</th>
+            {{/partisan}}
+            {{#(ranked_choice == 1)}}
+              <th>Results</th>
+              <th></th>
+              <th></th>
+              <th>Final</th>
+            {{/()}}
+            {{#(ranked_choice != 1)}}
+              <th>Percentage</th>
+              <th>Votes</th>
+            {{/()}}
+          </tr>
+          <tr class="table-second-heading">
+            <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>
+            {{#partisan}}
+              <th></th>
+            {{/partisan}}
+            {{#(ranked_choice == 1)}}
+              <th class="first-choice-heading">1st choice</th>
+              <th class="second-choice-heading">2nd choice</th>
+              <th class="third-choice-heading">3rd choice</th>
+              <th></th>
+            {{/()}}
+            {{#(ranked_choice != 1)}}
+              <th></th>
+              <th></th>
+            {{/()}}
+          </tr>
+        </thead>
 
-    <tbody>
-      {{#results:r}}
-        <tr class="{{ (r % 2 === 0) ? 'even' : 'odd' }}">
-          <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}} {{ candidate }}</td>
+        <tbody>
+          {{#results:r}}
+            <tr class="{{ (r % 2 === 0) ? 'even' : 'odd' }}">
+              <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}} {{ candidate }}</td>
 
-          {{#partisan}}
-            <td>{{ party_id }}</td>
-          {{/partisan}}
+              {{#partisan}}
+                <td>{{ party_id }}</td>
+              {{/partisan}}
 
-          {{#(ranked_choice == 1)}}
-            <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }} votes)</td>
-            <td>{{ fNum(ranked_choices.2.percentage) }}% ({{ fNum(ranked_choices.2.votes_candidate, 0) }} votes)</td>
-            <td>{{ fNum(ranked_choices.3.percentage) }}% ({{ fNum(ranked_choices.3.votes_candidate, 0) }} votes)</td>
-            <td>{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }} votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
-          {{/()}}
+              {{#(ranked_choice == 1)}}
+                <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }} votes)</td>
+                <td>{{ fNum(ranked_choices.2.percentage) }}% ({{ fNum(ranked_choices.2.votes_candidate, 0) }} votes)</td>
+                <td>{{ fNum(ranked_choices.3.percentage) }}% ({{ fNum(ranked_choices.3.votes_candidate, 0) }} votes)</td>
+                <td>{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }} votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
+              {{/()}}
 
-          {{#(ranked_choice != 1)}}
-            <td>{{ fNum(percentage) }}%</td>
-            <td>{{ fNum(votes_candidate, 0) }}</td>
-          {{/()}}
-        </tr>
-      {{/results}}
-    </tbody>
-  </table>
+              {{#(ranked_choice != 1)}}
+                <td>{{ fNum(percentage) }}%</td>
+                <td>{{ fNum(votes_candidate, 0) }}</td>
+              {{/()}}
+            </tr>
+          {{/results}}
+        </tbody>
+      </table>
 
-  <a href="#contest/{{ contest_id }}" class="contest-link">Link to contest</a>
+      <a href="#contest/{{ contest_id }}" class="contest-link">Link to contest</a>
+    </div>
 
-  <div class="contest-map" id="contest-map-{{ contest_id }}">
+    <div class="grid-30 tablet-grid-30 mobile-grid-100 grid-parent inner-column-right">
+      <div class="contest-map" id="contest-map-{{ contest_id }}">
+      </div>
+    </div>
   </div>
 
 </div>
