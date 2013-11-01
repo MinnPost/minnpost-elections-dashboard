@@ -74,6 +74,7 @@
           $(this.el).find('#address-search').val(), { trigger: true });
       });
       this.app.dashboardView.observeTitle(this.app.options.originalTitle);
+      this.reFocus();
     },
 
     routeSearch: function(term) {
@@ -98,6 +99,7 @@
         adaptors: [ 'Backbone' ]
       });
       this.app.contestsSearchView.observeTitle(this.app.options.originalTitle);
+      this.reFocus();
     },
 
     // Single contest route.  Creates contest model, fetches it
@@ -117,6 +119,7 @@
         adaptors: [ 'Backbone' ]
       });
       this.app.contestView.observeTitle(this.app.options.originalTitle);
+      this.reFocus();
     },
 
     // Route based different places.  If no place, then geolocate user,
@@ -147,6 +150,7 @@
           adaptors: [ 'Backbone' ]
         });
         thisRouter.app.contestsLocationView.observeTitle(thisRouter.app.options.originalTitle);
+        thisRouter.reFocus();
       }
 
       // Check for place format.  If no place, use geolocation, otherwise look
@@ -207,6 +211,15 @@
         });
 
       return defer.promise();
+    },
+
+    // Since we can change view drastically, we need to scoll back up to the
+    // top on new.  But we don't want to do it the first time
+    reFocus: function() {
+      if (this.viewed) {
+        $('html, body').animate({ scrollTop: this.app.$el.offset().top - 5}, 750);
+      }
+      this.viewed = true;
     },
 
     // Tear down any existing objects
