@@ -92,26 +92,6 @@ Backbone.ajax = function() {
     // Use backbone's extend function
     extend: Backbone.Model.extend,
 
-    // Default options
-    defaultOptions: {
-      dataPath: './data/',
-      jsonpProxy: 'http://mp-jsonproxy.herokuapp.com/proxy?url=',
-      electionsAPI: 'http://ec2-54-221-171-99.compute-1.amazonaws.com/?box=ubuntu&q=',
-      boundaryAPI: 'http://boundaries.minnpost.com/1.0/',
-      boundarySets: [
-        'counties-2010',
-        'county-commissioner-districts-2012',
-        'minneapolis-parks-and-recreation-districts-2014',
-        'minor-civil-divisions-2010',
-        'school-districts-2013',
-        'wards-2012'
-      ],
-      // Please don't steal/abuse
-      mapQuestKey: 'Fmjtd%7Cluub2d01ng%2C8g%3Do5-9ua20a',
-      mapQuestQuery: 'http://www.mapquestapi.com/geocoding/v1/address?key=[[[KEY]]]&outFormat=json&countrycodes=us&maxResults=1&location=[[[ADDRESS]]]',
-      originalTitle: document.title
-    },
-
     /**
      * JSONP request
      */

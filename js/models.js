@@ -4,11 +4,11 @@
 (function(App, $, undefined) {
   App.prototype.ContestModel = Backbone.Model.extend({
     // Base query for the contest
-    query: "SELECT * FROM contests AS c LEFT JOIN results AS r " +
+    query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
       "ON c.contest_id = r.contest_id WHERE c.contest_id = '%CONTEST_ID%'",
 
     // Fields that are for contests (not result)
-    contestFields: ['boundary', 'contest_id', 'contest_id_name', 'county_id', 'district_code', 'office_id', 'office_name_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'total_effected_precincts', 'total_votes_for_office', 'updated'],
+    contestFields: ['boundary', 'contest_id', 'contest_id_name', 'county_id', 'district_code', 'office_id', 'office_name_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help'],
 
     // Ranked choice places
     rankedChoiceTranslations: { 'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5, 'sixth': 6, 'seventh': 7, 'eighth': 8, 'nineth': 9, 'tenth': 10, 'final': 100 },
@@ -72,6 +72,12 @@
               // If the first choice, use this information to fill in results
               if (c === 1) {
                 groupedResults[r.candidate_id] = _.extend(groupedResults[r.candidate_id], r);
+              }
+
+              // If the final choice, get some values
+              if (c === 100) {
+                groupedResults[r.candidate_id].percentage = r.percentage;
+                groupedResults[r.candidate_id].votes_candidate = r.votes_candidate;
               }
             }
           });

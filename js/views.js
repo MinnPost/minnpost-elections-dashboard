@@ -59,11 +59,14 @@
   });
 
   App.prototype.DashboardView = App.prototype.ContestBaseView.extend({
-    init: function() {
+    init: function(options) {
       var thisView = this;
       var $contestSearch = $(this.el).find('#contest-search');
+      var query;
+      this.app = options.app;
+
       // Query can be either a contest or candidate
-      var query = "http://ec2-54-221-171-99.compute-1.amazonaws.com/?box=ubuntu&q=" +
+      query = this.app.options.electionsAPI +
         "SELECT title AS title, title AS search FROM contests AS c WHERE " +
         "c.title LIKE '%%QUERY%' " +
         "UNION " +
@@ -83,7 +86,7 @@
           dataType: 'jsonp',
           jsonpCallback: 'mpServerSideCachingHelper',
           replace: function(url, uriEncodedQuery) {
-            return url.replace(new RegExp(this.wildcard, 'g'), uriEncodedQuery);
+            return encodeURI(url.replace(new RegExp(this.wildcard, 'g'), uriEncodedQuery));
           }
         },
         valueKey: 'title'

@@ -6,7 +6,7 @@
     model: App.prototype.ContestModel,
 
     // Base query for the contest
-    query: "SELECT * FROM contests AS c LEFT JOIN results AS r " +
+    query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
       "ON c.contest_id = r.contest_id WHERE (%CONTEST_SEARCH%) " +
       "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
 
@@ -100,7 +100,7 @@
   App.prototype.ContestsLocationCollection = App.prototype.ContestsCollection.extend({
 
     // Base query for the contest
-    query: "SELECT * FROM contests AS c LEFT JOIN results AS r " +
+    query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
       "ON c.contest_id = r.contest_id WHERE boundary IN (%CONTEST_SEARCH%) " +
       "ORDER BY  c.title, r.percentage, r.candidate ASC LIMIT 400",
 

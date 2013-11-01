@@ -58,13 +58,13 @@
         el: this.app.$el.find('.content-container'),
         template: this.app.template('template-dashboard'),
         data: data,
+        app: this.app,
         partials: {
           dashboardContest: this.app.template('template-dashboard-contest'),
           loading: this.app.template('template-loading')
         },
         adaptors: [ 'Backbone' ]
       });
-      this.app.dashboardView.app = this.app;
 
       // Handle address search hear as we have an easy reference
       // to the router.
