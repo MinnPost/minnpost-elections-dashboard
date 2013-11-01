@@ -67,10 +67,12 @@
 
       // Query can be either a contest or candidate
       query = this.app.options.electionsAPI +
-        "SELECT title AS title, title AS search FROM contests AS c WHERE " +
+        "SELECT c.contest_id AS contest_id, title AS title, title AS search " +
+        "FROM contests AS c WHERE " +
         "c.title LIKE '%%QUERY%' " +
         "UNION " +
-        "SELECT r.candidate || ' (' || c.title || ')' AS title, c.title AS search " +
+        "SELECT c.contest_id AS contest_id, " +
+        "r.candidate || ' (' || c.title || ')' AS title, c.title AS search " +
         "FROM results AS r " +
         "JOIN contests AS c ON r.contest_id = c.contest_id " +
         "WHERE r.candidate LIKE '%%QUERY%' ORDER BY title LIMIT 20 ";
@@ -86,7 +88,9 @@
           dataType: 'jsonp',
           jsonpCallback: 'mpServerSideCachingHelper',
           replace: function(url, uriEncodedQuery) {
-            return encodeURI(url.replace(new RegExp(this.wildcard, 'g'), uriEncodedQuery));
+            var query = decodeURIComponent(uriEncodedQuery);
+            query = query.replace(new RegExp(' ', 'g'), '%');
+            return encodeURI(url.replace(new RegExp(this.wildcard, 'g'), query));
           }
         },
         valueKey: 'title'
@@ -94,7 +98,7 @@
 
       // Handle search selected
       $contestSearch.on('typeahead:selected', function(e, data, name) {
-        thisView.app.router.navigate('/search/' + data.search, { trigger: true });
+        thisView.app.router.navigate('/contest/' + data.contest_id, { trigger: true });
       });
 
       // Teardown event to remove typeahead gracefully
