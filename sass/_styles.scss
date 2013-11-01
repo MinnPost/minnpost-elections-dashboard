@@ -288,4 +288,16 @@ body .node-unpublished {
     font-weight: bold;
     color: $color-medium-gray;
   }
+
+
+
+  @media screen and (max-width: 768px) {
+    .dashboard .dashboard-inner-column-left {
+      padding-right: 0;
+    }
+
+    .dashboard .dashboard-inner-column-right {
+      padding-left: 0;
+    }
+  }
 }
