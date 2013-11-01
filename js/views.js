@@ -16,6 +16,7 @@
       var featureGroup;
       var shapes;
       var found = {};
+      var map;
       boundaries = _.isArray(boundaries) ? boundaries : [boundaries];
 
       // Ensure that we only add the same boundary once
@@ -35,13 +36,13 @@
       });
 
       // Make map
-      this.map = new L.Map(id, {
+      map = new L.Map(id, {
         zoom: 10,
         center: [44.9800, -93.2636],
         scrollWheelZoom: false
       });
-      this.map.attributionControl.setPrefix(false);
-      this.map.addLayer(new L.tileLayer('//{s}.tiles.mapbox.com/v3/minnpost.map-wi88b700/{z}/{x}/{y}.png'));
+      map.attributionControl.setPrefix(false);
+      map.addLayer(new L.tileLayer('//{s}.tiles.mapbox.com/v3/minnpost.map-wi88b700/{z}/{x}/{y}.png'));
 
       // Make GeoJSON layer from shapes
       featureGroup = new L.featureGroup();
@@ -59,14 +60,14 @@
         });
         featureGroup.addLayer(layer);
       });
-      this.map.addLayer(featureGroup);
+      map.addLayer(featureGroup);
 
       // Fit bounds breaks stuff because the geojson is not necessarily
       // fully loaded in the map, so we wrap this timer around it, as
       // Leaflet does not provide an sort of mechanism to allow us to know
       // when the layer is fully loaded
       window.setTimeout(function() {
-        thisView.map.fitBounds(featureGroup.getBounds());
+        map.fitBounds(featureGroup.getBounds());
       }, 500);
     },
 
@@ -154,20 +155,20 @@
     init: function() {
       var thisView = this;
       var shapes = [];
+      var rendered = {};
 
       // Attach formatters
       this.set('fNum', _.formatNumber);
 
-      // React to boundary update
+      // React to boundary update.  Not sure how to use wildcards in
+      // Ractive, so we hack around it.
       this.observe('models.0.fetchedBoundary', function(newValue, oldValue) {
         var testModel = this.get('models.0.boundarySets');
+
         if (_.isArray(testModel) && _.isObject(testModel[0])) {
           _.each(this.get('models'), function(m) {
-            _.each(m.get('boundarySets'), function(b) {
-              shapes.push(b);
-            });
+            thisView.makeMap('contest-map-' + m.get('contest_id'), m.get('boundarySets'));
           });
-          this.makeMap('contests-map', shapes);
         }
       });
     }
