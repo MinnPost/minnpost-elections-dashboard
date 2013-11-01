@@ -222,8 +222,16 @@ body .node-unpublished {
     margin-bottom: 2em;
   }
 
+  .dashboard .dashboard-inner-column-left {
+    padding-right: .75em;
+  }
+
+  .dashboard .dashboard-inner-column-right {
+    padding-left: .75em;
+  }
+
   .dashboard .location-search-section {
-    padding-bottom: 1em;
+    padding-bottom: 2em;
     margin-bottom: 2em;
     text-align: center;
     border-bottom: 1px solid $color-light-gray;

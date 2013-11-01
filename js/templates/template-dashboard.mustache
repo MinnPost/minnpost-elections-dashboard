@@ -1,6 +1,6 @@
-<div class="dashboard cf grid-parent {{ classes }}">
+<div class="dashboard cf grid-container grid-parent {{ classes }}">
 
-  <div class="grid-100 location-search-section">
+  <div class="grid-parent grid-100 location-search-section">
       <form on-submit="addresssSearch">
         <div class="location-search-group">
           <input type="text" id="address-search" placeholder="Search election results by address" />
@@ -16,7 +16,7 @@
       </form>
   </div>
 
-  <div class="grid-100 last-updated-section">
+  <div class="grid-parent grid-100 last-updated-section">
     {{#contestMinneapolisMayor.updated}}
       <div intro="fade">
         Last updated at {{ contestMinneapolisMayor.updated.format('h:mm a') }}
@@ -24,67 +24,71 @@
     {{/contestMinneapolisMayor.updated}}
   </div>
 
-  <div class="grid-50">
-    <div class="contest-minneapolis-mayor dashboard-section">
-      {{#contestMinneapolisMayor}}
-        {{>dashboardContest}}
-      {{/contestMinneapolisMayor}}
-    </div>
+  <div class="grid-parent grid-50">
+    <div class="dashboard-inner-column-left">
+      <div class="contest-minneapolis-mayor dashboard-section">
+        {{#contestMinneapolisMayor}}
+          {{>dashboardContest}}
+        {{/contestMinneapolisMayor}}
+      </div>
 
-    <div class="contest-st-paul-mayor dashboard-section">
-      {{#contestStPaulMayor}}
-        {{>dashboardContest}}
-      {{/contestStPaulMayor}}
-    </div>
+      <div class="contest-st-paul-mayor dashboard-section">
+        {{#contestStPaulMayor}}
+          {{>dashboardContest}}
+        {{/contestStPaulMayor}}
+      </div>
 
-    <div class="contest-st-paul-council dashboard-section">
-      {{#contestStPaulCouncil}}
-        {{>dashboardContest}}
-      {{/contestStPaulCouncil}}
-    </div>
+      <div class="contest-st-paul-council dashboard-section">
+        {{#contestStPaulCouncil}}
+          {{>dashboardContest}}
+        {{/contestStPaulCouncil}}
+      </div>
 
-    <div class="elections-search dashboard-section">
-      <h4>Other elections</h4>
+      <div class="elections-search dashboard-section">
+        <h4>Other elections</h4>
 
-      <form>
-        <label for="contest-search">Search contests by title or candidate.  Start typing to see suggestions. <br /></label>
-        <input type="text" id="contest-search" />
-      </form>
+        <form>
+          <label for="contest-search">Search contests by title or candidate.  Start typing to see suggestions. <br /></label>
+          <input type="text" id="contest-search" />
+        </form>
+      </div>
     </div>
   </div>
 
-  <div class="grid-50">
-    <div class="contest-minneapolis-council dashboard-section">
-      <h4>Minnesapolis City Council</h4>
+  <div class="grid-parent grid-50">
+    <div class="dashboard-inner-column-right">
+      <div class="contest-minneapolis-council dashboard-section">
+        <h4>Minneapolis City Council</h4>
 
-      {{#contestMinneapolisCouncil3}}
-        {{>dashboardContest}}
-      {{/contestMinneapolisCouncil3}}
+        {{#contestMinneapolisCouncil3}}
+          {{>dashboardContest}}
+        {{/contestMinneapolisCouncil3}}
 
-      {{#contestMinneapolisCouncil6}}
-        {{>dashboardContest}}
-      {{/contestMinneapolisCouncil6}}
+        {{#contestMinneapolisCouncil6}}
+          {{>dashboardContest}}
+        {{/contestMinneapolisCouncil6}}
 
-      {{#contestMinneapolisCouncil10}}
-        {{>dashboardContest}}
-      {{/contestMinneapolisCouncil10}}
+        {{#contestMinneapolisCouncil10}}
+          {{>dashboardContest}}
+        {{/contestMinneapolisCouncil10}}
 
-      {{#contestMinneapolisCouncil5}}
-        {{>dashboardContest}}
-      {{/contestMinneapolisCouncil5}}
+        {{#contestMinneapolisCouncil5}}
+          {{>dashboardContest}}
+        {{/contestMinneapolisCouncil5}}
 
-      {{#contestMinneapolisCouncil9}}
-        {{>dashboardContest}}
-      {{/contestMinneapolisCouncil9}}
+        {{#contestMinneapolisCouncil9}}
+          {{>dashboardContest}}
+        {{/contestMinneapolisCouncil9}}
 
-      {{#contestMinneapolisCouncil12}}
-        {{>dashboardContest}}
-      {{/contestMinneapolisCouncil12}}
+        {{#contestMinneapolisCouncil12}}
+          {{>dashboardContest}}
+        {{/contestMinneapolisCouncil12}}
 
-      {{#contestMinneapolisCouncil13}}
-        {{>dashboardContest}}
-      {{/contestMinneapolisCouncil13}}
+        {{#contestMinneapolisCouncil13}}
+          {{>dashboardContest}}
+        {{/contestMinneapolisCouncil13}}
 
+      </div>
     </div>
   </div>
 </div>
