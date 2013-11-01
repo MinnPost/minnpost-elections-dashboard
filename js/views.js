@@ -15,12 +15,26 @@
       var thisView = this;
       var featureGroup;
       var shapes;
-
+      var found = {};
       boundaries = _.isArray(boundaries) ? boundaries : [boundaries];
-      shapes = _.map(boundaries, function(b) {
+
+      // Ensure that we only add the same boundary once
+      boundaries = _.filter(boundaries, function(b) {
+        if (_.isUndefined(found[b.slug])) {
+          found[b.slug] = true;
+          return true;
+        }
+        else {
+          return false;
+        }
+      });
+
+      // Just get the shapes
+      shapes = _.map(boundaries, function(b, bi) {
         return b.simple_shape;
       });
 
+      // Make map
       this.map = new L.Map(id, {
         zoom: 10,
         center: [44.9800, -93.2636],
@@ -33,7 +47,16 @@
       featureGroup = new L.featureGroup();
       _.each(shapes, function(s) {
         var layer = new L.geoJson(s);
-        // Set style here
+        layer.setStyle({
+          stroke: true,
+          color: '#2DA51D',
+          weight: 1.5,
+          opacity: 0.9,
+          fill: true,
+          fillColor: '#2DA51D',
+          fillOpacity: 0.2,
+          clickable: false
+        });
         featureGroup.addLayer(layer);
       });
       this.map.addLayer(featureGroup);
