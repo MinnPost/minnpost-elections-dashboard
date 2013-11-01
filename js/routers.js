@@ -117,6 +117,7 @@
         adaptors: [ 'Backbone' ]
       });
       this.app.contestView.observeTitle(this.app.options.originalTitle);
+      this.app.contestView.set('showParties', this.app.options.showParties);
     },
 
     // Route based different places.  If no place, then geolocate user,
