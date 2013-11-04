@@ -180,11 +180,11 @@ body .node-unpublished {
   }
 
   .inner-column-left {
-    padding-right: .75em;
+    padding-right: 1.5em;
   }
 
   .inner-column-right {
-    padding-left: .75em;
+    padding-left: 1.5em;
   }
 
   // Contest
@@ -201,6 +201,14 @@ body .node-unpublished {
 
   .contest .grid-container {
     margin-bottom: 1em;
+  }
+
+  .contest .inner-column-left {
+    padding-right: 1em;
+  }
+
+  .contest .inner-column-right {
+    padding-left: 1em;
   }
 
   // Contests

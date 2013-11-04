@@ -5,7 +5,8 @@
   App.prototype.ContestModel = Backbone.Model.extend({
     // Base query for the contest
     query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
-      "ON c.id = r.contest_id WHERE c.id = '%CONTEST_ID%'",
+      "ON c.id = r.contest_id WHERE c.id = '%CONTEST_ID%' " +
+      "ORDER BY r.percentage ASC, r.candidate",
 
     // Fields that are for contests (not result)
     contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code', 'office_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help'],

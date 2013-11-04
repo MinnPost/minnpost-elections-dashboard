@@ -40,8 +40,10 @@
         zoom: 10,
         center: [44.9800, -93.2636],
         scrollWheelZoom: false,
-        trackResize: true
+        trackResize: true,
+        zoomControl: false
       });
+      map.addControl(new L.Control.Zoom({ position: 'topright' }));
       map.attributionControl.setPrefix(false);
       map.addLayer(new L.tileLayer('//{s}.tiles.mapbox.com/v3/minnpost.map-wi88b700/{z}/{x}/{y}.png'));
 
