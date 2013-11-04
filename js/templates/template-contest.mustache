@@ -55,7 +55,7 @@
 
         <tbody>
           {{#results:r}}
-            <tr class="{{ (r % 2 === 0) ? 'even' : 'odd' }}">
+            <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? 'even' : 'odd' }}">
               <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}} {{ candidate }}</td>
 
               {{#partisan}}
@@ -78,11 +78,11 @@
         </tbody>
       </table>
 
-      <a href="#contest/{{ contest_id }}" class="contest-link">Link to contest</a>
+      <a href="#contest/{{ id }}" class="contest-link">Link to contest</a>
     </div>
 
     <div class="grid-30 tablet-grid-30 mobile-grid-100 grid-parent inner-column-right">
-      <div class="contest-map" id="contest-map-{{ contest_id }}">
+      <div class="contest-map" id="contest-map-{{ id }}">
       </div>
     </div>
   </div>

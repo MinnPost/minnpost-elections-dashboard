@@ -7,7 +7,7 @@
 
     // Base query for the contest
     query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
-      "ON c.contest_id = r.contest_id WHERE (%CONTEST_SEARCH%) " +
+      "ON c.id = r.contest_id WHERE (%CONTEST_SEARCH%) " +
       "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
 
     // Construct API call
@@ -26,7 +26,7 @@
 
     // Parse the results
     parse: function(response) {
-      return _.values(_.groupBy(response, 'contest_id'));
+      return _.values(_.groupBy(response, 'id'));
     },
 
     initialize: function(models, options) {
@@ -101,7 +101,7 @@
 
     // Base query for the contest
     query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
-      "ON c.contest_id = r.contest_id WHERE boundary IN (%CONTEST_SEARCH%) " +
+      "ON c.id = r.contest_id WHERE boundary IN (%CONTEST_SEARCH%) " +
       "ORDER BY  c.title, r.percentage, r.candidate ASC LIMIT 400",
 
     // Construct API call

@@ -92,14 +92,14 @@
 
       // Query can be either a contest or candidate
       query = this.app.options.electionsAPI +
-        "SELECT c.contest_id AS contest_id, title AS title, title AS search " +
+        "SELECT c.id AS id, title AS title " +
         "FROM contests AS c WHERE " +
         "c.title LIKE '%%QUERY%' " +
         "UNION " +
-        "SELECT c.contest_id AS contest_id, " +
-        "r.candidate || ' (' || c.title || ')' AS title, c.title AS search " +
+        "SELECT c.id AS id, " +
+        "r.candidate || ' (' || c.title || ')' AS title " +
         "FROM results AS r " +
-        "JOIN contests AS c ON r.contest_id = c.contest_id " +
+        "JOIN contests AS c ON r.contest_id = c.id " +
         "WHERE r.candidate LIKE '%%QUERY%' ORDER BY title LIMIT 20 ";
 
       // Attach formatters
@@ -123,7 +123,7 @@
 
       // Handle search selected
       $contestSearch.on('typeahead:selected', function(e, data, name) {
-        thisView.app.router.navigate('/contest/' + data.contest_id, { trigger: true });
+        thisView.app.router.navigate('/contest/' + data.id, { trigger: true });
       });
 
       // Teardown event to remove typeahead gracefully
@@ -168,7 +168,7 @@
 
         if (_.isArray(testModel) && _.isObject(testModel[0])) {
           _.each(this.get('models'), function(m) {
-            thisView.makeMap('contest-map-' + m.get('contest_id'), m.get('boundarySets'));
+            thisView.makeMap('contest-map-' + m.get('id'), m.get('boundarySets'));
           });
         }
       });
