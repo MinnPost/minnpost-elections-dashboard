@@ -262,7 +262,7 @@ class ElectionScraper:
     table_query = "name FROM sqlite_master WHERE type='table' AND name='%s'"
     row_query = "* FROM %s WHERE id = '%s'"
     found_result_table = scraperwiki.sqlite.select(table_query % 'results')
-    found_contest_table = scraperwiki.sqlite.select(table_query % 'contets')
+    found_contest_table = scraperwiki.sqlite.select(table_query % 'contests')
     if found_result_table != []:
       found_results = scraperwiki.sqlite.select(row_query % ('results', row_id))
     if found_contest_table != []:
