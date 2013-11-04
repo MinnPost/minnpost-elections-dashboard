@@ -12,11 +12,12 @@
     "jquery": "1.9",
     "underscore": "*",
     "backbone": "*",
-    "ractive": "~0.3.7",
+    "ractive": "0.3.8",
     "momentjs": "~2.3.1",
     "leaflet": "~0.6.4",
     "typeahead.js": "~0.9.3",
     "unsemantic": "https://github.com/nathansmith/unsemantic.git",
-    "Placeholders.js": "~3.0.0"
+    "Placeholders.js": "~3.0.0",
+    "ractive-backbone": "~0.1.0"
   }
 }

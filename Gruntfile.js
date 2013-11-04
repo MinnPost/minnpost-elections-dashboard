@@ -113,7 +113,7 @@ module.exports = function(grunt) {
           'bower_components/underscore/underscore-min.js',
           'bower_components/backbone/backbone-min.js',
           'bower_components/ractive/build/Ractive-legacy.min.js',
-          'bower_components/ractive/plugins/adaptors/Backbone.js',
+          'bower_components/ractive-backbone/Ractive-Backbone.min.js',
           'bower_components/momentjs/min/moment.min.js',
           'bower_components/leaflet/dist/leaflet.js',
           'bower_components/typeahead.js/dist/typeahead.min.js',
