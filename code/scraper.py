@@ -29,9 +29,8 @@ class ElectionScraper:
     Constructor
     """
     self.log = logger.ScraperLogger('scraper_results').logger
-    self.log.info('[scraper] Scraping started.')
+    self.log.info('[scraper] Started.')
     self.read_sources()
-    self.route()
 
 
   def read_sources(self):
@@ -41,6 +40,14 @@ class ElectionScraper:
     data = open(self.sources_file)
     self.sources = json.load(data)
 
+    # Get the newest set
+    newest = 0
+    for s in self.sources:
+      newest = s if int(s) > newest else newest
+
+    self.newest_election = str(newest)
+    self.election = self.newest_election
+
 
   def route(self):
     """
@@ -48,6 +55,7 @@ class ElectionScraper:
     """
     if len(sys.argv) >= 2:
       method = sys.argv[1]
+      # There's probably a better way to get arguments and pass them along
       arg1 = sys.argv[2] if len(sys.argv) > 2 else None
       arg2 = sys.argv[3] if len(sys.argv) > 3 else None
       action = getattr(self, method, None)
@@ -55,15 +63,36 @@ class ElectionScraper:
         action(arg1, arg2)
 
 
-  def scrape(self, type, year):
+  def save(self, ids, data, table, index_method = None):
+    """
+    Wrapper around saving a row.
+    """
+    try:
+      scraperwiki.sqlite.save(unique_keys = ids, data = data, table_name = table)
+
+      # Create index if needed
+      if index_method is not None and callable(index_method) and not self.index_created[table]:
+        index_method()
+        self.index_created[table] = True
+    except Exception, err:
+      self.log.exception('[%s] Error thrown while saving to table: %s' % (table, data))
+      raise
+
+
+  def scrape(self, type, election, *args):
     """
     Main scraper handler.
     """
-    if year not in self.sources:
+
+    # Usually we just want the newest election but allow for other situations
+    election = election if election is not None and election != '' else self.newest_election
+    self.election = election
+
+    if election not in self.sources:
       return
 
-    for i in self.sources[year]:
-      s = self.sources[year][i]
+    for i in self.sources[election]:
+      s = self.sources[election][i]
 
       if 'type' in s and s['type'] == type:
         # Ensure we have a valid parser for this type
@@ -89,19 +118,7 @@ class ElectionScraper:
           for row in rows:
             # Parse row
             parsed = parser_method(row, i, s['table'])
-
-            # Save to database
-            try:
-              scraperwiki.sqlite.save(unique_keys = ['id'], data = parsed, table_name = s['table'])
-
-              # Create index if needed
-              if callable(index_method) and not self.index_created[s['table']]:
-                index_method()
-                self.index_created[s['table']] = True
-            except Exception, err:
-              self.log.exception('[%s] Error thrown while saving to table: %s' % (s['table'], parsed))
-              raise
-
+            self.save(['id'], parsed, s['table'], index_method)
             count = count + 1
 
           # Handle post actions
@@ -114,22 +131,27 @@ class ElectionScraper:
           self.log.info('[%s] Scraped rows for %s: %s' % (s['type'], i, count))
 
 
-  def supplement(self, type, year):
+  def supplement_connect(self, source):
     """
-    Handles running supplement methods that pull data from stuctured data
-    sources.
+    Connect to supplemental source (Google spreadsheets) given set.
     """
-    if year not in self.sources:
+    if self.election not in self.sources:
       return
 
-    for i in self.sources[year]:
-      s = self.sources[year][i]
+    if source not in self.sources[self.election]:
+      return
 
-      if 'supplemental_' + type == i:
-        # Ensure we have a valid method
-        supplement_method = getattr(self, type + '_supplement', None)
-        if callable(supplement_method):
-          supplement_method(s['spreadsheet_id'], s['worksheet_id'])
+    try:
+      s = self.sources[self.election][source]
+      client = SpreadsheetsService()
+      feed = client.GetWorksheetsFeed(s['spreadsheet_id'], visibility='public', projection='basic')
+      worksheet_id = feed.entry[s['worksheet_id']].id.text.rsplit('/', 1)[1]
+      rows = client.GetListFeed(key=s['spreadsheet_id'], wksht_id=worksheet_id, visibility='public', projection='values').entry
+    except Exception, err:
+      rows = None
+      self.log.exception('[%s] Unable to connecto supplemental source: %s' % ('supplement', s))
+
+    return rows
 
 
   def parser_areas(self, row, group, table):
@@ -197,83 +219,116 @@ class ElectionScraper:
 
   def parser_results(self, row, group, table):
     """
-    Parser for results type scraping.
+    Parser for results type scraping.  We actually split the data into a results
+    table as well as a contests table.
     """
     timestamp = calendar.timegm(datetime.datetime.utcnow().utctimetuple())
+    self.contests_updated = {} if getattr(self, 'contests_updated', None) is None else self.contests_updated
+    ranked_choice_translations = { 'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5, 'sixth': 6, 'seventh': 7, 'eighth': 8, 'nineth': 9, 'tenth': 10, 'final': 100 }
+    ranked_choice_place = None
 
-    # Create ids
-    cand_name_id = re.sub(r'\W+', '', row[7])
-    office_name_id = re.sub(r'\W+', '', row[4])
+    # Create ids.
+    # id-State-County-Precinct-District-Office
     base_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[5] + '-' + row[3]
+    # id-BASE-Candidate
     row_id = base_id + '-' + row[6]
-    id_name = base_id + '-' + row[6] + '-' + office_name_id + '-' + cand_name_id
 
-    # Check if records already exists, but first if table exists yet
-    found = False
-    found_table = scraperwiki.sqlite.select("name FROM sqlite_master WHERE type='table' AND name='%s'" % table)
-    if found_table != []:
-      found_rows = scraperwiki.sqlite.select("* FROM %s WHERE id = '%s'" % (table, row_id))
-      found = found_rows != []
+    # Office refers to office name and office id as assigned by SoS, but
+    # contest ID is a more specific id as office id's are not unique across
+    # all results
+    contest_id = base_id
+    office_id = row[3]
 
-    found = False
-    if found:
-      return {
-        'id': row_id,
-        'precincts_reporting': int(row[11]),
-        'total_effected_precincts': int(row[12]),
-        'votes_candidate': int(row[13]),
-        'percentage': float(row[14]),
-        'total_votes_for_office': int(row[15]),
-        'updated': int(timestamp)
-      }
+    # For ranked choice voting, we want to a consistent contest id, as the
+    # office_id is different for each set of choices.
+    #
+    # It seems that the office id is incremented by 1 starting at 1 so
+    # we use the first
+    ranked_choice = re.compile('.*(first|second|third|\w*th) choice.*', re.IGNORECASE).match(row[4])
+    if ranked_choice is not None:
+      office_id = ''.join(row[3].split())[:-1] + '1'
+      contest_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[5] + '-' + office_id
 
+      # Determine which "choice" this is
+      for c in ranked_choice_translations:
+        ranked_choice_choice = re.compile('.*%s.*' % c, re.IGNORECASE).match(row[4])
+        if ranked_choice_choice is not None:
+          ranked_choice_place = ranked_choice_translations[c]
+
+    # Check if records already exists, but first if table exists yet.  Also get
+    # current records as INSERT or UPDATE statements require all data.
+    found_result = False
+    found_contest = False
+    table_query = "name FROM sqlite_master WHERE type='table' AND name='%s'"
+    row_query = "* FROM %s WHERE id = '%s'"
+    found_result_table = scraperwiki.sqlite.select(table_query % 'results')
+    found_contest_table = scraperwiki.sqlite.select(table_query % 'contets')
+    if found_result_table != []:
+      found_results = scraperwiki.sqlite.select(row_query % ('results', row_id))
+    if found_contest_table != []:
+      found_contests = scraperwiki.sqlite.select(row_query % ('contests', contest_id))
+
+    # Handle result
+    if found_result_table != [] and found_results != []:
+      results_record = found_results[0]
+      results_record['votes_candidate'] = int(row[13])
+      results_record['percentage'] = float(row[14])
+      results_record['updated'] = int(timestamp)
     else:
-      # Office refers to office name and office id as assigned by SoS, but
-      # contest ID is a more specific id as office id's are not unique across
-      # all results
-      contest_id = base_id
-      contest_id_name = contest_id + '-' + office_name_id
-
-      # For ranked choice voting, we want to a consistent contest id, as the
-      # office_id is different for each set of choices.
-      #
-      # It seems that the office id is incremented by 1 starting at 1 so
-      # we use the first
-      ranked_choice = re.compile('.*(first|second|third|\w*th) choice.*', re.IGNORECASE).match(row[4])
-      if ranked_choice is not None:
-        office_id = ''.join(row[3].split())[:-1] + '1'
-        contest_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[5] + '-' + office_id
-        contest_id_name = contest_id + '-' + office_name_id
-
-      parsed = {
+      results_record = {
         'id': row_id,
         'results_group': group,
-        'state': row[0],
-        'county_id': row[1],
-        'precinct_id': row[2],
-        'office_id': row[3],
         'office_name': row[4],
-        'district_code': row[5], # District, mcd, or fips code
         'candidate_id': row[6],
         'candidate': row[7].replace('WRITE-IN**', 'WRITE-IN'),
         'suffix': row[8],
         'incumbent_code': row[9],
         'party_id': row[10],
-        'precincts_reporting': int(row[11]),
-        'total_effected_precincts': int(row[12]),
         'votes_candidate': int(row[13]),
         'percentage': float(row[14]),
-        'total_votes_for_office': int(row[15]),
-        'id_name': id_name,
+        'ranked_choice_place': ranked_choice_place,
         'contest_id': contest_id,
-        'contest_id_name': contest_id_name,
-        'cand_name_id': cand_name_id,
-        'office_name_id': office_name_id,
-        'question_body': '',
         'updated': int(timestamp)
       }
 
-      return parsed
+    # Handle contest
+    if found_contest_table != [] and found_contests != []:
+      contests_record = found_contests[0]
+      contests_record['precincts_reporting'] = int(row[11])
+      contests_record['total_effected_precincts'] = int(row[12])
+      contests_record['total_votes_for_office'] = int(row[15])
+      contests_record['updated'] = int(timestamp)
+    else:
+      # The only way to know if there are multiple seats is look at the office
+      # name which has "(Elect X)" in it.
+      re_seats = re.compile('.*\(elect ([0-9]+)\).*', re.IGNORECASE)
+      matched_seats = re_seats.match(row[4])
+
+      contests_record = {
+        'id': contest_id,
+        'office_id': office_id,
+        'results_group': group,
+        'office_name': row[4],
+        'district_code': row[5],
+        'state': row[0],
+        'county_id': row[1],
+        'precinct_id': row[2],
+        'precincts_reporting': int(row[11]),
+        'total_effected_precincts': int(row[12]),
+        'total_votes_for_office': int(row[15]),
+        'seats': matched_seats.group(1) if matched_seats is not None else 1,
+        'ranked_choice': ranked_choice is not None,
+        'updated': int(timestamp)
+      }
+
+    # Update the contests table.  This should really only happen once per
+    # contest
+    if contests_record['id'] not in self.contests_updated:
+      self.save(['id'], contests_record, 'contests')
+      self.contests_updated[contests_record['id']] = True
+
+    # Return results record to be updated
+    return results_record
 
 
   def index_results(self):
@@ -284,6 +339,12 @@ class ElectionScraper:
     self.log.info('[%s] Creating indices for results table.' % ('results'))
 
 
+  def index_contests(self):
+    index_query = "CREATE INDEX IF NOT EXISTS %s ON contests (%s)"
+    scraperwiki.sqlite.dt.execute(index_query % ('title', 'title'))
+    self.log.info('[%s] Creating indices for contests table.' % ('contests'))
+
+
   def post_results(self, group):
     # Update some vars for easy retrieval
     scraperwiki.sqlite.save_var('updated', int(calendar.timegm(datetime.datetime.utcnow().utctimetuple())))
@@ -292,7 +353,7 @@ class ElectionScraper:
       scraperwiki.sqlite.save_var('contests', contests[0]['contest_count'])
 
     # Use the first state level race to get general number of precincts reporting
-    state_contest = scraperwiki.sqlite.select("* FROM results WHERE county_id = '88' LIMIT 1")
+    state_contest = scraperwiki.sqlite.select("* FROM contests WHERE county_id = '88' LIMIT 1")
     if state_contest != []:
       scraperwiki.sqlite.save_var('precincts_reporting', state_contest[0]['precincts_reporting'])
       scraperwiki.sqlite.save_var('total_effected_precincts', state_contest[0]['total_effected_precincts'])
@@ -383,31 +444,27 @@ class ElectionScraper:
     return mcd_id + '-minor-civil-division-2010'
 
 
-  def aggregate_results(self, *args):
+  def match_contests(self, *args):
     """
-    Given results, aggregate into a table of races.  This is for the meta data
+    Update contests table matching things like boundaries.  This is for the meta data
     for each contest, not for the voting numbers, so it doesn't need to be run
     every update of results.
     """
+    processed = 0
+    supplemented = 0
     index_created = False
-    results = scraperwiki.sqlite.select("DISTINCT contest_id, office_name, county_id, precinct_id, district_code, results_group, question_body FROM results")
+    contests = scraperwiki.sqlite.select("* FROM contests")
 
-    for r in results:
-      # The only way to know if there are multiple seats is look at the office
-      # name which has "(Elect X)" in it.
-      r['seats'] = 1
-      re_seats = re.compile('.*\(elect ([0-9]+)\).*', re.IGNORECASE)
-      matched_seats = re_seats.match(r['office_name'])
-      if matched_seats is not None:
-        r['seats'] = matched_seats.group(1)
+    # Get data from Google spreadsheet
+    s_rows = self.supplement_connect('supplemental_contests')
+    translations = {
+      'title': 'title',
+      'questionhelp': 'question_help',
+      'questionbody': 'question_body'
+    }
 
-      # Ranked choice voting can be determined by a "* choice" string
-      r['ranked_choice'] = False
-      re_ranked_choice = re.compile('.*(first|second|third|\w*th) choice.*', re.IGNORECASE)
-      matched_ranked_choice = re_ranked_choice.match(r['office_name'])
-      if matched_ranked_choice is not None:
-        r['ranked_choice'] = True
-
+    # Go through each contests
+    for r in contests:
       # Title and search term
       r['title'] = r['office_name']
       r['title'] = re.compile('(\(elect [0-9]+\))', re.IGNORECASE).sub('', r['title'])
@@ -422,70 +479,21 @@ class ElectionScraper:
       # Match to a boundary or boundaries keys
       r['boundary'] = self.boundary_match_contests(r)
 
-      # Remove office
-      del r['office_name']
+      # Check for any supplemental data
+      for si in s_rows:
+        s = si.custom
+        if s['id'].text == r['id']:
+          supplemented = supplemented + 1
+          for field in translations:
+            if field in s and s[field].text is not None and s[field].text != '':
+              r[translations[field]] = s[field].text
 
       # Save to database
-      try:
-        scraperwiki.sqlite.save(unique_keys = ['contest_id'], data = r, table_name = 'contests')
+      self.save(['id'], r, 'contests')
+      processed = processed + 1
 
-        # Create index if needed
-        if index_created == False:
-          index_query = "CREATE INDEX IF NOT EXISTS %s ON contests (%s)"
-          scraperwiki.sqlite.dt.execute(index_query % ('title', 'title'))
-          self.log.info('[%s] Creating indices for contests table.' % ('contests'))
-          index_created = True
-      except Exception, err:
-        self.log.exception('[%s] Error thrown while saving to table: %s' % ('contests', r))
-        raise
-
-
-  def contests_supplement(self, spreadsheet_id, worksheet_id, *args):
-    """
-    Supplement contests table with Google Spreadsheet data.
-    """
-    client = SpreadsheetsService()
-    feed = client.GetWorksheetsFeed(spreadsheet_id, visibility='public', projection='basic')
-
-    # We know that the contests spreadsheet is the second one and this
-    # gets the id from the URL (something like od7)
-    worksheet_id = feed.entry[worksheet_id].id.text.rsplit('/', 1)[1]
-
-    # Get data from spreadsheet
-    rows = client.GetListFeed(key=spreadsheet_id, wksht_id=worksheet_id, visibility='public', projection='values').entry
-
-    # translare filed names gsheet => sql
-    translations = {
-      'title': 'title',
-      'questionhelp': 'question_help',
-      'questionbody': 'question_body'
-    }
-
-    # Go through each row
-    saved = 0
-    for r in rows:
-      row = r.custom
-      contest_id = row['contestid'].text
-
-      # Ensure that there is a contest already
-      results = scraperwiki.sqlite.select("* FROM contests WHERE contest_id = '%s'" % (contest_id))
-      if results != [] and results[0]['contest_id'] is not None:
-        to_update = results[0]
-
-        # Only add data that has values
-        for field in translations:
-          if field in row and row[field].text is not None:
-            to_update[translations[field]] = row[field].text
-
-        # Save
-        try:
-          scraperwiki.sqlite.save(unique_keys = ['contest_id'], data = to_update, table_name = 'contests')
-          saved = saved + 1
-        except Exception, err:
-          self.log.exception('[%s] Error thrown while saving supplement data to table: %s' % ('contests', to_update))
-          raise
-
-    self.log.info('[%s] Supplemented contest data with rows: %s' % ('contests', saved))
+    self.log.info('[%s] Processed contest rows: %s' % ('contests', processed))
+    self.log.info('[%s] Supplemented contest rows: %s' % ('contests', supplemented))
 
 
   def results_supplement(self, spreadsheet_id, worksheet_id, *args):
@@ -598,3 +606,4 @@ class ElectionScraper:
 # If calling directly
 if __name__ == "__main__":
   scraper = ElectionScraper()
+  scraper.route()
