@@ -301,12 +301,21 @@ body .node-unpublished {
 
 
   @media screen and (max-width: 768px) {
-    .inner-column-left {
+    .inner-column-left,
+    .contest .inner-column-left {
       padding-right: 0;
     }
 
-    .inner-column-right {
+    .inner-column-right,
+    .contest .inner-column-right {
       padding-left: 0;
+    }
+
+    .dashboard .location-search-group {
+      width: 70%;
+    }
+
+    .dashboard .location-search-section input[type=text] {
     }
   }
 }
