@@ -1,4 +1,4 @@
-<div class="dashboard-contest {{ .classes }}">
+<div class="dashboard-contest {{ .classes }} {{#(final === true)}}is-final{{/()}}">
   <div>
     {{#(results.length == 0 || results == undefined)}}
       {{>loading}}
@@ -10,6 +10,7 @@
   <table>
     <thead>
       <tr class="table-first-heading">
+        <th class="winner-column"></th>
         <th>Candidate</th>
         {{#(ranked_choice == 1)}}
           <th>Round One</th>
@@ -20,6 +21,7 @@
         {{/()}}
       </tr>
       <tr class="table-second-heading">
+        <th class="winner-column"></th>
         <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting</th>
         {{#(ranked_choice == 1)}}
           <th class="first-choice-heading">1st choice</th>
@@ -31,7 +33,9 @@
     <tbody>
       {{#results:r}}{{#(r < 2 || (rows != undefined && r < rows))}}
         <tr class="{{ (r % 2 === 0) ? 'even' : 'odd' }}">
-          <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}} {{ candidate }}</td>
+          <td class="winner-column">{{#winner}}<span class="bs-icon bs-icon-won"></span>{{/winner}}{{#(winner === false)}}<span class="bs-icon-spacer"></span>{{/()}}</td>
+
+          <td class="candidate-column">{{ candidate }}</td>
 
           {{#(ranked_choice == 1)}}
             <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }} votes)</td>

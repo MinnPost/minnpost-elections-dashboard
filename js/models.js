@@ -33,6 +33,7 @@
     parse: function(response, options) {
       var thisModel = this;
       var parsed = {};
+      var rankedChoiceFinal = false;
       parsed.results = [];
 
       // Separate out what is contest level properties and what is
@@ -91,21 +92,26 @@
       });
 
 
-      // Mark who won.  For ranked-choice, this is complicated and we might not
-      // even have that data, otherwise we need to make sure the number of
-      // precincts reporting is full and check the number of seats available.
-      if (parsed.precincts_reporting === parsed.total_effected_precincts) {
-        if (parsed.ranked_choice) {
-        }
-        else {
-          parsed.results = _.map(parsed.results, function(r, i) {
-            r.winner = false;
-            if (i < parsed.seats) {
-              r.winner = true;
-            }
-            return r;
-          });
-        }
+      // Mark who won.  Overall having all precincts reporting is good
+      // enough but with ranked choice, we need have all the final data
+      // in
+      if (parsed.ranked_choice) {
+        rankedChoiceFinal = (_.size(parsed.results) == _.size(_.filter(parsed.results, function(r) {
+          return (!_.isUndefined(r.ranked_choices[100]));
+        })));
+      }
+      if (parsed.precincts_reporting === parsed.total_effected_precincts || (
+        rankedChoiceFinal === true &&
+        parsed.precincts_reporting === parsed.total_effected_precincts
+        )) {
+        parsed.results = _.map(parsed.results, function(r, i) {
+          r.winner = false;
+          if (i < parsed.seats) {
+            r.winner = true;
+          }
+          return r;
+        });
+        parsed.final = true;
       }
 
       // Further formatting

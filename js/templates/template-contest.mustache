@@ -1,4 +1,4 @@
-<div class="contest {{ classes }}">
+<div class="contest {{ classes }} {{#(final === true)}}is-final{{/()}}">
   <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>
 
   <div>
@@ -20,6 +20,7 @@
       <table>
         <thead>
           <tr class="table-first-heading">
+            <th class="winner-column"></th>
             <th>Candidate</th>
             {{#partisan}}
               <th>Party</th>
@@ -36,6 +37,7 @@
             {{/()}}
           </tr>
           <tr class="table-second-heading">
+            <th class="winner-column"></th>
             <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>
             {{#partisan}}
               <th></th>
@@ -56,7 +58,9 @@
         <tbody>
           {{#results:r}}
             <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? 'even' : 'odd' }}">
-              <td>{{#winner}}Y{{/winner}}{{#(winner === false)}}N{{/()}} {{ candidate }}</td>
+              <td class="winner-column">{{#winner}}<span class="bs-icon bs-icon-won"></span>{{/winner}}{{#(winner === false)}}<span class="bs-icon-spacer"></span>{{/()}}</td>
+
+              <td class="candidate-column">{{ candidate }}</td>
 
               {{#partisan}}
                 <td>{{ party_id }}</td>

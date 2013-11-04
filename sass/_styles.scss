@@ -75,6 +75,35 @@ body .node-unpublished {
     font-size: 2em;
   }
 
+  // Icons
+  .bs-icon {
+    width: 14px;
+    height: 14px;
+    margin-top: 1px;
+    line-height: 14px;
+    vertical-align: text-top;
+    background-image: url("https://s3.amazonaws.com/data.minnpost/js/bootstrap-2.0.3/img/glyphicons-halflings.png");
+    background-repeat: no-repeat;
+    @include inline-block();
+  }
+  .bs-icon-spacer {
+    width: 14px;
+    height: 14px;
+    margin-top: 1px;
+    line-height: 14px;
+    vertical-align: text-top;
+    @include inline-block();
+  }
+  .bs-icon-won {
+    background-position: -288px 0;
+  }
+  .bs-icon-refresh {
+    background-position: -240px -23px;
+  }
+  .bs-icon-back {
+    background-position: -240px -95px;
+  }
+
   // Maps
   .contest-map {
     width: 100%;
@@ -185,6 +214,14 @@ body .node-unpublished {
 
   .inner-column-right {
     padding-left: 1.5em;
+  }
+
+  table .winner-column {
+    padding: 0;
+  }
+
+  .is-final table .winner-column {
+    padding: .5em;
   }
 
   // Contest
