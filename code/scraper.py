@@ -286,7 +286,7 @@ class ElectionScraper:
         'party_id': row[10],
         'votes_candidate': int(row[13]),
         'percentage': float(row[14]),
-        'ranked_choice_place': int(ranked_choice_place),
+        'ranked_choice_place': int(ranked_choice_place) if ranked_choice_place is not None else 0,
         'contest_id': contest_id,
         'updated': int(timestamp)
       }
