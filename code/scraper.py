@@ -79,7 +79,7 @@ class ElectionScraper:
       raise
 
 
-  def scrape(self, type, election, *args):
+  def scrape(self, group_type, election, *args):
     """
     Main scraper handler.
     """
@@ -94,7 +94,7 @@ class ElectionScraper:
     for i in self.sources[election]:
       s = self.sources[election][i]
 
-      if 'type' in s and s['type'] == type:
+      if 'type' in s and s['type'] == group_type:
         # Ensure we have a valid parser for this type
         parser = 'parser_' + s['type']
         parser_method = getattr(self, parser, None)
@@ -121,14 +121,14 @@ class ElectionScraper:
             self.save(['id'], parsed, s['table'], index_method)
             count = count + 1
 
-          # Handle post actions
-          post = 'post_' + s['type']
-          post_method = getattr(self, post, None)
-          if callable(post_method):
-            post_method(i)
-
           # Log
           self.log.info('[%s] Scraped rows for %s: %s' % (s['type'], i, count))
+
+    # Handle post actions
+    post = 'post_' + group_type
+    post_method = getattr(self, post, None)
+    if callable(post_method):
+      post_method()
 
 
   def supplement_connect(self, source):
@@ -286,7 +286,7 @@ class ElectionScraper:
         'party_id': row[10],
         'votes_candidate': int(row[13]),
         'percentage': float(row[14]),
-        'ranked_choice_place': ranked_choice_place,
+        'ranked_choice_place': int(ranked_choice_place),
         'contest_id': contest_id,
         'updated': int(timestamp)
       }
@@ -345,7 +345,7 @@ class ElectionScraper:
     self.log.info('[%s] Creating indices for contests table.' % ('contests'))
 
 
-  def post_results(self, group):
+  def post_results(self):
     # Update some vars for easy retrieval
     scraperwiki.sqlite.save_var('updated', int(calendar.timegm(datetime.datetime.utcnow().utctimetuple())))
     contests = scraperwiki.sqlite.select("COUNT(DISTINCT contest_id) AS contest_count FROM results")
@@ -358,12 +358,67 @@ class ElectionScraper:
       scraperwiki.sqlite.save_var('precincts_reporting', state_contest[0]['precincts_reporting'])
       scraperwiki.sqlite.save_var('total_effected_precincts', state_contest[0]['total_effected_precincts'])
 
+    # Handle any supplemental data
+    supplement_update = 0
+    supplement_insert = 0
+    supplement_delete = 0
+    s_rows = self.supplement_connect('supplemental_results')
+    for si in s_rows:
+      s = si.custom
+
+      # Parse some values we know we will look at
+      percentage = float(s['percentage'].text) if s['percentage'].text is not None else None
+      votes_candidate = int(s['votescandidate'].text) if s['votescandidate'].text is not None else None
+      ranked_choice_place = int(s['rankedchoiceplace'].text) if s['votescandidate'].text is not None else None
+      enabled = True if s['enabled'].text is not None else False
+      row_id = s['id'].text
+
+      # Check for existing rows
+      results = scraperwiki.sqlite.select("* FROM results WHERE id = '%s'" % (row_id))
+
+      # If valid data
+      if votes_candidate > 0 and row_id is not None and s['contestid'].text is not None and s['candidateid'].text is not None:
+        # If results exist and enabled then update, else if results and not
+        # enabled and is supplemental remove, otherwise add
+        if results != [] and enabled:
+          result = results[0]
+          result['percentage'] = percentage
+          result['votes_candidate'] = votes_candidate
+          result['ranked_choice_place'] = ranked_choice_place
+          self.save(['id'], result, 'results')
+          supplement_update = supplement_update + 1
+        elif results != [] and not enabled and results[0]['results_group'] == 'supplemental':
+          scraperwiki.sqlite.execute("DELETE FROM results WHERE id = '%s'" % (row_id))
+          scraperwiki.sqlite.commit()
+          supplement_delete = supplement_delete + 1
+        elif enabled:
+          # Add new row, make sure to mark the row as supplemental
+          result = {
+            'id': row_id,
+            'percentage': percentage,
+            'votes_candidate': votes_candidate,
+            'ranked_choice_place': ranked_choice_place,
+            'candidate': s['candidate'].text,
+            'office_name': s['officename'].text,
+            'contest_id': s['contestid'].text,
+            'candidate_id': s['candidateid'].text,
+            'results_group': 'supplemental'
+          }
+          self.save(['id'], result, 'results')
+          supplement_insert = supplement_insert + 1
+
+    self.log.info('[%s] Supplemental rows created: %s' % ('results', supplement_insert))
+    self.log.info('[%s] Supplemental rows updated: %s' % ('results', supplement_update))
+    self.log.info('[%s] Supplemental rows deleted: %s' % ('results', supplement_delete))
+
+
 
   def boundary_match_contests(self, parsed_row):
     """
     Logic to figure out what boundary the contest is for.  This will get messy.
     """
     boundary = ''
+
 
     # School district is in the office name
     if parsed_row['results_group'] == 'school_district_results':
@@ -494,82 +549,6 @@ class ElectionScraper:
 
     self.log.info('[%s] Processed contest rows: %s' % ('contests', processed))
     self.log.info('[%s] Supplemented contest rows: %s' % ('contests', supplemented))
-
-
-  def results_supplement(self, spreadsheet_id, worksheet_id, *args):
-    """
-    Supplement results table with Google Spreadsheet data.
-    """
-    client = SpreadsheetsService()
-    feed = client.GetWorksheetsFeed(spreadsheet_id, visibility='public', projection='basic')
-    timestamp = calendar.timegm(datetime.datetime.utcnow().utctimetuple())
-
-    # We know that the contests spreadsheet is the second one and this
-    # gets the id from the URL (something like od7)
-    worksheet_id = feed.entry[worksheet_id].id.text.rsplit('/', 1)[1]
-
-    # Get data from spreadsheet
-    rows = client.GetListFeed(key=spreadsheet_id, wksht_id=worksheet_id, visibility='public', projection='values').entry
-
-    # Go through each row
-    saved = 0
-    deleted = 0
-    for r in rows:
-      row = r.custom
-      row_id = row['id'].text
-      delete = row['delete'].text
-      percentage = float(row['percentage'].text) if row['percentage'].text is not None else None
-      votes_candidate = int(row['votescandidate'].text) if row['votescandidate'].text is not None else None
-
-      # If we have real data, then update, otherwise check for delete
-      if delete != 'delete' and percentage > 0 and row_id is not None:
-        to_update = {}
-
-        # Check if data already exists
-        results = scraperwiki.sqlite.select("* FROM results WHERE id = '%s'" % (row_id))
-
-        if results != []:
-          # Update existing
-          to_update = results[0]
-          to_update['percentage'] = percentage
-          to_update['votes_candidate'] = votes_candidate
-          to_update['updated'] = int(timestamp)
-        else:
-          candidate_id = row_id.rsplit('-', 1)[1]
-
-          # Create new row
-          to_update = {
-            'id': row_id,
-            'results_group': 'supplemental_results',
-            'office_name': row['officename'].text,
-            'candidate': row['candidate'].text,
-            'votes_candidate': votes_candidate,
-            'percentage': percentage,
-            'contest_id': row['contestid'].text,
-            'updated': int(timestamp),
-            'candidate_id': candidate_id
-          }
-
-        # Save
-        try:
-          scraperwiki.sqlite.save(unique_keys = ['id'], data = to_update, table_name = 'results')
-          saved = saved + 1
-        except Exception, err:
-          self.log.exception('[%s] Error thrown while saving supplement data to table: %s' % ('results', to_update))
-          raise
-
-      elif delete == 'delete' and row_id is not None:
-        results = scraperwiki.sqlite.select("* FROM results WHERE id = '%s'" % (row_id))
-        if results != []:
-          try:
-            scraperwiki.sqlite.execute("DELETE FROM results WHERE id = '%s'" % (row_id))
-            scraperwiki.sql.commit()
-          except Exception, err:
-            self.log.exception('[%s] Error thrown while deleting supplement data to table: %s' % ('results', results[0]))
-            raise
-
-    self.log.info('[%s] Supplemented data with rows: %s' % ('results', saved))
-    self.log.info('[%s] Removed supplemented rows of data: %s' % ('results', deleted))
 
 
 
