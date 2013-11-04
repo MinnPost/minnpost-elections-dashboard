@@ -255,13 +255,17 @@ body .node-unpublished {
   }
 
   .dashboard .elections-search .twitter-typeahead {
-    width: 90%;
+    width: 72%;
   }
 
   .dashboard .elections-search input[type=text] {
     width: 100%;
     display: block;
     margin: 0;
+  }
+
+  .dashboard .elections-search input[type=submit] {
+    margin-left: 1em;
   }
 
   .dashboard .elections-search label {

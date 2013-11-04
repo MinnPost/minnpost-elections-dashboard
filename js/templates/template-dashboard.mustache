@@ -47,9 +47,10 @@
       <div class="elections-search dashboard-section">
         <h4>Other elections</h4>
 
-        <form>
-          <label for="contest-search">Search contests by title or candidate.  Start typing to see suggestions. <br /></label>
+        <form on-submit="contestSearch">
+          <label for="contest-search">Search contests by title or candidate.  Start typing to see suggestions for specific contests, or hit Go to search for keywords, for example "<a href="#search/duluth">duluth</a>". <br /></label>
           <input type="text" id="contest-search" placeholder="Search by title or candidate" />
+          <input type="submit" value="Go" class="contest-search-submit" on-submit="contestSearch" />
         </form>
       </div>
     </div>

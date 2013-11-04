@@ -66,12 +66,19 @@
         adaptors: [ 'Backbone' ]
       });
 
-      // Handle address search hear as we have an easy reference
+      // Handle searches here as we have an easy reference
       // to the router.
       this.app.dashboardView.on('addresssSearch', function(e) {
         e.original.preventDefault();
         thisRouter.navigate('/location/' +
-          $(this.el).find('#address-search').val(), { trigger: true });
+          encodeURIComponent($(this.el).find('#address-search').val()),
+          { trigger: true });
+      });
+      this.app.dashboardView.on('contestSearch', function(e) {
+        e.original.preventDefault();
+        thisRouter.navigate('/search/' +
+          encodeURIComponent($(this.el).find('#contest-search').val()),
+          { trigger: true });
       });
       this.app.dashboardView.observeTitle(this.app.options.originalTitle);
       this.reFocus();
@@ -90,7 +97,7 @@
         template: this.app.template('template-contests'),
         data: {
           models: this.app.contestsSearch,
-          title: 'Search: ' + term
+          title: 'Search for "' + term + '"'
         },
         partials: {
           contest: this.app.template('template-contest'),
@@ -141,7 +148,7 @@
           template: thisRouter.app.template('template-contests'),
           data: {
             models: thisRouter.app.locationContests,
-            title: (place) ? 'Contests for ' + place : 'Contests for your location'
+            title: (place) ? 'Contests for "' + place + '"' : 'Contests for your location'
           },
           partials: {
             contest: thisRouter.app.template('template-contest'),
