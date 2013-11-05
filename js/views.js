@@ -193,8 +193,6 @@
       });
 
       // Update view when synced
-
-      // When data comes in, react
       this.data.models.on('sync', function() {
         thisView.set('synced', true);
       });

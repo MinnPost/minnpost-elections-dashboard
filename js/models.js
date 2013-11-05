@@ -136,7 +136,7 @@
       var thisModel = this;
 
       this.app.jsonpRequest({
-        url: this.app.options.boundaryAPI + 'boundary/?slug__in=' +
+        url: this.app.options.boundaryAPI + 'boundary/?limit=10&slug__in=' +
           encodeURIComponent(this.get('boundary'))
       })
       .done(function(response) {

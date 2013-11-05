@@ -57,16 +57,18 @@
       var thisCollection = this;
 
       this.app.jsonpRequest({
-        url: this.app.options.boundaryAPI + 'boundary/?slug__in=' +
+        url: this.app.options.boundaryAPI + 'boundary/?limit=30&slug__in=' +
           encodeURIComponent(this.pluck('boundary').join(','))
       })
       .done(function(response) {
         if (_.isArray(response.objects)) {
           // Match up slugs to models
           _.each(response.objects, function(b) {
-            thisCollection.filter(function(m) {
+            _.each(thisCollection.filter(function(m) {
               return (m.get('boundary').indexOf(b.slug) >= 0);
-            })[0].set('boundarySets', [b]);
+            }), function(m) {
+              m.set('boundarySets', [b]);
+            });
           });
           thisCollection.fetchedBoundary = true;
 
