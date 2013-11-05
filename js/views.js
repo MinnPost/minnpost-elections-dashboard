@@ -11,6 +11,18 @@
   });
 
   App.prototype.ContestBaseView = Ractive.extend({
+    defaultMapStyle: {
+      stroke: true,
+      color: '#2DA51D',
+      weight: 1.5,
+      opacity: 0.9,
+      fill: true,
+      fillColor: '#2DA51D',
+      fillOpacity: 0.2,
+      clickable: false
+    },
+
+    // Put together map for boundary(s)
     makeMap: function(id, boundaries) {
       var thisView = this;
       var featureGroup;
@@ -51,16 +63,7 @@
       featureGroup = new L.featureGroup();
       _.each(shapes, function(s) {
         var layer = new L.geoJson(s);
-        layer.setStyle({
-          stroke: true,
-          color: '#2DA51D',
-          weight: 1.5,
-          opacity: 0.9,
-          fill: true,
-          fillColor: '#2DA51D',
-          fillOpacity: 0.2,
-          clickable: false
-        });
+        layer.setStyle(thisView.defaultMapStyle);
         featureGroup.addLayer(layer);
       });
       map.addLayer(featureGroup);
@@ -195,6 +198,29 @@
       // Update view when synced
       this.data.models.on('sync', function() {
         thisView.set('synced', true);
+      });
+
+      // Make location map if lonlat exist
+      this.observe('lonlat', function(newValue, oldValue) {
+        var ll = newValue;
+        var map;
+        var circle;
+
+        if (_.isArray(ll) && _.isNumber(ll[0])) {
+          map = new L.Map('location-map', {
+            zoom: 13,
+            center: [ll[1], ll[0]],
+            scrollWheelZoom: false,
+            trackResize: true,
+            zoomControl: false
+          });
+          map.attributionControl.setPrefix(false);
+          map.addLayer(new L.tileLayer('//{s}.tiles.mapbox.com/v3/minnpost.map-wi88b700/{z}/{x}/{y}.png'));
+
+          circle = new L.circleMarker([ll[1], ll[0]], 10);
+          circle.setStyle(this.defaultMapStyle);
+          map.addLayer(circle);
+        }
       });
     }
   });

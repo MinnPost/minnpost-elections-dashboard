@@ -107,7 +107,7 @@ body .node-unpublished {
   // Maps
   .contest-map {
     width: 100%;
-    height: 30em;
+    height: 25em;
   }
 
   // Tables
@@ -126,6 +126,7 @@ body .node-unpublished {
     font-style: italic;
     color: $color-medium-gray;
     font-size: .85em;
+    line-height: 1.5em;
   }
 
   table tbody tr.even {
@@ -266,6 +267,32 @@ body .node-unpublished {
     display: block;
   }
 
+  .contests .inner-column-left {
+    padding-right: 1em;
+  }
+
+  .contests .inner-column-right {
+    padding-left: 1em;
+  }
+
+  .contests #location-map {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 2.5em;
+  }
+
+  .contests .location-note {
+    padding-top: 0;
+    margin-bottom: .5em;
+    font-style: italic;
+    color: $color-medium-gray;
+    font-size: .85em;
+    line-height: 1.5em;
+  }
+
+  .contests h3.with-location {
+    margin-bottom: 0;
+  }
 
   // Dashboard
   .dashboard .dashboard-section {
@@ -348,12 +375,14 @@ body .node-unpublished {
 
   @media screen and (max-width: 768px) {
     .inner-column-left,
-    .contest .inner-column-left {
+    .contest .inner-column-left,
+    .contests .inner-column-left {
       padding-right: 0;
     }
 
     .inner-column-right,
-    .contest .inner-column-right {
+    .contest .inner-column-right,
+    .contests .inner-column-right {
       padding-left: 0;
     }
 

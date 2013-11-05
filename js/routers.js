@@ -156,7 +156,8 @@
           template: thisRouter.app.template('template-contests'),
           data: {
             models: thisRouter.app.locationContests,
-            title: (place) ? 'Contests for "' + place + '"' : 'Contests for your location'
+            title: (place) ? 'Contests for "' + place + '"' : 'Contests for your location',
+            lonlat: lonlat
           },
           partials: {
             contest: thisRouter.app.template('template-contest'),
