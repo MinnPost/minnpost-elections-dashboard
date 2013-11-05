@@ -380,7 +380,7 @@ body .node-unpublished {
   }
 
 
-
+  // "Mobile" breakpoint
   @media screen and (max-width: 768px) {
     .inner-column-left,
     .contest .inner-column-left,
@@ -399,6 +399,20 @@ body .node-unpublished {
     }
 
     .dashboard .location-search-section input[type=text] {
+    }
+  }
+
+  @media screen and (max-width: 500px) {
+    .is-ranked-choice .candidate-column {
+      width: auto;
+    }
+
+    .contest .second-choice-column {
+      display: none;
+    }
+
+    .contest .third-choice-column {
+      display: none;
     }
   }
 }

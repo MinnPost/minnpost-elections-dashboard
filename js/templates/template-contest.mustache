@@ -33,10 +33,10 @@
               <th>Party</th>
             {{/partisan}}
             {{#(ranked_choice == 1)}}
-              <th>Results</th>
-              <th></th>
-              <th></th>
-              <th>Final</th>
+              <th class="first-choice-column">Results</th>
+              <th class="second-choice-column"></th>
+              <th class="third-choice-column"></th>
+              <th class="final-column">Final</th>
             {{/()}}
             {{#(ranked_choice != 1)}}
               <th>Percentage</th>
@@ -50,10 +50,10 @@
               <th></th>
             {{/partisan}}
             {{#(ranked_choice == 1)}}
-              <th class="first-choice-heading">1st choice</th>
-              <th class="second-choice-heading">2nd choice</th>
-              <th class="third-choice-heading">3rd choice</th>
-              <th></th>
+              <th class="first-choice-column first-choice-heading">1st choice</th>
+              <th class="second-choice-column second-choice-heading">2nd choice</th>
+              <th class="third-choice-column third-choice-heading">3rd choice</th>
+              <th class="final-column"></th>
             {{/()}}
             {{#(ranked_choice != 1)}}
               <th></th>
@@ -74,10 +74,10 @@
               {{/partisan}}
 
               {{#(ranked_choice == 1)}}
-                <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>
-                <td>{{ fNum(ranked_choices.2.percentage) }}% ({{ fNum(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>
-                <td>{{ fNum(ranked_choices.3.percentage) }}% ({{ fNum(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>
-                <td>{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
+                <td class="first-choice-column first-choice-heading">{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>
+                <td class="second-choice-column first-choice-heading">{{ fNum(ranked_choices.2.percentage) }}% ({{ fNum(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>
+                <td class="third-choice-column first-choice-heading">{{ fNum(ranked_choices.3.percentage) }}% ({{ fNum(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>
+                <td class="final-column first-choice-heading">{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
               {{/()}}
 
               {{#(ranked_choice != 1)}}
