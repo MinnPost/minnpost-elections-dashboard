@@ -130,7 +130,7 @@ body .node-unpublished {
   }
 
   table tbody tr.even {
-    background-color: $color-lighter-gray;
+    background-color: $color-lightest-gray;
   }
 
   // Forms
@@ -223,6 +223,14 @@ body .node-unpublished {
 
   .is-final table .winner-column {
     padding: .5em;
+  }
+
+  .candidate-column {
+    width: 60%;
+  }
+
+  .is-ranked-choice .candidate-column {
+    width: 50%;
   }
 
   // Contest

@@ -1,4 +1,4 @@
-<div class="dashboard-contest {{ .classes }} {{#(final === true)}}is-final{{/()}}">
+<div class="dashboard-contest {{ .classes }} {{#(.ranked_choice == 1)}}is-ranked-choice {{/()}}{{#(final === true)}}is-final{{/()}}">
   <div>
     {{#(results.length == 0 || results == undefined)}}
       {{>loading}}
@@ -38,8 +38,8 @@
           <td class="candidate-column">{{ candidate }}</td>
 
           {{#(ranked_choice == 1)}}
-            <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }} votes)</td>
-            <td>{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }} votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
+            <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>
+            <td>{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
           {{/()}}
 
           {{#(ranked_choice != 1)}}

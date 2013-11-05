@@ -1,4 +1,4 @@
-<div class="contest {{ classes }} {{#(final === true)}}is-final{{/()}}">
+<div class="contest {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}}{{#(final === true)}}is-final{{/()}}">
   <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>
 
   <div>
@@ -74,10 +74,10 @@
               {{/partisan}}
 
               {{#(ranked_choice == 1)}}
-                <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }} votes)</td>
-                <td>{{ fNum(ranked_choices.2.percentage) }}% ({{ fNum(ranked_choices.2.votes_candidate, 0) }} votes)</td>
-                <td>{{ fNum(ranked_choices.3.percentage) }}% ({{ fNum(ranked_choices.3.votes_candidate, 0) }} votes)</td>
-                <td>{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }} votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
+                <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>
+                <td>{{ fNum(ranked_choices.2.percentage) }}% ({{ fNum(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>
+                <td>{{ fNum(ranked_choices.3.percentage) }}% ({{ fNum(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>
+                <td>{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
               {{/()}}
 
               {{#(ranked_choice != 1)}}
