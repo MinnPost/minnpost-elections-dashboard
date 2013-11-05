@@ -4,8 +4,12 @@
   <h3 class="contests-title">{{ (title) ? title : 'Contests' }}</h3>
 
   <div>
-    {{#(models.length == 0)}}
+    {{#(models.length == 0 && !synced)}}
       {{>loading}}
+    {{/())}}
+
+    {{#(models.length == 0 && synced)}}
+      <p>Unable to find any contests.</p>
     {{/())}}
   </div>
 

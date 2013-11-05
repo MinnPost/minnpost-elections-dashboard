@@ -296,9 +296,13 @@ body .node-unpublished {
   }
 
   .dashboard .elections-search input[type=text] {
+    width: 70%;
+    margin: 0;
+  }
+
+  .dashboard .elections-search input[type=text].tt-query {
     width: 100%;
     display: block;
-    margin: 0;
   }
 
   .dashboard .elections-search input[type=submit] {

@@ -121,6 +121,8 @@
 
     // When data comes is, handle it
     contestUpdate: function() {
+      this.set('synced', true);
+
       // Only handle once
       if (!this.get('fetchedBoundary') && _.isString(this.get('boundary'))) {
         this.fetchBoundary();

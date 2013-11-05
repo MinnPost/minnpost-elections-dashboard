@@ -2,17 +2,24 @@
   <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>
 
   <div>
-    {{#(results.length == 0 || results == undefined)}}
+    {{#((results.length == 0 || results == undefined) && !synced)}}
       {{>loading}}
     {{/()}}
   </div>
 
-  <h3>{{ title }}</h3>
+  {{#((results.length == 0 || results == undefined) && synced)}}
+    <h3>Did not find any contests</h3>
+  {{/()}}
 
-  <div class="last-updated">Last updated at {{ updated.format('h:mm a') }}</div>
 
-  {{#(!!question_body)}}
-    <p>{{{ question_body }}}</p>
+  {{#((results.length > 0) && synced)}}
+    <h3>{{ title }}</h3>
+
+    <div class="last-updated">Last updated at {{ updated.format('h:mm a') }}</div>
+
+    {{#(!!question_body)}}
+      <p>{{{ question_body }}}</p>
+    {{/()}}
   {{/()}}
 
   <div class="grid-container grid-parent cf">
@@ -90,5 +97,4 @@
       </div>
     </div>
   </div>
-
 </div>
