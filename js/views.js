@@ -106,6 +106,9 @@
       var query;
       this.app = options.app;
 
+      // Attach formatters
+      this.set('fNum', _.formatNumber);
+
       // Typeahead.  This seems to break in IE. Query can be
       // either a contest or candidate
       if (this.app.options.capabilities.typeahead) {
@@ -119,9 +122,6 @@
           "FROM results AS r " +
           "JOIN contests AS c ON r.contest_id = c.id " +
           "WHERE r.candidate LIKE '%%QUERY%' ORDER BY title LIMIT 20 ";
-
-        // Attach formatters
-        this.set('fNum', _.formatNumber);
 
         // Make typeahead functionality for search
         $contestSearch.typeahead({
