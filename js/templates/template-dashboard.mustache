@@ -1,19 +1,19 @@
 <div class="dashboard cf grid-container grid-parent {{ classes }}">
 
   <div class="grid-parent grid-100 location-search-section">
-      <form on-submit="addresssSearch">
-        <div class="location-search-group">
-          <input type="text" id="address-search" placeholder="Search address for results" />
+    <form on-submit="addresssSearch">
+      <div class="location-search-group">
+        <input type="text" id="address-search" placeholder="Search address for results" />
 
-          {{#geolocationEnabled}}
-            <div class="geolocation">
-              <a href="#location">Or view contests at your current location</a>
-            </div>
-          {{/geolocationEnabled}}
-        </div>
+        {{#geolocationEnabled}}
+          <div class="geolocation">
+            <a href="#location">Or view contests at your current location</a>
+          </div>
+        {{/geolocationEnabled}}
+      </div>
 
-        <input type="submit" value="Go" class="address-search-submit" />
-      </form>
+      <input type="submit" value="Go" class="address-search-submit" />
+    </form>
   </div>
 
   <div class="grid-parent grid-100 last-updated-section">

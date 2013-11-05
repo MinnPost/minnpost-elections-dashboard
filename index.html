@@ -62,7 +62,7 @@ addthis_config = Drupal.settings.addthis.config_default; addthis_share = Drupal.
 
   <!-- =========================================================
     START: Embeddable
-    -- ========================================================= -->
+    ========================================================= -->
 
   <!--
     For full width articles, keep these classes
@@ -172,7 +172,12 @@ addthis_config = Drupal.settings.addthis.config_default; addthis_share = Drupal.
           var thisApp = new App({
             el: '#minnpost-elections-dashboard-container'
           });
-          thisApp.start();
+          try {
+            thisApp.start();
+          }
+          catch (e) {
+            
+          }
         });
       })(mpApps['minnpost-elections-dashboard'], jQuery);
     </script>
@@ -188,7 +193,7 @@ addthis_config = Drupal.settings.addthis.config_default; addthis_share = Drupal.
 
   <!-- =========================================================
     END: Embeddable
-    -- ========================================================= -->
+    ========================================================= -->
 
 
 </body>

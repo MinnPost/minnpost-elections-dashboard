@@ -12,7 +12,7 @@
     "jquery": "1.9",
     "underscore": "*",
     "backbone": "*",
-    "ractive": "0.3.8",
+    "ractive": "https://github.com/zzolo/Ractive.git#ie8-exception-hack",
     "momentjs": "~2.3.1",
     "leaflet": "~0.6.4",
     "typeahead.js": "~0.9.3",

@@ -34,6 +34,7 @@
       var thisApp = this;
       var templates = ['template-application', 'template-footnote', 'template-dashboard', 'template-loading', 'template-contest', 'template-contests', 'template-dashboard-contest'];
 
+      // Get templates and start rendering
       this.getTemplates(templates).done(function() {
         // Render the container and "static" templates.
         thisApp.applicationView = new thisApp.ApplicationView({

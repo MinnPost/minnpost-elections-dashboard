@@ -58,3 +58,6 @@ Deploying will push the relevant files up to Amazon's AWS S3 so that they can be
 
 1. Run: `grunt mp-deploy`
 
+## Hacks
+
+* A fork of Ractive has been used to remove a pesky issue where an exception throw cannot be handled and breaks IE8, specifically the maps.  [Fork](https://github.com/zzolo/Ractive/tree/ie8-exception-hack) and [Issue](https://github.com/Rich-Harris/Ractive/issues/249).
