@@ -52,6 +52,9 @@
       data.contestMinneapolisMayor.set('rows', 8);
       data.contestStPaulMayor.set('rows', 3);
 
+      // We need some of this data
+      data.capabilities = thisRouter.app.options.capabilities;
+
       // Create dashboard view
       data.title = 'Dashboard';
       this.app.dashboardView = new this.app.DashboardView({
