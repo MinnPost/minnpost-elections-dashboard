@@ -74,6 +74,20 @@
       }, 500);
     },
 
+    // Form handling for some older browsers.  This does end up
+    // firing the handler twice :(
+    handleForms: function() {
+      var thisView = this;
+      $(this.el).find('form').on('submit', function(e) {
+        var trigger = $(this).attr('legacy-on-submit');
+        if (trigger) {
+          e.preventDefault();
+          thisView.fire(trigger, { original: e });
+        }
+        return false;
+      });
+    },
+
     // Handle title change for document title
     observeTitle: function(originalTitle) {
       this.observe('title', function(newValue, oldValue) {
@@ -92,46 +106,49 @@
       var query;
       this.app = options.app;
 
-      // Query can be either a contest or candidate
-      query = this.app.options.electionsAPI +
-        "SELECT c.id AS id, title AS title " +
-        "FROM contests AS c WHERE " +
-        "c.title LIKE '%%QUERY%' " +
-        "UNION " +
-        "SELECT c.id AS id, " +
-        "r.candidate || ' (' || c.title || ')' AS title " +
-        "FROM results AS r " +
-        "JOIN contests AS c ON r.contest_id = c.id " +
-        "WHERE r.candidate LIKE '%%QUERY%' ORDER BY title LIMIT 20 ";
+      // Typeahead.  This seems to break in IE. Query can be
+      // either a contest or candidate
+      if (this.app.options.capabilities.typeahead) {
+        query = this.app.options.electionsAPI +
+          "SELECT c.id AS id, title AS title " +
+          "FROM contests AS c WHERE " +
+          "c.title LIKE '%%QUERY%' " +
+          "UNION " +
+          "SELECT c.id AS id, " +
+          "r.candidate || ' (' || c.title || ')' AS title " +
+          "FROM results AS r " +
+          "JOIN contests AS c ON r.contest_id = c.id " +
+          "WHERE r.candidate LIKE '%%QUERY%' ORDER BY title LIMIT 20 ";
 
-      // Attach formatters
-      this.set('fNum', _.formatNumber);
+        // Attach formatters
+        this.set('fNum', _.formatNumber);
 
-      // Make typeahead functionality for search
-      $contestSearch.typeahead({
-        name: 'Contests and Candidates',
-        remote: {
-          url: query,
-          dataType: 'jsonp',
-          jsonpCallback: 'mpServerSideCachingHelper',
-          replace: function(url, uriEncodedQuery) {
-            var query = decodeURIComponent(uriEncodedQuery);
-            query = query.replace(new RegExp(' ', 'g'), '%');
-            return encodeURI(url.replace(new RegExp(this.wildcard, 'g'), query));
-          }
-        },
-        valueKey: 'title'
-      });
+        // Make typeahead functionality for search
+        $contestSearch.typeahead({
+          name: 'Contests and Candidates',
+          remote: {
+            url: query,
+            dataType: 'jsonp',
+            jsonpCallback: 'mpServerSideCachingHelper',
+            replace: function(url, uriEncodedQuery) {
+              var query = decodeURIComponent(uriEncodedQuery);
+              query = query.replace(new RegExp(' ', 'g'), '%');
+              return encodeURI(url.replace(new RegExp(this.wildcard, 'g'), query));
+            }
+          },
+          valueKey: 'title'
+        });
 
-      // Handle search selected
-      $contestSearch.on('typeahead:selected', function(e, data, name) {
-        thisView.app.router.navigate('/contest/' + data.id, { trigger: true });
-      });
+        // Handle search selected
+        $contestSearch.on('typeahead:selected', function(e, data, name) {
+          thisView.app.router.navigate('/contest/' + data.id, { trigger: true });
+        });
 
-      // Teardown event to remove typeahead gracefully
-      this.on('teardown', function() {
-        $contestSearch.typeahead('destroy');
-      });
+        // Teardown event to remove typeahead gracefully
+        this.on('teardown', function() {
+          $contestSearch.typeahead('destroy');
+        });
+      }
 
       // Mark if geolocation is availablle
       this.set('geolocationEnabled', (_.isObject(navigator) && _.isObject(navigator.geolocation)));

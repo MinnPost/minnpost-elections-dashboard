@@ -56,6 +56,14 @@ _.mixin({
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
     }, 0));
+  },
+
+  /**
+   * Returns version of MSIE.
+   */
+  isMSIE: function() {
+    var match = /(msie) ([\w.]+)/i.exec(navigator.userAgent);
+    return match ? parseInt(match[2], 10) : false;
   }
 });
 

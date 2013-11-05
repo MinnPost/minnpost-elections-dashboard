@@ -22,7 +22,11 @@
       // Please don't steal/abuse
       mapQuestKey: 'Fmjtd%7Cluub2d01ng%2C8g%3Do5-9ua20a',
       mapQuestQuery: 'http://www.mapquestapi.com/geocoding/v1/address?key=[[[KEY]]]&outFormat=json&countrycodes=us&maxResults=1&location=[[[ADDRESS]]]',
-      originalTitle: document.title
+      originalTitle: document.title,
+      capabilities: {
+        typeahead: (_.isMSIE() !== 9),
+        preventLinks: (!_.isMSIE() && _.isMSIE() <= 9)
+      }
     },
 
     // Start function that starts the application.
@@ -45,6 +49,16 @@
         // level logic
         thisApp.router = new thisApp.DashboardRouter(_.extend(thisApp.options, { app: thisApp }));
         thisApp.router.start();
+
+        // Try to ensure that links are prevented from their default
+        // behavior.  Sometimes because of Ractive's dom insertions, the
+        // preventDefault is not handled correctly
+        if (thisApp.options.capabilities.preventLinks) {
+          $('a[href^="#"]').on('click', thisApp.$el, function(e) {
+            e.preventDefault();
+            thisApp.router.navigate($(this).attr('href'), { trigger: true });
+          });
+        }
       });
     }
   });

@@ -4,16 +4,16 @@
   <div>
     {{#(results.length == 0 || results == undefined)}}
       {{>loading}}
-    {{/())}}
+    {{/()}}
   </div>
 
   <h3>{{ title }}</h3>
 
   <div class="last-updated">Last updated at {{ updated.format('h:mm a') }}</div>
 
-  {{#question_body}}
+  {{#(!!question_body)}}
     <p>{{{ question_body }}}</p>
-  {{/question_body}}
+  {{/()}}
 
   <div class="grid-container grid-parent cf">
     <div class="grid-70 tablet-grid-70 mobile-grid-100 grid-parent inner-column-left">

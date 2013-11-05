@@ -69,16 +69,21 @@
       // Handle searches here as we have an easy reference
       // to the router.
       this.app.dashboardView.on('addresssSearch', function(e) {
+        var val = $(this.el).find('#address-search').val();
         e.original.preventDefault();
-        thisRouter.navigate('/location/' +
-          encodeURIComponent($(this.el).find('#address-search').val()),
+        if (val) {
+          thisRouter.navigate('/location/' + encodeURIComponent(val),
           { trigger: true });
+        }
       });
       this.app.dashboardView.on('contestSearch', function(e) {
         e.original.preventDefault();
-        thisRouter.navigate('/search/' +
-          encodeURIComponent($(this.el).find('#contest-search').val()),
+        var $input = $(this.el).find('#contest-search');
+        var val = $input.val();
+        if (val) {
+          thisRouter.navigate('/search/' + encodeURIComponent(val),
           { trigger: true });
+        }
       });
       this.app.dashboardView.observeTitle(this.app.options.originalTitle);
       this.reFocus();
