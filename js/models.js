@@ -100,8 +100,9 @@
           return (!_.isUndefined(r.ranked_choices[100]));
         })));
       }
-      if (parsed.precincts_reporting === parsed.total_effected_precincts || (
-        rankedChoiceFinal === true &&
+      if ((parsed.precincts_reporting === parsed.total_effected_precincts &&
+        !parsed.ranked_choice) ||
+        (parsed.ranked_choice && rankedChoiceFinal === true &&
         parsed.precincts_reporting === parsed.total_effected_precincts
         )) {
         parsed.results = _.map(parsed.results, function(r, i) {
