@@ -380,7 +380,7 @@ class ElectionScraper:
       if  row_id is not None and s['contestid'].text is not None and s['candidateid'].text is not None:
         # If results exist and enabled then update, else if results and not
         # enabled and is supplemental remove, otherwise add
-        if votes_candidate > 0 and results != [] and enabled:
+        if (votes_candidate > 0 or s['votescandidate'].text == '0') and results != [] and enabled:
           result = results[0]
           result['percentage'] = percentage
           result['votes_candidate'] = votes_candidate
@@ -391,7 +391,7 @@ class ElectionScraper:
           scraperwiki.sqlite.execute("DELETE FROM results WHERE id = '%s'" % (row_id))
           scraperwiki.sqlite.commit()
           supplement_delete = supplement_delete + 1
-        elif votes_candidate > 0 and enabled:
+        elif (votes_candidate > 0 or s['votescandidate'].text == '0') and enabled:
           # Add new row, make sure to mark the row as supplemental
           result = {
             'id': row_id,
