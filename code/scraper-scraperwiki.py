@@ -17,7 +17,82 @@ from gdata.spreadsheet.service import SpreadsheetsService
 
 
 # This is placeholder for scraperwiki embedding
-scraper_sources_inline = None
+scraper_sources_inline = """
+{
+  "20131105": {
+    "county_results": {
+      "url": "ftp://media:results@ftp.sos.state.mn.us/20131105_MG/cntyRaces.txt",
+      "table": "results",
+      "type": "results"
+    },
+    "municipal_results": {
+      "url": "ftp://media:results@ftp.sos.state.mn.us/20131105_MG/local.txt",
+      "table": "results",
+      "type": "results"
+    },
+    "school_district_results": {
+      "url": "ftp://media:results@ftp.sos.state.mn.us/20131105_MG/sdraceQuesions.txt",
+      "table": "results",
+      "type": "results",
+      "notes": "combines school district and questions results SchoolQuestions.txt + sdrace.txt"
+    },
+    "parties": {
+      "url": "ftp://media:results@ftp.sos.state.mn.us/20131105_MG/PartyTbl.txt",
+      "table": "parties",
+      "type": "parties"
+    },
+    "candidates": {
+      "url": "ftp://media:results@ftp.sos.state.mn.us/20131105_MG/cand.txt",
+      "table": "candidates",
+      "type": "candidates"
+    },
+    "local_candidates": {
+      "url": "ftp://media:results@ftp.sos.state.mn.us/20131105_MG/LocalCandTbl.txt",
+      "table": "candidates",
+      "type": "local_candidates"
+    },
+    "counties": {
+      "url": "ftp://media:results@ftp.sos.state.mn.us/20131105_MG/Cntytbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "municipalities": {
+      "url": "ftp://media:results@ftp.sos.state.mn.us/20131105_MG/MunTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "precincts": {
+      "url": "ftp://media:results@ftp.sos.state.mn.us/20131105_MG/PrctTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "school_districts": {
+      "url": "ftp://media:results@ftp.sos.state.mn.us/20131105_MG/SchoolDistTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "local_precinct_results": {
+      "url": "ftp://media:results@ftp.sos.state.mn.us/20131105_MG/localPrct.txt",
+      "table": "precinct_results",
+      "type": "precinct_results"
+    },
+    "county_precinct_results": {
+      "url": "ftp://media:results@ftp.sos.state.mn.us/20131105_MG/allracesbyprecinct.txt",
+      "table": "precinct_results",
+      "type": "precinct_results"
+    },
+    "supplemental_results": {
+      "spreadsheet_id": "0AjYft7IGrHzNdGltZUg1clM3cnNXT3pwVjg0a3Jqa3c",
+      "worksheet_id": 0,
+      "notes": "Workesheet ID is the zero-based ID from the order of workssheets and is used to find the actual ID."
+    },
+    "supplemental_contests": {
+      "spreadsheet_id": "0AjYft7IGrHzNdGltZUg1clM3cnNXT3pwVjg0a3Jqa3c",
+      "worksheet_id": 1
+    }
+  }
+}
+"""
 
 
 class ScraperLogger:
@@ -627,4 +702,8 @@ if __name__ == "__main__":
   scraper = ElectionScraper()
   scraper.route()
 
-  # <Scraperwiki commands go here>
+  
+  # Scraperwiki commands
+  scraper.scrape('areas', None)
+  scraper.scrape('results', None)
+  scraper.match_contests()

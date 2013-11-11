@@ -92,3 +92,14 @@ Test with a call like:
 #### Cron
 
     crontab deploy/crontab
+
+## ScraperWiki
+
+The code and deployment methods have been designed so that on slower traffic times, these operations can happen on ScraperWiki and save resources.
+
+Currently, the scraper is at [https://scraperwiki.com/dataset/ez47yoa/](https://scraperwiki.com/dataset/ez47yoa/).
+
+To update the scraper code, do the following:
+
+1. Run: ``
+2. Copy the contents of `code/scraper-scraperwiki.py` into the ScraperWiki interface.
