@@ -95,11 +95,11 @@ Test with a call like:
 
 ## ScraperWiki
 
-The code and deployment methods have been designed so that on slower traffic times, these operations can happen on ScraperWiki and save resources.
+The code and deployment methods have been designed so that on slower traffic times, these operations can happen on ScraperWiki and save resources.  You will have to SSH into the scraper and add the needed libraries, `pip install --user logging lxml datetime flask gdata`.
 
 Currently, the scraper is at [https://scraperwiki.com/dataset/ez47yoa/](https://scraperwiki.com/dataset/ez47yoa/).
 
 To update the scraper code, do the following:
 
-1. Run: ``
+1. Run: `python deploy/scraperwiki.py`
 2. Copy the contents of `code/scraper-scraperwiki.py` into the ScraperWiki interface.
