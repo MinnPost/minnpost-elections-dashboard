@@ -131,6 +131,9 @@ class ElectionScraper:
     if election not in self.sources:
       return
 
+    # Get metadata about election
+    self.election_meta = self.sources[election]['meta'] if 'meta' in self.sources[election] else {}
+
     for i in self.sources[election]:
       s = self.sources[election][i]
 
@@ -139,12 +142,15 @@ class ElectionScraper:
         parser = 'parser_' + s['type']
         parser_method = getattr(self, parser, None)
         if callable(parser_method):
+          # Check if election has base_url
+          s['url'] = self.election_meta['base_url'] + s['url'] if 'base_url' in self.election_meta else s['url']
+
           # Get data from URL
           try:
             scraped = scraperwiki.scrape(s['url'])
             rows = csv.reader(scraped.splitlines(), delimiter=';', quotechar='|')
           except Exception, err:
-            self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (u, s['url']))
+            self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (s['type'], s['url']))
             raise
 
           # Index is created after first insert
@@ -176,10 +182,10 @@ class ElectionScraper:
     Connect to supplemental source (Google spreadsheets) given set.
     """
     if self.election not in self.sources:
-      return
+      return []
 
     if source not in self.sources[self.election]:
-      return
+      return []
 
     try:
       s = self.sources[self.election][source]
@@ -539,7 +545,7 @@ class ElectionScraper:
     return mcd_id + '-minor-civil-division-2010'
 
 
-  def match_contests(self, *args):
+  def match_contests(self, election, *args):
     """
     Update contests table matching things like boundaries.  This is for the meta data
     for each contest, not for the voting numbers, so it doesn't need to be run
@@ -549,6 +555,10 @@ class ElectionScraper:
     supplemented = 0
     index_created = False
     contests = scraperwiki.sqlite.select("* FROM contests")
+
+    # Usually we just want the newest election but allow for other situations
+    election = election if election is not None and election != '' else self.newest_election
+    self.election = election
 
     # Get data from Google spreadsheet
     s_rows = self.supplement_connect('supplemental_contests')
