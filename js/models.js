@@ -9,7 +9,7 @@
       "ORDER BY r.percentage ASC, r.candidate",
 
     // Fields that are for contests (not result)
-    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code', 'office_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help'],
+    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code', 'office_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help', 'primary', 'scope'],
 
     // Non-Partisan parties
     npParties: ['NP', 'WI'],
@@ -80,9 +80,9 @@
         parsed.results = _.values(groupedResults);
       }
 
-      // Partison by default, unless we find a party
-      parsed.partisan = (_.findWhere(parsed.results, function(r, ri) {
-        return (_.indexOf(thisModel.npParties, r.party) >= 0);
+      // Look for a party
+      parsed.partisan = (_.find(parsed.results, function(r, ri) {
+        return (_.indexOf(thisModel.npParties, r.party_id) === -1);
       })) ? true : false;
 
       // Put results in a basic order.
@@ -90,28 +90,44 @@
       parsed.results = _.sortBy(parsed.results, function(r) {
         return r.percentage * -1;
       });
-
+      // If primary, sort by party
+      if (parsed.primary) {
+        parsed.results = _.sortBy(parsed.results, 'party');
+      }
 
       // Mark who won.  Overall having all precincts reporting is good
       // enough but with ranked choice, we need have all the final data
-      // in
+      // in.  Primaries need to choose winners per parties
+      parsed.done = (parsed.precincts_reporting === parsed.total_effected_precincts);
+
       if (parsed.ranked_choice) {
         rankedChoiceFinal = (_.size(parsed.results) == _.size(_.filter(parsed.results, function(r) {
           return (!_.isUndefined(r.ranked_choices[100]));
         })));
       }
-      if ((parsed.precincts_reporting === parsed.total_effected_precincts &&
-        !parsed.ranked_choice) ||
-        (parsed.ranked_choice && rankedChoiceFinal === true &&
-        parsed.precincts_reporting === parsed.total_effected_precincts
-        )) {
-        parsed.results = _.map(parsed.results, function(r, i) {
+      if ((parsed.done && !parsed.ranked_choice && !parsed.primary) ||
+        (parsed.done && parsed.ranked_choice && rankedChoiceFinal && !parsed.primary) ||
+        (parsed.done && parsed.primary && !parsed.partisan)) {
+        parsed.results = _.map(parsed.results, function(r, ri) {
           r.winner = false;
-          if (i < parsed.seats) {
+          if (ri < parsed.seats) {
             r.winner = true;
           }
           return r;
         });
+        parsed.final = true;
+      }
+      else if (parsed.done && parsed.primary && parsed.partisan) {
+        _.each(_.groupBy(parsed.results, 'party_id'), function(p, pi) {
+          _.each(p, function(r, ri) {
+            r.winner = false;
+            if (ri < parsed.seats) {
+              r.winner = true;
+            }
+            return r;
+          });
+        });
+
         parsed.final = true;
       }
 

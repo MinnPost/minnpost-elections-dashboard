@@ -13,7 +13,7 @@
 
 
   {{#((results.length > 0) && synced)}}
-    <h3>{{ title }}</h3>
+    <h3>{{ title }}{{#primary}} &nbsp;<small class="last-updated">primary</small>{{/primary}}</h3>
 
     <div class="last-updated">Last updated at {{ updated.format('h:mm a') }}</div>
 
