@@ -34,6 +34,10 @@ Add a new object keyed by the date of the election, like `YYYYMMDD`.  This shoul
 
 In theory this should be it, assuming the scraper can reconcile everything.  There is a good chance, though, that formatting changes could break the scraper, or that the scraper does not know how to fully process some results.
 
+### Manual data
+
+Both manual results and contest question text can be managed in Google Spreadsheets.
+
 ## Scraping
 
 `<ELECTION_DATE>` is optional and the newest eleciton will be used if not provided.  It should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
@@ -51,17 +55,18 @@ In theory this should be it, assuming the scraper can reconcile everything.  The
 1. Get the code: `git clone https://github.com/MinnPost/minnpost-scraper-mn-election-results.git`
 1. Change the directory: `cd minnpost-scraper-mn-election-results`
 1. (optional) Make a `virtualenv`
-1. `pip install -r requirements_local.txt`
-    * This is used locally to get around some bugs in the scraperwiki libraries.
+1. `pip install -r requirements.txt`
 1. Run a scraper process (see above).
-1. Run basic API server; this should not be run on production, it is meant for local developmet: `python deploy/local_server.py`
+1. Run basic API server; this should not be run on production; it is meant for local development: `python deploy/local_server.py`
+  * This create a basic endpoint server at http://localhost:5000/.
 
 ## Production setup and deployment
 
-As this is meant to remulate how ScraperWiki works, it uses Python, FastCGI
-and Nginx to create an API for the scraped data in the sqlite database.
+As this is meant to emulate how ScraperWiki works, it uses Python, FastCGI and Nginx to create an API for the scraped data in the sqlite database.
 
 These instructions have been performed on an EC2 Ubuntu instance.
+
+**Note that for MinnPost's specific purpose, there is an AMI for this that has many of these steps already completed.  This should be used instead of starting from scratch.**
 
 ### Code, Libraries and prerequisites
 
