@@ -107,6 +107,7 @@ class ElectionScraper:
     """
     Wrapper around saving a row.
     """
+
     try:
       scraperwiki.sqlite.save(unique_keys = ids, data = data, table_name = table)
 
@@ -163,7 +164,7 @@ class ElectionScraper:
           count = 0
           for row in rows:
             # Parse row
-            parsed = parser_method(row, i, s['table'])
+            parsed = parser_method(row, i, s['table'], s)
             self.save(['id'], parsed, s['table'], index_method)
             count = count + 1
 
@@ -200,7 +201,7 @@ class ElectionScraper:
     return rows
 
 
-  def parser_areas(self, row, group, table):
+  def parser_areas(self, row, group, table, source):
     """
     Parser for areas type supporting tables.
     """
@@ -263,7 +264,7 @@ class ElectionScraper:
     return parsed
 
 
-  def parser_results(self, row, group, table):
+  def parser_results(self, row, group, table, source):
     """
     Parser for results type scraping.  We actually split the data into a results
     table as well as a contests table.
@@ -350,6 +351,14 @@ class ElectionScraper:
       re_seats = re.compile('.*\(elect ([0-9]+)\).*', re.IGNORECASE)
       matched_seats = re_seats.match(row[4])
 
+      # Primary is not designated in anyway, but we can make some initial
+      # guesses.  All contests in an election are considered primary, but
+      # non-partisan ones only mean there is more than one seat available.
+      is_primary = self.election_meta['primary'] if 'primary' in self.election_meta else False
+      re_question = re.compile('.*\question ([0-9]+).*', re.IGNORECASE)
+      matched_question = re_question.match(row[4])
+      is_primary = False if matched_question is not None else is_primary
+
       contests_record = {
         'id': contest_id,
         'office_id': office_id,
@@ -364,6 +373,8 @@ class ElectionScraper:
         'total_votes_for_office': int(row[15]),
         'seats': matched_seats.group(1) if matched_seats is not None else 1,
         'ranked_choice': ranked_choice is not None,
+        'primary': is_primary,
+        'scope': source['contest_scope'] if 'contest_scope' in source else None,
         'updated': int(timestamp)
       }
 
@@ -465,18 +476,47 @@ class ElectionScraper:
     """
     boundary = ''
 
+    # State level race
+    if parsed_row['scope'] == 'state':
+      boundary = 'mn-state-2014'
 
-    # School district is in the office name
-    if parsed_row['results_group'] == 'school_district_results':
-      isd_match = re.compile('.*\(ISD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
-      if isd_match is not None:
-        boundary = isd_match.group(1) + '-school-district-2013'
+    # US House districts
+    if parsed_row['scope'] == 'us_house':
+      us_house_match = re.compile('.*\U.S. Representative District ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
+      if us_house_match is not None:
+        boundary = us_house_match.group(1) + '-congressional-district-2012'
       else:
-        self.log.info('[%s] Could not find ISD boundary for: %s' % ('results', parsed_row['office_name']))
+        self.log.info('[%s] Could not find US House boundary for: %s' % ('results', parsed_row['office_name']))
+
+    # State House districts
+    if parsed_row['scope'] == 'state_house':
+      state_house_match = re.compile('.*\State Representative District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
+      if state_house_match is not None:
+        boundary = state_house_match.group(1).lower() + '-state-house-district-2012'
+      else:
+        self.log.info('[%s] Could not find State House boundary for: %s' % ('results', parsed_row['office_name']))
+
+    # State court districts.  Judge - 7th District Court 27
+    if parsed_row['scope'] == 'district_court':
+      court_match = re.compile('.*\Judge - ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
+      if court_match is not None:
+        boundary = court_match.group(1).lower() + '-district-court-2012'
+      else:
+        self.log.info('[%s] Could not find State District Court boundary for: %s' % ('results', parsed_row['office_name']))
+
+    # School district is in the office name.  Special school district for
+    # Minneapolis is "1-1"
+    if parsed_row['scope'] == 'school':
+      isd_match = re.compile('.*\([IS]SD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
+      if isd_match is not None:
+        isd_match_value = '1-1' if isd_match.group(1) == '1' else isd_match.group(1)
+        boundary = isd_match_value + '-school-district-2013'
+      else:
+        self.log.info('[%s] Could not find (I|S)SD boundary for: %s' % ('results', parsed_row['office_name']))
 
     # County should be provide, but the results also have results for county
     # comissioner which are sub-county boundaries
-    if parsed_row['results_group'] == 'county_results':
+    if parsed_row['scope'] == 'county':
       comissioner_match = re.compile('.*Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
       if comissioner_match is not None:
         boundary = parsed_row['county_id'] + '-' + parsed_row['district_code'] + '-county-commissioner-district-2012'
@@ -505,7 +545,7 @@ class ElectionScraper:
     # thing.
     #
     # And there is also just wrong data occassionaly.
-    if parsed_row['results_group'] == 'municipal_results':
+    if parsed_row['scope'] == 'municipal':
       # Checks
       wards_matched = re.compile('.*(Council Member Ward|Council Member District) ([0-9]+).*\((((?!elect).)*)\).*', re.IGNORECASE).match(parsed_row['office_name'])
       mpls_parks_matched = re.compile('.*Park and Recreation Commissioner District ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
@@ -527,6 +567,10 @@ class ElectionScraper:
             boundary = ','.join(boundaries)
           else:
             self.log.info('[%s] Could not find corresponding county for municpality: %s' % ('results', parsed_row['office_name']))
+
+    # General notice if not found
+    if boundary == '':
+      self.log.info('[%s] Could not find boundary for: %s' % ('results', parsed_row['office_name']))
 
     return boundary
 
