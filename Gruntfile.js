@@ -269,7 +269,7 @@ module.exports = function(grunt) {
 
   // Watch tasks
   grunt.registerTask('lint-watch', ['jshint', 'compass:dev']);
-  grunt.registerTask('server', ['connect', 'watch']);
+  grunt.registerTask('server', ['compass:dev', 'connect', 'watch']);
 
   // Deploy tasks
   grunt.registerTask('mp-deploy', ['s3']);
