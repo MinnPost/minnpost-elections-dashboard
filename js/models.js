@@ -9,7 +9,7 @@
       "ORDER BY r.percentage ASC, r.candidate",
 
     // Fields that are for contests (not result)
-    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code', 'office_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help', 'primary', 'scope'],
+    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code', 'office_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help', 'primary', 'scope', 'partisan'],
 
     // Non-Partisan parties
     npParties: ['NP', 'WI'],
@@ -79,11 +79,6 @@
         });
         parsed.results = _.values(groupedResults);
       }
-
-      // Look for a party
-      parsed.partisan = (_.find(parsed.results, function(r, ri) {
-        return (_.indexOf(thisModel.npParties, r.party_id) === -1);
-      })) ? true : false;
 
       // Put results in a basic order.
       parsed.results = _.sortBy(parsed.results, 'candidate');
