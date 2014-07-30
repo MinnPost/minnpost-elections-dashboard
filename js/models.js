@@ -92,7 +92,7 @@
       });
       // If primary, sort by party
       if (parsed.primary) {
-        parsed.results = _.sortBy(parsed.results, 'party');
+        parsed.results = _.sortBy(parsed.results, 'party_id');
       }
 
       // Mark who won.  Overall having all precincts reporting is good

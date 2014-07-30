@@ -15,11 +15,13 @@
       boundaryAPI: 'http://boundaries.minnpost.com/1.0/',
       boundarySets: [
         'counties-2010',
-        'county-commissioner-districts-2012',
-        'minneapolis-parks-and-recreation-districts-2014',
         'minor-civil-divisions-2010',
         'school-districts-2013',
-        'wards-2012'
+        'wards-2012',
+        'state-house-districts-2012',
+        'state-senate-districts-2012',
+        'minnesota-state-2014',
+        'district-courts-2012'
       ],
       // Please don't steal/abuse
       mapQuestKey: 'Fmjtd%7Cluub2d01ng%2C8g%3Do5-9ua20a',
