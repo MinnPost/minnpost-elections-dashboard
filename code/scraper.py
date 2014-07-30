@@ -605,6 +605,11 @@ class ElectionScraper:
     election = election if election is not None and election != '' else self.newest_election
     self.election = election
 
+    # Attach election meta data for front-end querying
+    if 'meta' in self.sources[self.election]:
+      for m in self.sources[self.election]['meta']:
+        scraperwiki.sqlite.save_var(m, self.sources[self.election]['meta'][m])
+
     # Get data from Google spreadsheet
     s_rows = self.supplement_connect('supplemental_contests')
     translations = {
