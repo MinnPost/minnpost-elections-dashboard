@@ -372,7 +372,7 @@ class ElectionScraper:
         'precincts_reporting': int(row[11]),
         'total_effected_precincts': int(row[12]),
         'total_votes_for_office': int(row[15]),
-        'seats': matched_seats.group(1) if matched_seats is not None else 1,
+        'seats': int(matched_seats.group(1)) if matched_seats is not None else 1,
         'ranked_choice': ranked_choice is not None,
         'primary': is_primary,
         'scope': source['contest_scope'] if 'contest_scope' in source else None,
@@ -635,6 +635,16 @@ class ElectionScraper:
       results = scraperwiki.sqlite.select("* FROM results WHERE contest_id = '%s' AND party_id NOT IN ('%s')" % (r['id'], "', '".join(self.nonpartisan_parties)))
       r['partisan'] = True if results != [] else False
 
+      # For non-partisan primaries, the general rule is that there are twice
+      # as many winners as there are seats available for the general election.
+      # Unfortunately we can't determine this from the existing value
+      # otherwise, it will just grow.
+      if r['primary'] and not r['partisan']:
+        re_seats = re.compile('.*\(elect ([0-9]+)\).*', re.IGNORECASE)
+        matched_seats = re_seats.match(r['office_name'])
+        seats = matched_seats.group(1) if matched_seats is not None else 1
+        r['seats'] = int(seats) * 2
+
       # Check for any supplemental data
       for si in s_rows:
         s = si.custom
@@ -650,7 +660,6 @@ class ElectionScraper:
 
     self.log.info('[%s] Processed contest rows: %s' % ('contests', processed))
     self.log.info('[%s] Supplemented contest rows: %s' % ('contests', supplemented))
-
 
 
   def check_boundaries(self, *args):
@@ -682,6 +691,7 @@ class ElectionScraper:
     slug = re.sub(r'[^a-z0-9]+', '-', slug).strip('-')
     slug = re.sub(r'[-]+', '-', slug)
     return slug
+
 
 # If calling directly
 if __name__ == "__main__":
