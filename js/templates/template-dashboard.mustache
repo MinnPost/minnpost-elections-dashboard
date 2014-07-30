@@ -17,11 +17,14 @@
   </div>
 
   <div class="grid-parent grid-100 last-updated-section">
-    {{#contestMinneapolisMayor.updated}}
-      <div intro="fade">
-        Last updated at {{ contestMinneapolisMayor.updated.format('h:mm a') }}
-      </div>
-    {{/contestMinneapolisMayor.updated}}
+    <div>
+      {{#election.date}}
+        {{ election.date.format('MMM DD') }} {{ (election.primary) ? 'primary' : 'general' }} election.
+      {{/election.date}}
+      {{#election.updated}}
+        Last updated at {{ election.updated.format('h:mm a') }}
+      {{/election.updated}}
+    </div>
   </div>
 
   <div class="grid-parent grid-50 tablet-grid-50 mobile-grid-100">

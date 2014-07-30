@@ -177,4 +177,70 @@
     }
   });
 
+
+  // Model for election wide data
+  App.prototype.ElectionModel = Backbone.Model.extend({
+    // Base query for the metadata
+    query: "SELECT * FROM swvariables",
+
+    // Initializer
+    initialize: function(model, options) {
+      this.options = options || {};
+      this.app = options.app;
+    },
+
+    // Construct API call
+    url: function() {
+      return this.app.options.electionsAPI +
+        encodeURIComponent(this.query);
+    },
+
+    // Parse results
+    parse: function(response, options) {
+      var parsed = {};
+
+      // Parse out values
+      _.each(response, function(r, ri) {
+        // Parsing large ints in JS :(
+        if (r.type === 'integer') {
+          parsed[r.name] = parseInt(r.value_blob, 10);
+        }
+        else if (r.type === 'float') {
+          parsed[r.name] = parseFloat(r.value_blob);
+        }
+        else if (r.type === 'boolean') {
+          parsed[r.name] = !!r.value_blob;
+        }
+        else {
+          parsed[r.name] = r.value_blob;
+        }
+      });
+
+      // Some specifics
+      if (parsed.date) {
+        parsed.date = moment(parsed.date);
+      }
+      if (parsed.updated) {
+        parsed.updated = moment.unix(parsed.updated);
+      }
+
+      return parsed;
+    },
+
+    // Our API is pretty simple, so we do a basic time based
+    // polling.  Call right away as well.
+    connect: function() {
+      var thisModel = this;
+      this.fetch();
+      this.pollID = window.setInterval(function() {
+        thisModel.fetch();
+      }, 30000);
+    },
+
+    // Stop the polling
+    disconnect: function() {
+      window.clearInterval(this.pollID);
+    }
+  });
+
 })(mpApps['minnpost-elections-dashboard'], jQuery);

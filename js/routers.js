@@ -50,6 +50,11 @@
       data.contestGovernorR.set('show_party', 'R');
       data.contestSoSDFL.set('show_party', 'DFL');
 
+      // Get and connect to election metadata
+      this.app.election = new this.app.ElectionModel({}, { app: this.app });
+      data.election = this.app.election;
+      this.app.election.connect();
+
       // We need some of this data
       data.capabilities = thisRouter.app.options.capabilities;
 
@@ -240,7 +245,7 @@
     teardownObjects: function() {
       var thisRouter = this;
       var views = ['contestView', 'contestsSearchView', 'contestsLocationView'];
-      var models = ['contest', 'contestsSearch', 'locationContests'];
+      var models = ['contest', 'contestsSearch', 'locationContests', 'election'];
 
       // Merge in dashboard contests
       if (_.isObject(this.app.dashboardContests)) {
