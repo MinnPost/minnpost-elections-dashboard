@@ -5,7 +5,7 @@
     {{/())}}
   </div>
 
-  <h4>{{ .title }}</h4>
+  <h4>{{ .title }}{{#(show_party != undefined)}} {{ show_party }}{{/()}}{{#primary}} Primary{{/primary}}</h4>
 
   <table>
     <thead>
@@ -31,7 +31,7 @@
     </thead>
 
     <tbody>
-      {{#results:r}}{{#(r < 2 || (rows != undefined && r < rows))}}
+      {{#results:r}}{{#((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party != undefined && party_id == show_party))}}
         <tr class="{{ (r % 2 === 0) ? 'even' : 'odd' }}">
           <td class="winner-column">{{#winner}}<span class="bs-icon bs-icon-won"></span>{{/winner}}{{#(winner === false)}}<span class="bs-icon-spacer"></span>{{/()}}</td>
 

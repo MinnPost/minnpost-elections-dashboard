@@ -8,6 +8,7 @@
 var mpApps = mpApps || {};
 var mpTemplates = mpTemplates || {};
 mpTemplates['minnpost-elections-dashboard'] = mpTemplates['minnpost-elections-dashboard'] || {};
+mpApps.cacheURLIncrementer = {};
 
 /**
  * Extend underscore
@@ -74,11 +75,15 @@ _.mixin({
  */
 Backbone.ajax = function() {
   var options = arguments;
+  var hash;
 
   if (options[0].dataTypeForce !== true) {
+    hash = _.hash(options[0].url);
+    mpApps.cacheURLIncrementer[hash] = (!_.isUndefined(mpApps.cacheURLIncrementer[hash])) ?
+      mpApps.cacheURLIncrementer[hash] + 1 : 0;
     options[0].dataType = 'jsonp';
-    options[0].jsonpCallback = 'mpServerSideCachingHelper' +
-      _.hash(options[0].url);
+    options[0].jsonpCallback = 'mpServerSideCachingHelper' + hash +
+      mpApps.cacheURLIncrementer[hash];
   }
   return Backbone.$.ajax.apply(Backbone.$, options);
 };

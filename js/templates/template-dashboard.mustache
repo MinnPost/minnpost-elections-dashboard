@@ -26,10 +26,16 @@
 
   <div class="grid-parent grid-50 tablet-grid-50 mobile-grid-100">
     <div class="inner-column-left">
-      <div class="contest-governor dashboard-section">
-        {{#contestGovernor}}
+      <div class="contest-governor-dfl dashboard-section">
+        {{#contestGovernorDFL}}
           {{>dashboardContest}}
-        {{/contestGovernor}}
+        {{/contestGovernorDFL}}
+      </div>
+
+      <div class="contest-governor-r dashboard-section">
+        {{#contestGovernorR}}
+          {{>dashboardContest}}
+        {{/contestGovernorR}}
       </div>
 
       <div class="elections-search dashboard-section">
@@ -47,10 +53,16 @@
 
   <div class="grid-parent grid-50 tablet-grid-50 mobile-grid-100">
     <div class="inner-column-right">
-      <div class="contest-auditor dashboard-section">
-        {{#contestAuditor}}
+      <div class="contest-auditor-dfl dashboard-section">
+        {{#contestAuditorDFL}}
           {{>dashboardContest}}
-        {{/contestAuditor}}
+        {{/contestAuditorDFL}}
+      </div>
+
+      <div class="contest-sos-dfl dashboard-section">
+        {{#contestSoSDFL}}
+          {{>dashboardContest}}
+        {{/contestSoSDFL}}
       </div>
 
     </div>

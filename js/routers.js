@@ -31,8 +31,10 @@
 
       // Get races objects
       this.app.dashboardContests = {
-        contestGovernor: 'id-MN----0331',
-        contestAuditor: 'id-MN----0333'
+        contestGovernorDFL: 'id-MN----0331',
+        contestAuditorDFL: 'id-MN----0333',
+        contestGovernorR: 'id-MN----0331',
+        contestSoSDFL: 'id-MN----0332'
       };
       _.each(this.app.dashboardContests, function(c, ci) {
         thisRouter.app[ci] = new thisRouter.app.ContestModel({ id: c }, { app: thisRouter.app });
@@ -40,8 +42,13 @@
         data[ci] = thisRouter.app[ci];
       });
 
-      // Partials don't take arguments, so we have to set some things here
-      //data.contestMinneapolisMayor.set('rows', 8);
+      // Partials don't take arguments, so we have to set some things here.
+      // Rows and show_party are exclusive
+      //data.contestGovernorDFL.set('rows', 8);
+      data.contestGovernorDFL.set('show_party', 'DFL');
+      data.contestAuditorDFL.set('show_party', 'DFL');
+      data.contestGovernorR.set('show_party', 'R');
+      data.contestSoSDFL.set('show_party', 'DFL');
 
       // We need some of this data
       data.capabilities = thisRouter.app.options.capabilities;
