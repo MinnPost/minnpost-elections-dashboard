@@ -58,6 +58,7 @@ class ElectionScraper:
   Election scraper class.
   """
   sources_file = os.path.join(os.path.dirname(__file__), '../scraper_sources.json')
+  nonpartisan_parties = ['NP', 'WI']
   index_created = {}
 
 
@@ -478,7 +479,7 @@ class ElectionScraper:
 
     # State level race
     if parsed_row['scope'] == 'state':
-      boundary = 'mn-state-2014'
+      boundary = '27-minnesota-state-2014'
 
     # US House districts
     if parsed_row['scope'] == 'us_house':
@@ -618,6 +619,7 @@ class ElectionScraper:
       r['title'] = r['office_name']
       r['title'] = re.compile('(\(elect [0-9]+\))', re.IGNORECASE).sub('', r['title'])
       r['title'] = re.compile('((first|second|third|\w*th) choice)', re.IGNORECASE).sub('', r['title'])
+
       # Look for non-ISD parenthesis which should be place names
       re_place = re.compile('.*\(([^#]*)\).*', re.IGNORECASE).match(r['title'])
       r['title'] = re.compile('(\([^#]*\))', re.IGNORECASE).sub('', r['title'])
@@ -627,6 +629,11 @@ class ElectionScraper:
 
       # Match to a boundary or boundaries keys
       r['boundary'] = self.boundary_match_contests(r)
+
+      # Determine partisanship for contests for other processing.  We need to look
+      # at all the candidates to know if the contest is nonpartisan or not.
+      results = scraperwiki.sqlite.select("* FROM results WHERE contest_id = '%s' AND party_id NOT IN ('%s')" % (r['id'], "', '".join(self.nonpartisan_parties)))
+      r['partisan'] = True if results != [] else False
 
       # Check for any supplemental data
       for si in s_rows:

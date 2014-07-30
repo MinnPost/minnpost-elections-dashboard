@@ -49,6 +49,7 @@ Both manual results and contest question text can be managed in Google Spreadshe
   * This is the core processing of the scraper will be run frequently.
 1. Match contests to boundary area: `python code/scraper.py match_contests <ELECTION_DATE>`
 1. (optional) For results that are in a Google Spreadsheet, use the supplement step: `python code/scraper.py supplement contests <ELECTION_DATE>`
+1. (optional) To check each boundary ID against the boundary service: `python code/scraper.py check_boundaries`
 
 ## Local setup and development
 
