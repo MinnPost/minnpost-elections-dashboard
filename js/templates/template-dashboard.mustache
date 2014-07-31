@@ -29,16 +29,17 @@
 
   <div class="grid-parent grid-50 tablet-grid-50 mobile-grid-100">
     <div class="inner-column-left">
-      <div class="contest-governor-dfl dashboard-section">
-        {{#contestGovernorDFL}}
-          {{>dashboardContest}}
-        {{/contestGovernorDFL}}
-      </div>
 
       <div class="contest-governor-r dashboard-section">
         {{#contestGovernorR}}
           {{>dashboardContest}}
         {{/contestGovernorR}}
+      </div>
+
+      <div class="contest-auditor-dfl dashboard-section">
+        {{#contestAuditorDFL}}
+          {{>dashboardContest}}
+        {{/contestAuditorDFL}}
       </div>
 
       <div class="elections-search dashboard-section">
@@ -56,16 +57,23 @@
 
   <div class="grid-parent grid-50 tablet-grid-50 mobile-grid-100">
     <div class="inner-column-right">
-      <div class="contest-auditor-dfl dashboard-section">
-        {{#contestAuditorDFL}}
+    
+      <div class="contest-senate-r dashboard-section">
+        {{#contestSenateR}}
           {{>dashboardContest}}
-        {{/contestAuditorDFL}}
+        {{/contestSenateR}}
       </div>
 
-      <div class="contest-sos-dfl dashboard-section">
-        {{#contestSoSDFL}}
+      <div class="contest-house-60b-dfl dashboard-section">
+        {{#contestHouse60BDFL}}
           {{>dashboardContest}}
-        {{/contestSoSDFL}}
+        {{/contestHouse60BDFL}}
+      </div>
+
+      <div class="contest-house-48b-r dashboard-section">
+        {{#contestHouse48BR}}
+          {{>dashboardContest}}
+        {{/contestHouse48BR}}
       </div>
 
     </div>
