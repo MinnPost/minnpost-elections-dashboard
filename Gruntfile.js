@@ -1,7 +1,31 @@
-/*global module:false*/
-module.exports = function(grunt) {
+/* global module:false */
 
-  // Project configuration.
+/**
+ * Grunt file that handles managing tasks such as rendering
+ * SASS, providing a basic HTTP server, building a
+ * distribution, and deploying.
+ */
+module.exports = function(grunt) {
+  var _ = grunt.util._;
+
+  // Bower has an extra, custom section to manage where files are.  Order of
+  // list matters.
+  var bower = grunt.file.readJSON('bower.json');
+  var components = bower.dependencyMap;
+  var componentParts = {
+    js: _.map(_.compact(_.flatten(_.pluck(components, 'js'))), function(c) {
+      return 'bower_components/' + c + '.js';
+    }),
+    css: _.map(_.compact(_.flatten(_.pluck(components, 'css'))), function(c) {
+      return 'bower_components/' + c + '.css';
+    }),
+    ie: _.map(_.compact(_.flatten(_.pluck(components, 'ie'))), function(c) {
+      return 'bower_components/' + c + '.css';
+    })
+  };
+
+  // Project configuration.  Many values are directly read from
+  // package.json.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     meta: {
@@ -9,19 +33,24 @@ module.exports = function(grunt) {
         '<%= grunt.template.today("yyyy-mm-dd") + "\\n" %>' +
         '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
         '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-        ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */' +
+        ' Licensed <%= pkg.license || _.pluck(pkg.licenses, "type").join(", ") %> */' +
+        '<%= "\\n\\n" %>',
+      bannerLatest: '/*! <%= pkg.title || pkg.name %> - LATEST VERSION - ' +
+        '<%= grunt.template.today("yyyy-mm-dd") + "\\n" %>' +
+        '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
+        '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
+        ' Licensed <%= pkg.license || _.pluck(pkg.licenses, "type").join(", ") %> */' +
         '<%= "\\n\\n" %>'
     },
-    data_embed: {
-      app_data: {
-        options: {
-          output: 'dist/data.js'
-        },
-        files: {
-          // 'examples.json': ['data/example.json'],
-        }
-      }
+    components: components,
+    componentParts: componentParts,
+
+    // Clean up the distribution fold
+    clean: {
+      folder: 'dist/'
     },
+
+    // JS Hint checks code for coding styles and possible errors
     jshint: {
       options: {
         curly: true,
@@ -31,13 +60,17 @@ module.exports = function(grunt) {
         //maxlen: 80,
         indent: 2
       },
-      files: ['Gruntfile.js', 'js/*.js', 'data-processing/*.js']
+      files: ['Gruntfile.js', 'js/*.js', 'data/processing/*.js']
     },
+
+
+    // Compass is an extended SASS.  Set it up so that it generates to .tmp/
     compass: {
       options: {
-        sassDir: 'sass',
+        sassDir: 'styles',
         cssDir: '.tmp/css',
-        fontsDir: 'font',
+        generatedImagesDir: '.tmp/images',
+        fontsDir: 'styles/fonts',
         imagesDir: 'images',
         javascriptsDir: 'js',
         importPath: 'bower_components',
@@ -46,11 +79,11 @@ module.exports = function(grunt) {
       },
       dist: {
         options: {
-          imagesDir: './images',
           environment: 'production',
-          outputStyle: 'compressed',
+          outputStyle: 'expanded',
           relativeAssets: false,
-          cssDir: '.tmp/dist_css'
+          cssDir: '.tmp/dist_css',
+          generatedImagesDir: '.tmp/dist_css/images'
         }
       },
       dev: {
@@ -59,119 +92,18 @@ module.exports = function(grunt) {
         }
       }
     },
-    clean: {
-      folder: 'dist/'
-    },
-    mustache: {
-      templates: {
-        src: 'js/templates/',
-        dest: 'dist/templates.js',
-        options: {
-          prefix: 'mpTemplates = mpTemplates || {}; mpTemplates[\'<%= pkg.name %>\'] = ',
-          postfix: ';',
-          verbose: true
-        }
-      }
-    },
-    concat: {
-      options: {
-        separator: '\r\n\r\n'
-      },
-      // JS application
-      dist: {
-        src: ['js/core.js', 'dist/data.js', 'dist/templates.js',
-          'js/app.js', 'js/models.js', 'js/collections.js', 'js/views.js',
-          'js/routers.js', 'js/*.js'],
-        dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.js'
-      },
-      dist_latest: {
-        src: ['<%= concat.dist.src %>'],
-        dest: 'dist/<%= pkg.name %>.latest.js'
-      },
-      // CSS application
-      dist_css: {
-        src: ['<%= compass.dist.options.cssDir %>/main.css'],
-        dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.css'
-      },
-      dist_css_latest: {
-        src: ['<%= compass.dist.options.cssDir %>/main.css'],
-        dest: 'dist/<%= pkg.name %>.latest.css'
-      },
-      dist_css_ie: {
-        src: ['<%= compass.dist.options.cssDir %>/main.ie.css'],
-        dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.ie.css'
-      },
-      dist_css_latest_ie: {
-        src: ['<%= compass.dist.options.cssDir %>/main.ie.css'],
-        dest: 'dist/<%= pkg.name %>.latest.ie.css'
-      },
 
-      // JS libs
-      libs: {
-        src: [
-          'bower_components/jquery/jquery.min.js',
-          'bower_components/underscore/underscore-min.js',
-          'bower_components/backbone/backbone-min.js',
-          'bower_components/ractive/build/Ractive-legacy.min.js',
-          'bower_components/ractive-backbone/Ractive-Backbone.min.js',
-          'bower_components/momentjs/min/moment.min.js',
-          'bower_components/leaflet/dist/leaflet.js',
-          'bower_components/typeahead.js/dist/typeahead.min.js',
-          'bower_components/Placeholders.js/build/placeholders.jquery.min.js'
-        ],
-        dest: 'dist/<%= pkg.name %>.libs.js',
-        options: {
-          separator: ';\r\n\r\n'
-        }
-      },
-      // CSS libs
-      libs_css: {
-        src: [
-          'bower_components/unsemantic/assets/stylesheets/unsemantic-grid-responsive-tablet.css',
-          'bower_components/leaflet/dist/leaflet.css'
-        ],
-        dest: 'dist/<%= pkg.name %>.libs.css'
-      },
-      libs_css_ie: {
-        src: [
-          'bower_components/unsemantic/assets/stylesheets/ie.css',
-          'bower_components/leaflet/dist/leaflet.ie.css'
-        ],
-        dest: 'dist/<%= pkg.name %>.libs.ie.css'
-      }
-    },
-    uglify: {
-      options: {
-        banner: '<%= meta.banner %>'
-      },
-      dist: {
-        src: ['<%= concat.dist.dest %>'],
-        dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.min.js'
-      },
-      dist_latest: {
-        src: ['<%= concat.dist_latest.dest %>'],
-        dest: 'dist/<%= pkg.name %>.latest.min.js'
-      }
-    },
+
+    // Copy relevant files over to distribution
     copy: {
       images: {
         files: [
           {
             cwd: './images/',
             expand: true,
-            filter: 'isFile',
-            src: ['*'],
+            src: ['**'],
             dest: 'dist/images/'
           }
-          /*
-          {
-            cwd: '<%= compass.options.generatedImagesDir %>',
-            expand: true,
-            filter: 'isFile',
-            src: ['*'],
-            dest: 'dist/images/'
-          }
-          */
         ]
       },
       data: {
@@ -186,6 +118,166 @@ module.exports = function(grunt) {
         ]
       }
     },
+
+    // R.js to bring together files through requirejs.  We have two main builds.
+    // The first is the application build, for application, we exclude libraries
+    // and compile them separately for network efficiency as these will change
+    // less often than the application code.
+    //
+    // The second is for embedding which puts all the JS together.
+    requirejs: {
+      app: {
+        options: {
+          name: '<%= pkg.name %>',
+          // Exclude libraries
+          exclude: _.compact(_.flatten(_.pluck(_.filter(components, function(c) { return (c.js !== undefined); }), 'rname'))),
+          baseUrl: 'js',
+          mainConfigFile: 'js/config.js',
+          out: 'dist/<%= pkg.name %>.latest.js',
+          optimize: 'none'
+        }
+      },
+      libs: {
+        options: {
+          // Include just libraries
+          include: _.compact(_.flatten(_.pluck(_.filter(components, function(c) { return (c.js !== undefined); }), 'rname'))),
+          exclude: ['requirejs'],
+          baseUrl: 'js',
+          mainConfigFile: 'js/config.js',
+          out: 'dist/<%= pkg.name %>.libs.js',
+          optimize: 'none',
+          wrap: {
+            startFile: 'js/build/wrapper.start.js',
+            endFile: 'js/build/wrapper.end.js'
+          }
+        }
+      },
+      embed: {
+        options: {
+          name: '<%= pkg.name %>',
+          include: ['almond'],
+          exclude: ['requirejs'],
+          baseUrl: 'js',
+          mainConfigFile: 'js/config.js',
+          out: 'dist/<%= pkg.name %>.embed.latest.js',
+          optimize: 'none',
+          wrap: {
+            startFile: 'js/build/wrapper.start.js',
+            endFile: 'js/build/wrapper.end.js'
+          }
+        }
+      }
+    },
+
+    // Brings files toggether.  We make versioned files so that when deployed,
+    // there is a versioned and latest which allows to work and deploy
+    // without overriding exising published pieces.
+    concat: {
+      options: {
+        separator: '\r\n\r\n'
+      },
+      // JS version
+      js: {
+        src: ['<%= requirejs.app.options.out %>'],
+        dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.js'
+      },
+      jsEmbed: {
+        src: ['<%= requirejs.embed.options.out %>'],
+        dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.embed.js'
+      },
+      // CSS
+      css: {
+        src: [
+
+          '<%= compass.dist.options.cssDir %>/main.css'
+        ],
+        dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.css'
+      },
+      cssLatest: {
+        src: ['<%= concat.css.src %>'],
+        dest: 'dist/<%= pkg.name %>.latest.css'
+      },
+      // CSS Libs
+      cssLibs: {
+        src: _.isEmpty(componentParts.css) ? ['nofile'] : componentParts.css,
+        dest: 'dist/<%= pkg.name %>.libs.css'
+      },
+      cssIeLibs: {
+        src: _.isEmpty(componentParts.ie) ? ['nofile'] : componentParts.ie,
+        dest: 'dist/<%= pkg.name %>.libs.ie.css'
+      }
+    },
+
+    // Minify JS for network efficiency
+    uglify: {
+      options: {
+        banner: '<%= meta.banner %>'
+      },
+      js: {
+        src: ['<%= concat.js.dest %>'],
+        dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.min.js'
+      },
+      jsEmbed: {
+        src: ['<%= concat.jsEmbed.dest %>'],
+        dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.embed.min.js'
+      },
+      jsLatest: {
+        options: {
+          banner: '<%= meta.bannerLatest %>'
+        },
+        src: ['<%= concat.js.dest %>'],
+        dest: 'dist/<%= pkg.name %>.latest.min.js'
+      },
+      jsLatestEmbed: {
+        options: {
+          banner: '<%= meta.bannerLatest %>'
+        },
+        src: ['<%= concat.jsEmbed.dest %>'],
+        dest: 'dist/<%= pkg.name %>.latest.embed.min.js'
+      },
+      jsLibs: {
+        options: {
+          banner: ''
+        },
+        src: ['dist/<%= pkg.name %>.libs.js'],
+        dest: 'dist/<%= pkg.name %>.libs.min.js'
+      }
+    },
+
+    // Minify CSS for network efficiency
+    cssmin: {
+      options: {
+        banner: '<%= meta.banner %>',
+        report: true
+      },
+      css: {
+        src: ['<%= concat.css.dest %>'],
+        dest: 'dist/<%= pkg.name %>.<%= pkg.version %>.min.css'
+      },
+      cssLatest: {
+        options: {
+          banner: '<%= meta.bannerLatest %>'
+        },
+        src: ['<%= concat.css.dest %>'],
+        dest: 'dist/<%= pkg.name %>.latest.min.css'
+      },
+      cssLibs: {
+        options: {
+          banner: ''
+        },
+        src: ['<%= concat.cssLibs.dest %>'],
+        dest: 'dist/<%= pkg.name %>.libs.min.css'
+      },
+      cssIeLibs: {
+        options: {
+          banner: ''
+        },
+        src: ['<%= concat.cssIeLibs.dest %>'],
+        dest: 'dist/<%= pkg.name %>.libs.min.ie.css'
+      }
+    },
+
+    // Deploy to S3
     s3: {
       options: {
         // This is specific to MinnPost
@@ -199,7 +291,8 @@ module.exports = function(grunt) {
         //key: 'YOUR KEY',
         //secret: 'YOUR SECRET',
         bucket: 'data.minnpost',
-        access: 'public-read'
+        access: 'public-read',
+        gzip: true
       },
       mp_deploy: {
         upload: [
@@ -220,6 +313,7 @@ module.exports = function(grunt) {
         ]
       }
     },
+    // HTTP Server
     connect: {
       server: {
         options: {
@@ -227,9 +321,10 @@ module.exports = function(grunt) {
         }
       }
     },
+    // Watches files for changes and performs task
     watch: {
-      files: ['<%= jshint.files %>', 'sass/*.scss'],
-      tasks: 'lint-watch'
+      files: ['<%= jshint.files %>', 'styles/*.scss'],
+      tasks: 'watcher'
     }
   });
 
@@ -242,36 +337,29 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
-  grunt.loadNpmTasks('grunt-mustache');
+  grunt.loadNpmTasks('grunt-contrib-requirejs');
+  grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-s3');
 
-
-  // Custom task to save json data into a JS file for concatentation
-  grunt.registerMultiTask('data_embed', 'Make data embeddable', function() {
-    var options = this.options();
-    var config = grunt.config.get();
-    var finalOutput = '';
-    console.log(options);
-
-    this.files.forEach(function(f) {
-      var data = grunt.file.readJSON(f.src[0]);
-      finalOutput += 'mpApp["' + config.pkg.name + '"].data["' + f.dest + '"] = ' + JSON.stringify(data) + '; \n\n';
-      grunt.log.write('Read file: ' + f.src[0] + '...').ok();
-
-    });
-
-    grunt.file.write(options.output, finalOutput);
-    grunt.log.write('Wrote data to: ' + options.output + '...').ok();
+  // Custom task to output embed code when deploy is run, if the project is Inline
+  grunt.registerTask('inline_embed', 'Embed code generation.', function(name) {
+    grunt.log.writeln('To embed this in an article, use the following.  For full page article, copy relevant code from index-deploy.html.');
+    grunt.log.writeln('=====================================');
+    grunt.log.writeln('<div id="' + name + '-container mp"></div>');
+    grunt.log.writeln('<script type="text/javascript" src="https://s3.amazonaws.com/data.minnpost/projects/' + name + '/' + name + '.embed.latest.min.js"></script>');
+    grunt.log.writeln('=====================================');
   });
 
   // Default build task
-  grunt.registerTask('default', ['jshint', 'compass:dist', 'clean', 'data_embed', 'mustache', 'concat', 'uglify', 'copy']);
+  grunt.registerTask('default', ['jshint', 'compass:dist', 'clean', 'copy', 'requirejs', 'concat', 'cssmin', 'uglify']);
 
   // Watch tasks
-  grunt.registerTask('lint-watch', ['jshint', 'compass:dev']);
-  grunt.registerTask('server', ['compass:dev', 'connect', 'watch']);
+
+  grunt.registerTask('watcher', ['jshint', 'compass:dev']);
+  grunt.registerTask('server', ['jshint', 'compass:dev', 'connect', 'watch']);
+
 
   // Deploy tasks
-  grunt.registerTask('mp-deploy', ['s3']);
+  grunt.registerTask('deploy', ['s3', 'inline_embed:minnpost-elections-dashboard']);
 
 };

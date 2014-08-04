@@ -1,16 +1,36 @@
-(function(App, $, undefined) {
+/**
+ * Views
+ */
 
-  App.prototype.ApplicationView = Ractive.extend({
+define([
+  'jquery', 'underscore', 'backbone', 'ractive', 'ractive-events-tap',
+  'ractive-backbone', 'leaflet', 'models', 'collections',
+  'typeahead-js', 'placeholders-js', 'mpFormatters',
+  'text!templates/application.mustache', 'text!templates/footnote.mustache',
+  'text!templates/contest.mustache', 'text!templates/contests.mustache',
+  'text!templates/dashboard-contest.mustache', 'text!templates/dashboard.mustache',
+  'text!templates/loading.mustache'
+], function(
+  $, _, Backbone, Ractive, RactiveETap, RactiveBackbone, L, models,
+  collections, typeahead, placeholders, mpFormatters,
+  tApplication, tFootnote, tContest,
+  tContests, tDContest, tDashboard, tLoading
+  ) {
+  var views = {};
+
+  views.ApplicationView = Ractive.extend({
     init: function() {
-    }
+    },
+    template: tApplication
   });
 
-  App.prototype.FootnoteView = Ractive.extend({
+  views.FootnoteView = Ractive.extend({
     init: function() {
-    }
+    },
+    template: tFootnote
   });
 
-  App.prototype.ContestBaseView = Ractive.extend({
+  views.ContestBaseView = Ractive.extend({
     defaultMapStyle: {
       stroke: true,
       color: '#2DA51D',
@@ -21,6 +41,8 @@
       fillOpacity: 0.2,
       clickable: false
     },
+
+    adapt: [ 'Backbone' ],
 
     // Put together map for boundary(s)
     makeMap: function(id, boundaries) {
@@ -103,7 +125,14 @@
     }
   });
 
-  App.prototype.DashboardView = App.prototype.ContestBaseView.extend({
+  views.DashboardView = views.ContestBaseView.extend({
+    template: tDashboard,
+
+    partials: {
+      dashboardContest: tDContest,
+      loading: tLoading
+    },
+
     init: function(options) {
       var thisView = this;
       var $contestSearch = $(this.el).find('#contest-search');
@@ -111,7 +140,7 @@
       this.app = options.app;
 
       // Attach formatters
-      this.set('fNum', _.formatNumber);
+      this.set('formatters', mpFormatters);
 
       // Typeahead.  This seems to break in IE. Query can be
       // either a contest or candidate
@@ -159,12 +188,18 @@
     }
   });
 
-  App.prototype.ContestView = App.prototype.ContestBaseView.extend({
+  views.ContestView = views.ContestBaseView.extend({
+    template: tContest,
+
+    partials: {
+      loading: tLoading
+    },
+
     init: function() {
       this.set('classes', 'contest-view');
 
       // Attach formatters
-      this.set('fNum', _.formatNumber);
+      this.set('formatters', mpFormatters);
 
       // Make a map if boundary has been found
       this.observe('boundarySets', function(newValue, oldValue) {
@@ -175,14 +210,23 @@
     }
   });
 
-  App.prototype.ContestsView = App.prototype.ContestBaseView.extend({
+  views.ContestsView = views.ContestBaseView.extend({
+    template: tContests,
+
+    partials: {
+      contest: tContest,
+      loading: tLoading
+    },
+
     init: function() {
       var thisView = this;
       var shapes = [];
       var rendered = {};
 
       // Attach formatters
-      this.set('fNum', _.formatNumber);
+
+      // Attach formatters
+      this.set('formatters', mpFormatters);
 
       // React to boundary update.  Not sure how to use wildcards in
       // Ractive, so we hack around it.
@@ -227,4 +271,6 @@
     }
   });
 
-})(mpApps['minnpost-elections-dashboard'], jQuery);
+
+  return views;
+});

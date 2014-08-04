@@ -1,9 +1,14 @@
 /**
- * Models
+ * Collections
  */
-(function(App, $, undefined) {
-  App.prototype.ContestsCollection = Backbone.Collection.extend({
-    model: App.prototype.ContestModel,
+define([
+  'jquery', 'underscore', 'backbone', 'models'
+], function($, _, Backbone, models) {
+
+  var collections = {};
+
+  collections.ContestsCollection = Backbone.Collection.extend({
+    model: models.ContestModel,
 
     // Base query for the contest
     query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
@@ -99,7 +104,7 @@
   });
 
   // A collection based a location
-  App.prototype.ContestsLocationCollection = App.prototype.ContestsCollection.extend({
+  collections.ContestsLocationCollection = collections.ContestsCollection.extend({
 
     // Base query for the contest
     query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
@@ -169,4 +174,6 @@
     }
   });
 
-})(mpApps['minnpost-elections-dashboard'], jQuery);
+  return collections;
+
+});

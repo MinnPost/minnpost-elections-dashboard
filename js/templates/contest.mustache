@@ -74,15 +74,15 @@
               {{/partisan}}
 
               {{#(ranked_choice == 1)}}
-                <td class="first-choice-column first-choice-heading">{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>
-                <td class="second-choice-column first-choice-heading">{{ fNum(ranked_choices.2.percentage) }}% ({{ fNum(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>
-                <td class="third-choice-column first-choice-heading">{{ fNum(ranked_choices.3.percentage) }}% ({{ fNum(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>
-                <td class="final-column first-choice-heading">{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
+                <td class="first-choice-column first-choice-heading">{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>
+                <td class="second-choice-column first-choice-heading">{{ formatters.number(ranked_choices.2.percentage) }}% ({{ formatters.number(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>
+                <td class="third-choice-column first-choice-heading">{{ formatters.number(ranked_choices.3.percentage) }}% ({{ formatters.number(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>
+                <td class="final-column first-choice-heading">{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% ({{ formatters.number(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
               {{/()}}
 
               {{#(ranked_choice != 1)}}
-                <td>{{ fNum(percentage) }}%</td>
-                <td>{{ fNum(votes_candidate, 0) }}</td>
+                <td>{{ formatters.number(percentage) }}%</td>
+                <td>{{ formatters.number(votes_candidate, 0) }}</td>
               {{/()}}
             </tr>
           {{/results}}

@@ -38,12 +38,12 @@
           <td class="candidate-column">{{ candidate }}</td>
 
           {{#(ranked_choice == 1)}}
-            <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>
-            <td>{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
+            <td>{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>
+            <td>{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% ({{ formatters.number(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
           {{/()}}
 
           {{#(ranked_choice != 1)}}
-            <td>{{ fNum(percentage) }}% ({{ fNum(votes_candidate, 0) }} votes)</td>
+            <td>{{ formatters.number(percentage) }}% ({{ formatters.number(votes_candidate, 0) }} votes)</td>
           {{/()}}
         </tr>
       {{/()}}{{/results}}

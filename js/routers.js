@@ -1,8 +1,12 @@
 /**
  * Routers
  */
-(function(App, $, undefined) {
-  App.prototype.DashboardRouter = Backbone.Router.extend({
+define([
+  'jquery', 'underscore', 'backbone', 'models', 'collections', 'views'
+], function($, _, Backbone, models, collections, views) {
+  var routers = {};
+
+  routers.DashboardRouter = Backbone.Router.extend({
     initialize: function(options) {
       this.options = options;
       this.app = options.app;
@@ -38,7 +42,7 @@
         contestHouse48BR: 'id-MN---48B-0283'
       };
       _.each(this.app.dashboardContests, function(c, ci) {
-        thisRouter.app[ci] = new thisRouter.app.ContestModel({ id: c }, { app: thisRouter.app });
+        thisRouter.app[ci] = new models.ContestModel({ id: c }, { app: thisRouter.app });
         thisRouter.app[ci].connect(false);
         data[ci] = thisRouter.app[ci];
       });
@@ -53,7 +57,7 @@
       data.contestHouse48BR.set('show_party', 'R');
 
       // Get and connect to election metadata
-      this.app.election = new this.app.ElectionModel({}, { app: this.app });
+      this.app.election = new models.ElectionModel({}, { app: this.app });
       data.election = this.app.election;
       this.app.election.connect();
 
@@ -62,16 +66,10 @@
 
       // Create dashboard view
       data.title = 'Dashboard';
-      this.app.dashboardView = new this.app.DashboardView({
+      this.app.dashboardView = new views.DashboardView({
         el: this.app.$el.find('.content-container'),
-        template: this.app.template('template-dashboard'),
         data: data,
-        app: this.app,
-        partials: {
-          dashboardContest: this.app.template('template-dashboard-contest'),
-          loading: this.app.template('template-loading')
-        },
-        adaptors: [ 'Backbone' ]
+        app: this.app
       });
 
       // Handle searches here as we have an easy reference
@@ -100,23 +98,17 @@
     routeSearch: function(term) {
       this.teardownObjects();
 
-      this.app.contestsSearch = new this.app.ContestsCollection([], {
+      this.app.contestsSearch = new collections.ContestsCollection([], {
         app: this.app,
         search: term
       });
       this.app.contestsSearch.connect();
-      this.app.contestsSearchView = new this.app.ContestsView({
+      this.app.contestsSearchView = new view.ContestsView({
         el: this.app.$el.find('.content-container'),
-        template: this.app.template('template-contests'),
         data: {
           models: this.app.contestsSearch,
           title: 'Search for "' + term + '"'
-        },
-        partials: {
-          contest: this.app.template('template-contest'),
-          loading: this.app.template('template-loading')
-        },
-        adaptors: [ 'Backbone' ]
+        }
       });
       this.app.contestsSearchView.observeTitle(this.app.options.originalTitle);
       this.reFocus();
@@ -127,16 +119,11 @@
     routeContest: function(contest) {
       this.teardownObjects();
 
-      this.app.contest = new this.app.ContestModel({ id: contest }, { app: this.app });
+      this.app.contest = new models.ContestModel({ id: contest }, { app: this.app });
       this.app.contest.connect();
-      this.app.contestView = new this.app.ContestView({
+      this.app.contestView = new views.ContestView({
         el: this.app.$el.find('.content-container'),
-        template: this.app.template('template-contest'),
-        data: this.app.contest,
-        partials: {
-          loading: this.app.template('template-loading')
-        },
-        adaptors: [ 'Backbone' ]
+        data: this.app.contest
       });
       this.app.contestView.observeTitle(this.app.options.originalTitle);
       this.reFocus();
@@ -150,25 +137,19 @@
 
       // Handle location
       function handleLocation(lonlat) {
-        thisRouter.app.locationContests = new thisRouter.app.ContestsLocationCollection(
+        thisRouter.app.locationContests = new collections.ContestsLocationCollection(
           [], {
             app: thisRouter.app,
             lonlat: lonlat
           });
         thisRouter.app.locationContests.fetchBoundaryFromCoordinates();
-        thisRouter.app.contestsLocationView = new thisRouter.app.ContestsView({
+        thisRouter.app.contestsLocationView = new views.ContestsView({
           el: thisRouter.app.$el.find('.content-container'),
-          template: thisRouter.app.template('template-contests'),
           data: {
             models: thisRouter.app.locationContests,
             title: (place) ? 'Contests for "' + place + '"' : 'Contests for your location',
             lonlat: lonlat
-          },
-          partials: {
-            contest: thisRouter.app.template('template-contest'),
-            loading: thisRouter.app.template('template-loading')
-          },
-          adaptors: [ 'Backbone' ]
+          }
         });
         thisRouter.app.contestsLocationView.observeTitle(thisRouter.app.options.originalTitle);
         thisRouter.reFocus();
@@ -274,4 +255,6 @@
       });
     }
   });
-})(mpApps['minnpost-elections-dashboard'], jQuery);
+
+  return routers;
+});

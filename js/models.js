@@ -1,8 +1,12 @@
 /**
  * Models
  */
-(function(App, $, undefined) {
-  App.prototype.ContestModel = Backbone.Model.extend({
+define([
+  'jquery', 'underscore', 'backbone', 'moment', 'helpers'
+], function($, _, Backbone, moment, helpers) {
+  var models = {};
+
+  models.ContestModel = Backbone.Model.extend({
     // Base query for the contest
     query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
       "ON c.id = r.contest_id WHERE c.id = '%CONTEST_ID%' " +
@@ -147,10 +151,10 @@
     fetchBoundary: function() {
       var thisModel = this;
 
-      this.app.jsonpRequest({
+      helpers.jsonpRequest({
         url: this.app.options.boundaryAPI + 'boundary/?limit=10&slug__in=' +
           encodeURIComponent(this.get('boundary'))
-      })
+      }, this.app.options)
       .done(function(response) {
         if (_.isArray(response.objects)) {
           thisModel.set('boundarySets', response.objects);
@@ -179,7 +183,7 @@
 
 
   // Model for election wide data
-  App.prototype.ElectionModel = Backbone.Model.extend({
+  models.ElectionModel = Backbone.Model.extend({
     // Base query for the metadata
     query: "SELECT * FROM swvariables",
 
@@ -243,4 +247,7 @@
     }
   });
 
-})(mpApps['minnpost-elections-dashboard'], jQuery);
+
+  return models;
+
+});

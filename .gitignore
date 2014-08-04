@@ -2,6 +2,7 @@ node_modules
 components
 bower_components
 !dist
+!js/build
 dist/data.js
 dist/templates.js
 false

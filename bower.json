@@ -9,15 +9,139 @@
     "bower_components"
   ],
   "dependencies": {
-    "jquery": "1.9",
-    "underscore": "*",
-    "backbone": "*",
-    "ractive": "https://github.com/zzolo/Ractive.git#ie8-exception-hack",
-    "momentjs": "~2.3.1",
-    "leaflet": "~0.6.4",
-    "typeahead.js": "~0.9.3",
-    "unsemantic": "https://github.com/nathansmith/unsemantic.git",
+    "leaflet": "0.7.3",
+    "ractive": "~0.4.0",
+    "ractive-events-tap": "~0.1.1",
+    "requirejs": "~2.1.11",
+    "almond": "~0.2.9",
+    "text": "~2.0.12",
+    "underscore": "~1.6.0",
+    "jquery": "~1.11.0",
+    "minnpost-styles": "master",
+    "momentjs": "~2.8.1",
+    "typeahead.js": "~0.10.4",
     "Placeholders.js": "~3.0.0",
-    "ractive-backbone": "~0.1.0"
+    "ractive-backbone": "~0.1.1",
+    "backbone": "~1.1.2"
+  },
+  "dependencyMap": {
+    "requirejs": {
+      "rname": "requirejs",
+      "js": [
+        "requirejs/require"
+      ]
+    },
+    "almond": {
+      "rname": "almond",
+      "js": [
+        "almond/almond"
+      ]
+    },
+    "text": {
+      "rname": "text",
+      "js": [
+        "text/text"
+      ]
+    },
+    "jquery": {
+      "rname": "jquery",
+      "js": [
+        "jquery/dist/jquery"
+      ],
+      "returns": "$"
+    },
+    "underscore": {
+      "rname": "underscore",
+      "js": [
+        "underscore/underscore"
+      ],
+      "returns": "_"
+    },
+    "ractive": {
+      "rname": "ractive",
+      "js": [
+        "ractive/ractive"
+      ],
+      "returns": "Ractive"
+    },
+    "ractive-events-tap": {
+      "rname": "ractive-events-tap",
+      "js": [
+        "ractive-events-tap/ractive-events-tap"
+      ],
+      "returns": "RactiveEventsTap"
+    },
+    "ractive-backbone": {
+      "rname": "ractive-bakcbone",
+      "js": [
+        "ractive-bakcbone/ractive-bakcbone"
+      ],
+      "returns": "RactiveBackbone"
+    },
+    "leaflet": {
+      "rname": "leaflet",
+      "js": [
+        "leaflet/dist/leaflet-src"
+      ],
+      "css": [
+        "leaflet/dist/leaflet"
+      ],
+      "images": [
+        "leaflet/dist/images"
+      ],
+      "returns": "L"
+    },
+    "momentjs": {
+      "rname": "momentjs",
+      "js": [
+        "momentjs/moment"
+      ],
+      "returns": "moment"
+    },
+    "Placeholders.js": {
+      "rname": "placeholders-js",
+      "js": [
+        "Placeholders.js/build/placeholders.jquery"
+      ],
+      "returns": "placeholders"
+    },
+    "typeahead.js": {
+      "rname": "typeahead-js",
+      "js": [
+        "typeahead.js/dist/typeahead.jquery"
+      ],
+      "returns": "typeahead"
+    },
+    "minnpost-styles": {
+      "rname": "mpStyles",
+      "css": [
+        "//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css",
+        "minnpost-styles/dist/minnpost-styles"
+      ],
+      "sass": [
+        "minnpost-styles/styles/main"
+      ]
+    },
+    "mpConfig": {
+      "rname": "mpConfig",
+      "js": [
+        "minnpost-styles/dist/minnpost-styles.config"
+      ],
+      "returns": "mpConfig"
+    },
+    "mpFormatters": {
+      "rname": "mpFormatters",
+      "js": [
+        "minnpost-styles/dist/minnpost-styles.formatters"
+      ],
+      "returns": "mpFormatters"
+    },
+    "mpMaps": {
+      "rname": "mpMaps",
+      "js": [
+        "minnpost-styles/dist/minnpost-styles.maps"
+      ],
+      "returns": "mpMaps"
+    }
   }
 }

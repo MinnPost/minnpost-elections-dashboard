@@ -26,7 +26,9 @@
     "grunt-contrib-sass": "~0.3.0",
     "grunt-contrib-connect": "~0.3.0",
     "grunt-contrib-compass": "~0.5.0",
-    "grunt-mustache": "https://github.com/SealedEnvelope/grunt-mustache/archive/fixquotes.tar.gz"
+    "grunt-mustache": "https://github.com/SealedEnvelope/grunt-mustache/archive/fixquotes.tar.gz",
+    "grunt-contrib-requirejs": "^0.4.4",
+    "grunt-contrib-cssmin": "^0.10.0"
   },
   "author": {
     "name": "MinnPost",
