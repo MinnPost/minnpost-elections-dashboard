@@ -8,9 +8,9 @@
     defaultOptions: {
       dataPath: './data/',
       jsonpProxy: 'http://mp-jsonproxy.herokuapp.com/proxy?url=',
-      electionsAPI: 'http://localhost:5000/?q=',
+      electionsAPI: 'http://50.19.100.197/?box=ubuntu&q=',
       electionsAPILocal: 'http://localhost:5000/?q=',
-      electionsAPIEC2: 'http://54.204.17.59/?box=ubuntu&q=',
+      electionsAPIEC2: 'http://50.19.100.197/?box=ubuntu&q=',
       electionsAPIScraperWiki: 'https://premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
       boundaryAPI: 'http://boundaries.minnpost.com/1.0/',
       boundarySets: [
