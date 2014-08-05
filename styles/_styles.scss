@@ -1,0 +1,254 @@
+/**
+ * Main styles for: minnpost-elections-dashboard
+ *
+ * Make the default styles for a 960px wide screen.  A mobile
+ * first approach is fine, but starting with a 960px wide
+ * screen means that older browsers that do not support
+ * media queries will be fine as they are all desktop browsers.
+ */
+
+/**
+ * General variables
+ */
+
+$color-light-gray: #7A7A7A;
+$color-medium-gray: #404040;
+$color-dark-gray: #282828;
+
+.mp .minnpost-elections-dashboard-container {
+
+  padding-top: 2em;
+
+  // Maps
+  .contest-map {
+    width: 100%;
+    height: 25em;
+  }
+
+  // Tables
+  table {
+    width: 100%;
+  }
+
+  table thead th {
+    padding-bottom: 0;
+  }
+
+  table thead tr.table-second-heading th {
+    padding-top: 0;
+    padding-bottom: .5em;
+    font-weight: normal;
+    font-style: italic;
+    color: $color-medium-gray;
+    font-size: .85em;
+    line-height: 1.5em;
+  }
+
+  // Typehead
+  .tt-hint {
+    color: $color-medium-gray;
+  }
+
+  .tt-dropdown-menu {
+    font-size: 1em;
+    line-height: 1.25em;
+    width: 100%;
+    margin-top: .25em;
+    padding: .25em 0;
+    background-color: #FFFFFF;
+    border: 1px solid $color-medium-gray;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    @include border-radius(3px);
+    @include box-shadow(0 5px 10px rgba(0,0,0,.2));
+  }
+
+  .tt-suggestion {
+    padding: .25em .5em;
+
+    &:hover {
+      color: #FFFFFF;
+      background-color: $color-dark-gray;
+      cursor: pointer;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .tt-highlight {
+    font-weight: bold;
+  }
+
+  // General
+  .contest-link {
+    display: block;
+    text-align: right;
+    margin-bottom: 1em;
+    font-size: 0.85em;
+  }
+
+  .dashboard-link {
+    display: block;
+    margin-bottom: 1em;
+  }
+
+  .inner-column-left {
+    //padding-right: 1.5em;
+  }
+
+  .inner-column-right {
+    //padding-left: 1.5em;
+  }
+
+  table .winner-column {
+    padding: 0;
+  }
+
+  .is-final table .winner-column {
+    padding: .5em;
+  }
+
+  .candidate-column {
+    width: 60%;
+  }
+
+  .is-ranked-choice .candidate-column {
+    width: 50%;
+  }
+
+  // Contest
+  .contest .last-updated {
+    min-height: 1.5em;
+    font-weight: bold;
+    color: $color-medium-gray;
+    margin-bottom: 1em;
+  }
+
+  .contest .contest-link {
+    display: none;
+  }
+
+  .contest .grid-container {
+    margin-bottom: 1em;
+  }
+
+  .contest .inner-column-left {
+    padding-right: 1em;
+  }
+
+  .contest .inner-column-right {
+    padding-left: 1em;
+  }
+
+  // Contests
+  .contests .contests-title {
+    margin-bottom: 1em;
+  }
+
+  .contests .contest-list .dashboard-link {
+    display: none;
+  }
+
+  .contests .contest-list .contest-link {
+    display: block;
+  }
+
+  .contests .inner-column-left {
+    padding-right: 1em;
+  }
+
+  .contests .inner-column-right {
+    padding-left: 1em;
+  }
+
+  .contests #location-map {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 2.5em;
+  }
+
+  .contests .location-note {
+    padding-top: 0;
+    margin-bottom: .5em;
+    font-style: italic;
+    color: $color-medium-gray;
+    font-size: .85em;
+    line-height: 1.5em;
+  }
+
+  .contests h3.with-location {
+    margin-bottom: 0;
+  }
+
+  // Dashboard
+  .dashboard .dashboard-section {
+    margin-bottom: 3em;
+  }
+
+  .dashboard .last-updated-section {
+    min-height: 1.5em;
+    margin-bottom: 2.5em;
+    text-align: center;
+    font-weight: bold;
+    color: $color-light-gray;
+  }
+
+  // Dashboard location section
+  .dashboard .location-search-section {
+    padding-bottom: 2em;
+    margin-bottom: 2em;
+    text-align: center;
+    border-bottom: 1px solid $color-light-gray;
+
+    form {
+      margin-bottom: 0;
+    }
+  }
+
+  .dashboard .location-search-group {
+    @include inline-block();
+  }
+
+  // Dashboard elections search
+  .dashboard .elections-search {
+
+    .form-input-group {
+      width: 100%;
+    }
+
+    .twitter-typeahead {
+      vertical-align: middle;
+      width: 100%;
+    }
+  }
+
+  // "Mobile" breakpoint
+  @media screen and (max-width: 768px) {
+    .inner-column-left,
+    .contest .inner-column-left,
+    .contests .inner-column-left {
+      padding-right: 0;
+    }
+
+    .inner-column-right,
+    .contest .inner-column-right,
+    .contests .inner-column-right {
+      padding-left: 0;
+    }
+  }
+
+  @media screen and (max-width: 500px) {
+    .is-ranked-choice .candidate-column {
+      width: auto;
+    }
+
+    .contest .second-choice-column {
+      display: none;
+    }
+
+    .contest .third-choice-column {
+      display: none;
+    }
+  }
+}

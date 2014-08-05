@@ -84,7 +84,7 @@ define('minnpost-elections-dashboard', [
       mapQuestQuery: '//open.mapquestapi.com/geocoding/v1/address?key=[[[KEY]]]&outFormat=json&countrycodes=us&maxResults=1&location=[[[ADDRESS]]]',
       originalTitle: document.title,
       capabilities: {
-        typeahead: (helpers.isMSIE() !== 9),
+        typeahead: true, //(helpers.isMSIE() !== 9),
         preventLinks: (!helpers.isMSIE() && helpers.isMSIE() <= 9)
       },
       availablePaths: {

@@ -15,6 +15,10 @@ require.config({
     },
     'typeahead-js': {
       deps: ['jquery']
+    },
+    'bloodhound': {
+      dep: ['jquery'],
+      exports: 'Bloodhound'
     }
   },
   baseUrl: 'js',
@@ -32,6 +36,7 @@ require.config({
     'moment': '../bower_components/momentjs/moment',
     'placeholders-js': '../bower_components/Placeholders.js/build/placeholders.jquery',
     'typeahead-js': '../bower_components/typeahead.js/dist/typeahead.jquery',
+    'bloodhound': '../bower_components/typeahead.js/dist/bloodhound',
     'mpConfig': '../bower_components/minnpost-styles/dist/minnpost-styles.config',
     'mpFormatters': '../bower_components/minnpost-styles/dist/minnpost-styles.formatters',
     'mpMaps': '../bower_components/minnpost-styles/dist/minnpost-styles.maps',

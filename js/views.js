@@ -5,14 +5,14 @@
 define([
   'jquery', 'underscore', 'backbone', 'ractive', 'ractive-events-tap',
   'ractive-backbone', 'leaflet', 'models', 'collections',
-  'typeahead-js', 'placeholders-js', 'mpFormatters',
+  'bloodhound', 'typeahead-js', 'placeholders-js', 'mpFormatters',
   'text!templates/application.mustache', 'text!templates/footnote.mustache',
   'text!templates/contest.mustache', 'text!templates/contests.mustache',
   'text!templates/dashboard-contest.mustache', 'text!templates/dashboard.mustache',
   'text!templates/loading.mustache'
 ], function(
   $, _, Backbone, Ractive, RactiveETap, RactiveBackbone, L, models,
-  collections, typeahead, placeholders, mpFormatters,
+  collections, Bloodhound, typeahead, placeholders, mpFormatters,
   tApplication, tFootnote, tContest,
   tContests, tDContest, tDashboard, tLoading
   ) {
@@ -136,13 +136,13 @@ define([
     init: function(options) {
       var thisView = this;
       var $contestSearch = $(this.el).find('#contest-search');
-      var query;
+      var query, querySearchEngine;
       this.app = options.app;
 
       // Attach formatters
       this.set('formatters', mpFormatters);
 
-      // Typeahead.  This seems to break in IE. Query can be
+      // Typeahead.  This (used to?) break in IE. Query can be
       // either a contest or candidate
       if (this.app.options.capabilities.typeahead) {
         query = this.app.options.electionsAPI +
@@ -156,20 +156,33 @@ define([
           "JOIN contests AS c ON r.contest_id = c.id " +
           "WHERE r.candidate LIKE '%%QUERY%' ORDER BY title LIMIT 20 ";
 
-        // Make typeahead functionality for search
-        $contestSearch.typeahead({
+        // Create bloodhound engine
+        querySearchEngine = new Bloodhound({
           name: 'Contests and Candidates',
+          datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title'),
+          queryTokenizer: Bloodhound.tokenizers.whitespace,
           remote: {
             url: query,
-            dataType: 'jsonp',
-            jsonpCallback: 'mpServerSideCachingHelper',
             replace: function(url, uriEncodedQuery) {
               var query = decodeURIComponent(uriEncodedQuery);
               query = query.replace(new RegExp(' ', 'g'), '%');
               return encodeURI(url.replace(new RegExp(this.wildcard, 'g'), query));
+            },
+            ajax: {
+              dataType: 'jsonp',
+              jsonpCallback: 'mpServerSideCachingHelper'
             }
-          },
-          valueKey: 'title'
+          }
+        });
+        querySearchEngine.initialize();
+
+        // Make typeahead functionality for search
+        $contestSearch.typeahead(null, {
+          displayKey: 'title',
+          source: querySearchEngine.ttAdapter(),
+          minLength: 3,
+          hint: true,
+          highlight: true
         });
 
         // Handle search selected

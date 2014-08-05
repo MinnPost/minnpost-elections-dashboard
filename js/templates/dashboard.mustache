@@ -1,22 +1,28 @@
-<div class="dashboard cf grid-container grid-parent {{ classes }}">
+<div class="dashboard {{ classes }}">
 
-  <div class="grid-parent grid-100 location-search-section">
-    <form on-submit="addresssSearch">
+  <div class="row location-search-section">
+    <form role="form" class="" on-submit="addresssSearch">
+
       <div class="location-search-group">
-        <input type="text" id="address-search" placeholder="Search by address for results" />
+        <div class="form-input-group">
+          <label for="address" class="sr-only">Search address for results</label>
+          <input type="text" id="address-search" placeholder="Search address for results">
 
-        {{#geolocationEnabled}}
-          <div class="geolocation">
-            <a href="#location">Or view contests at your current location</a>
+          <div class="button-group">
+            <button type="submit" class="button primary address-search-submit">Search</button>
           </div>
-        {{/geolocationEnabled}}
+        </div>
       </div>
 
-      <input type="submit" value="Go" class="address-search-submit" />
+      {{#geolocationEnabled}}
+        <div class="geolocation">
+          <a href="#location">Or view contests at your current location</a>
+        </div>
+      {{/geolocationEnabled}}
     </form>
   </div>
 
-  <div class="grid-parent grid-100 last-updated-section">
+  <div class="row last-updated-section">
     <div>
       {{#election.date}}
         {{ election.date.format('MMM DD') }} {{ (election.primary) ? 'primary' : 'general' }} election.
@@ -27,55 +33,63 @@
     </div>
   </div>
 
-  <div class="grid-parent grid-50 tablet-grid-50 mobile-grid-100">
-    <div class="inner-column-left">
+  <div class="row">
+    <div class="column-medium-50">
+      <div class="inner-column-left">
 
-      <div class="contest-governor-r dashboard-section">
-        {{#contestGovernorR}}
-          {{>dashboardContest}}
-        {{/contestGovernorR}}
-      </div>
+        <div class="contest-governor-r dashboard-section">
+          {{#contestGovernorR}}
+            {{>dashboardContest}}
+          {{/contestGovernorR}}
+        </div>
 
-      <div class="contest-auditor-dfl dashboard-section">
-        {{#contestAuditorDFL}}
-          {{>dashboardContest}}
-        {{/contestAuditorDFL}}
-      </div>
+        <div class="contest-auditor-dfl dashboard-section">
+          {{#contestAuditorDFL}}
+            {{>dashboardContest}}
+          {{/contestAuditorDFL}}
+        </div>
 
-      <div class="elections-search dashboard-section">
-        <h4>Other elections</h4>
+        <div class="elections-search dashboard-section">
+          <h4>Other elections</h4>
 
-        <form on-submit="contestSearch">
-          <label for="contest-search">{{#capabilities.typeahead}}Search contests by title or candidate.  Start typing to see suggestions for specific contests, or search by {{/capabilities.typeahead}}{{^capabilities.typeahead}}Search contests by title with {{/capabilities.typeahead}} keywords (e.g., "<a href="#search/duluth">Duluth</a>" or "<a href="#search/school+board">school board</a>").</label>
+          <form role="form" class="" on-submit="contestSearch">
 
-          <input type="text" id="contest-search" placeholder="Search by title{{#capabilities.typeahead}} or candidate{{/capabilities.typeahead}}" />
-          <input type="submit" value="Go" class="contest-search-submit" />
-        </form>
+            <p class="caption" for="contest-search">{{#capabilities.typeahead}}Search contests by title or candidate.  Start typing to see suggestions for specific contests, or search by {{/capabilities.typeahead}}{{^capabilities.typeahead}}Search contests by title with {{/capabilities.typeahead}} keywords (e.g., "<a href="#search/duluth">Duluth</a>" or "<a href="#search/school+board">school board</a>").</p>
+
+            <div class="form-input-group">
+              <input type="text" id="contest-search" placeholder="Search by title{{#capabilities.typeahead}} or candidate{{/capabilities.typeahead}}" />
+
+              <div class="button-group">
+                <button type="submit" class="button primary contest-search-submit">Search</button>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="grid-parent grid-50 tablet-grid-50 mobile-grid-100">
-    <div class="inner-column-right">
-    
-      <div class="contest-senate-r dashboard-section">
-        {{#contestSenateR}}
-          {{>dashboardContest}}
-        {{/contestSenateR}}
+    <div class="column-medium-50">
+      <div class="inner-column-right">
+
+        <div class="contest-senate-r dashboard-section">
+          {{#contestSenateR}}
+            {{>dashboardContest}}
+          {{/contestSenateR}}
+        </div>
+
+        <div class="contest-house-60b-dfl dashboard-section">
+          {{#contestHouse60BDFL}}
+            {{>dashboardContest}}
+          {{/contestHouse60BDFL}}
+        </div>
+
+        <div class="contest-house-48b-r dashboard-section">
+          {{#contestHouse48BR}}
+            {{>dashboardContest}}
+          {{/contestHouse48BR}}
+        </div>
+
       </div>
-
-      <div class="contest-house-60b-dfl dashboard-section">
-        {{#contestHouse60BDFL}}
-          {{>dashboardContest}}
-        {{/contestHouse60BDFL}}
-      </div>
-
-      <div class="contest-house-48b-r dashboard-section">
-        {{#contestHouse48BR}}
-          {{>dashboardContest}}
-        {{/contestHouse48BR}}
-      </div>
-
     </div>
   </div>
 </div>

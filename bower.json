@@ -112,6 +112,13 @@
       ],
       "returns": "typeahead"
     },
+    "bloodhound": {
+      "rname": "bloodhound",
+      "js": [
+        "typeahead.js/dist/bloodhound"
+      ],
+      "returns": "Bloodhound"
+    },
     "minnpost-styles": {
       "rname": "mpStyles",
       "css": [
