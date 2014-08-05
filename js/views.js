@@ -237,19 +237,15 @@ define([
       var rendered = {};
 
       // Attach formatters
-
-      // Attach formatters
       this.set('formatters', mpFormatters);
 
-      // React to boundary update.  Not sure how to use wildcards in
-      // Ractive, so we hack around it.
-      this.observe('models.0.fetchedBoundary', function(newValue, oldValue) {
-        var testModel = this.get('models.0.boundarySets');
+      // React to boundary update.
+      this.observe('models.*.boundarySets', function(newValue, oldValue, keypath) {
+        var parts = keypath.split('.');
+        var m = this.get(parts[0] + '.' + parts[1]);
 
-        if (_.isArray(testModel) && _.isObject(testModel[0])) {
-          _.each(this.get('models'), function(m) {
-            thisView.makeMap('contest-map-' + m.get('id'), m.get('boundarySets'));
-          });
+        if (_.isArray(newValue) && _.isObject(newValue[0]) && _.isObject(m)) {
+          this.makeMap('contest-map-' + m.get('id'), newValue);
         }
       });
 

@@ -98,11 +98,11 @@ $color-dark-gray: #282828;
   }
 
   .inner-column-left {
-    //padding-right: 1.5em;
+    padding-right: 1em;
   }
 
   .inner-column-right {
-    //padding-left: 1.5em;
+    padding-left: 1em;
   }
 
   table .winner-column {
@@ -135,14 +135,6 @@ $color-dark-gray: #282828;
 
   .contest .grid-container {
     margin-bottom: 1em;
-  }
-
-  .contest .inner-column-left {
-    padding-right: 1em;
-  }
-
-  .contest .inner-column-right {
-    padding-left: 1em;
   }
 
   // Contests

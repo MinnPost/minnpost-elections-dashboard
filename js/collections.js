@@ -2,8 +2,8 @@
  * Collections
  */
 define([
-  'jquery', 'underscore', 'backbone', 'models'
-], function($, _, Backbone, models) {
+  'jquery', 'underscore', 'backbone', 'models', 'helpers'
+], function($, _, Backbone, models, helpers) {
 
   var collections = {};
 
@@ -61,10 +61,10 @@ define([
     fetchBoundary: function() {
       var thisCollection = this;
 
-      this.app.jsonpRequest({
+      helpers.jsonpRequest({
         url: this.app.options.boundaryAPI + 'boundary/?limit=30&slug__in=' +
           encodeURIComponent(this.pluck('boundary').join(','))
-      })
+      }, this.app.options)
       .done(function(response) {
         if (_.isArray(response.objects)) {
           // Match up slugs to models
@@ -120,7 +120,7 @@ define([
 
     initialize: function(models, options) {
       // Call parent intializer
-      App.prototype.ContestsLocationCollection.__super__.initialize.apply(this, arguments);
+      collections.ContestsLocationCollection.__super__.initialize.apply(this, arguments);
 
       this.on('fetchedBoundary', function() {
         this.connect();
@@ -158,12 +158,12 @@ define([
     fetchBoundaryFromCoordinates: function() {
       var thisCollection = this;
 
-      this.app.jsonpRequest({
+      helpers.jsonpRequest({
         url: this.app.options.boundaryAPI + 'boundary/?contains=' +
           encodeURIComponent(this.options.lonlat[1]) + ',' +
           encodeURIComponent(this.options.lonlat[0]) + '&sets=' +
           encodeURIComponent(this.app.options.boundarySets.join(','))
-      })
+      }, this.app.options)
       .done(function(response) {
         if (_.isArray(response.objects)) {
           thisCollection.fullBoundaries = response.objects;

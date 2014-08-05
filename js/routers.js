@@ -103,7 +103,7 @@ define([
         search: term
       });
       this.app.contestsSearch.connect();
-      this.app.contestsSearchView = new view.ContestsView({
+      this.app.contestsSearchView = new views.ContestsView({
         el: this.app.$el.find('.content-container'),
         data: {
           models: this.app.contestsSearch,

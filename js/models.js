@@ -168,7 +168,9 @@ define([
     connect: function(fetchBoundary) {
       var thisModel = this;
 
+      // Allow to turn off boundary fetching
       this.set('fetchedBoundary', (fetchBoundary !== false) ? false : true);
+      
       this.fetch();
       this.pollID = window.setInterval(function() {
         thisModel.fetch();
