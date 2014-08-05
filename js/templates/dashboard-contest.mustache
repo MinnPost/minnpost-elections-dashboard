@@ -7,7 +7,7 @@
 
   <h4>{{ .title }}{{#(show_party != undefined)}} {{ show_party }}{{/()}}{{#primary}} Primary{{/primary}}</h4>
 
-  <table>
+  <table class="striped">
     <thead>
       <tr class="table-first-heading">
         <th class="winner-column"></th>
@@ -38,12 +38,12 @@
           <td class="candidate-column">{{ candidate }}</td>
 
           {{#(ranked_choice == 1)}}
-            <td>{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>
-            <td>{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% ({{ formatters.number(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
+            <td>{{ formatters.number(ranked_choices.1.percentage) }}% </td>
+            <td>{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% {{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>
           {{/()}}
 
           {{#(ranked_choice != 1)}}
-            <td>{{ formatters.number(percentage) }}% ({{ formatters.number(votes_candidate, 0) }} votes)</td>
+            <td>{{ formatters.number(percentage) }}%</td>
           {{/()}}
         </tr>
       {{/()}}{{/results}}

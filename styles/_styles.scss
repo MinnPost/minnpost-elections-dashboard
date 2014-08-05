@@ -28,20 +28,24 @@ $color-dark-gray: #282828;
   // Tables
   table {
     width: 100%;
-  }
 
-  table thead th {
-    padding-bottom: 0;
-  }
+    thead {
 
-  table thead tr.table-second-heading th {
-    padding-top: 0;
-    padding-bottom: .5em;
-    font-weight: normal;
-    font-style: italic;
-    color: $color-medium-gray;
-    font-size: .85em;
-    line-height: 1.5em;
+      tr.table-first-heading th {
+        border-bottom: none;
+        padding-bottom: 0.15em;
+      }
+
+      tr.table-second-heading th {
+        padding-top: 0;
+        padding-bottom: .5em;
+        font-weight: normal;
+        font-style: italic;
+        color: $color-medium-gray;
+        font-size: .85em;
+        line-height: 1.5em;
+      }
+    }
   }
 
   // Typehead
@@ -203,11 +207,16 @@ $color-dark-gray: #282828;
 
     form {
       margin-bottom: 0;
-    }
-  }
 
-  .dashboard .location-search-group {
-    @include inline-block();
+      .location-search-group {
+        @include inline-block();
+      }
+
+      .form-input-group {
+        width: 40em;
+        margin-bottom: 0;
+      }
+    }
   }
 
   // Dashboard elections search
