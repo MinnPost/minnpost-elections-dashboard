@@ -107,7 +107,7 @@ define([
         el: this.app.$el.find('.content-container'),
         data: {
           models: this.app.contestsSearch,
-          title: 'Search for "' + term + '"'
+          title: 'Search for "' + term.replace(/\+/g, ' ') + '"'
         }
       });
       this.app.contestsSearchView.observeTitle(this.app.options.originalTitle);
