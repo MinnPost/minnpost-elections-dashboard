@@ -41,7 +41,7 @@ $color-dark-gray: #282828;
         padding-bottom: .5em;
         font-weight: normal;
         font-style: italic;
-        color: $color-medium-gray;
+        color: $color-light-gray;
         font-size: .85em;
         line-height: 1.5em;
       }
@@ -50,7 +50,7 @@ $color-dark-gray: #282828;
 
   // Typehead
   .tt-hint {
-    color: $color-medium-gray;
+    color: $color-light-gray;
   }
 
   .tt-dropdown-menu {
@@ -60,7 +60,7 @@ $color-dark-gray: #282828;
     margin-top: .25em;
     padding: .25em 0;
     background-color: #FFFFFF;
-    border: 1px solid $color-medium-gray;
+    border: 1px solid $color-light-gray;
     border: 1px solid rgba(0, 0, 0, 0.2);
     @include border-radius(3px);
     @include box-shadow(0 5px 10px rgba(0,0,0,.2));
@@ -133,97 +133,98 @@ $color-dark-gray: #282828;
   }
 
   // Contest
-  .contest .last-updated {
-    min-height: 1.5em;
-    font-weight: bold;
-    color: $color-medium-gray;
-    margin-bottom: 1em;
+  .contest {
+
+    h3 {
+      margin-bottom: 0;
+    }
+
+    .last-updated {
+      min-height: 1.5em;
+      font-weight: bold;
+      color: $color-light-gray;
+      margin-bottom: 1em;
+    }
   }
 
   // Contests
-  .contests .contests-title {
-    margin-bottom: 1em;
-  }
+  .contests {
 
-  .contests .contest-list .dashboard-link {
-    display: none;
-  }
+    .contests-title {
+      margin-bottom: 1em;
+    }
 
-  .contests .contest-list .contest-link {
-    display: block;
-  }
+    .contest-list .dashboard-link {
+      display: none;
+    }
 
-  .contests .inner-column-left {
-    padding-right: 1em;
-  }
+    #location-map {
+      width: 100%;
+      height: 100px;
+      margin-bottom: 2.5em;
+    }
 
-  .contests .inner-column-right {
-    padding-left: 1em;
-  }
-
-  .contests #location-map {
-    width: 100%;
-    height: 100px;
-    margin-bottom: 2.5em;
-  }
-
-  .contests .location-note {
-    padding-top: 0;
-    margin-bottom: .5em;
-    font-style: italic;
-    color: $color-medium-gray;
-    font-size: .85em;
-    line-height: 1.5em;
-  }
-
-  .contests h3.with-location {
-    margin-bottom: 0;
+    h3.with-location {
+      margin-bottom: 0;
+    }
   }
 
   // Dashboard
-  .dashboard .dashboard-section {
-    margin-bottom: 3em;
-  }
+  .dashboard {
 
-  .dashboard .last-updated-section {
-    min-height: 1.5em;
-    margin-bottom: 2.5em;
-    text-align: center;
-    font-weight: bold;
-    color: $color-light-gray;
-  }
+    .dashboard-section {
+      margin-bottom: 3em;
+    }
 
-  // Dashboard location section
-  .dashboard .location-search-section {
-    padding-bottom: 2em;
-    margin-bottom: 2em;
-    text-align: center;
-    border-bottom: 1px solid $color-light-gray;
+    .last-updated-section {
+      min-height: 1.5em;
+      margin-bottom: 2.5em;
+      text-align: center;
+      font-weight: bold;
+      color: $color-light-gray;
+    }
 
-    form {
-      margin-bottom: 0;
+    // Dashboard contests
+    .dashboard-contest {
 
-      .location-search-group {
-        @include inline-block();
+      h3 {
+        font-size: 1.75em;
+        margin-bottom: .25em;
       }
+    }
+
+    // Dashboard location section
+    .location-search-section {
+      padding-bottom: 2em;
+      margin-bottom: 2em;
+      text-align: center;
+      border-bottom: 1px solid $color-light-gray;
+
+      form {
+        margin-bottom: 0;
+
+        .location-search-group {
+          @include inline-block();
+        }
+
+        .form-input-group {
+          width: 40em;
+          margin-bottom: 0;
+        }
+      }
+    }
+
+    // Dashboard elections search
+    .elections-search {
 
       .form-input-group {
-        width: 40em;
-        margin-bottom: 0;
+        width: 100%;
       }
-    }
-  }
 
-  // Dashboard elections search
-  .dashboard .elections-search {
-
-    .form-input-group {
-      width: 100%;
-    }
-
-    .twitter-typeahead {
-      vertical-align: middle;
-      width: 100%;
+      .twitter-typeahead {
+        vertical-align: middle;
+        width: 100%;
+      }
     }
   }
 
