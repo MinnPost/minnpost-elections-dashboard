@@ -235,16 +235,20 @@ define([
       var thisView = this;
       var shapes = [];
       var rendered = {};
+      var modelBoundarySet = {};
 
       // Attach formatters
       this.set('formatters', mpFormatters);
 
-      // React to boundary update.
+      // React to boundary update.  For some reason, this is getting changed
+      // more than once.
       this.observe('models.*.boundarySets', function(newValue, oldValue, keypath) {
         var parts = keypath.split('.');
         var m = this.get(parts[0] + '.' + parts[1]);
 
-        if (_.isArray(newValue) && _.isObject(newValue[0]) && _.isObject(m)) {
+        if (_.isArray(newValue) && _.isObject(newValue[0]) && _.isObject(m) &&
+          !modelBoundarySet[m.get('id')]) {
+          modelBoundarySet[m.get('id')] = true;
           this.makeMap('contest-map-' + m.get('id'), newValue);
         }
       });

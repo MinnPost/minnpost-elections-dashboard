@@ -40,6 +40,12 @@ define([
       var rankedChoiceFinal = false;
       parsed.results = [];
 
+      // Given how collections process fetching new data, we want to avoid
+      // parsing here and parse on the collection part
+      if (options.collection) {
+        return response;
+      }
+
       // Separate out what is contest level properties and what is
       // results
       _.each(response, function(r) {
@@ -170,11 +176,11 @@ define([
 
       // Allow to turn off boundary fetching
       this.set('fetchedBoundary', (fetchBoundary !== false) ? false : true);
-      
+
       this.fetch();
       this.pollID = window.setInterval(function() {
         thisModel.fetch();
-      }, 30000);
+      }, this.app.options.electionsAPIPollInterval);
     },
 
     // Stop the polling
@@ -240,7 +246,7 @@ define([
       this.fetch();
       this.pollID = window.setInterval(function() {
         thisModel.fetch();
-      }, 30000);
+      }, this.app.options.electionsAPIPollInterval);
     },
 
     // Stop the polling

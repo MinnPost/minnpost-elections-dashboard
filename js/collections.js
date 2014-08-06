@@ -29,9 +29,16 @@ define([
         encodeURIComponent(this.query.replace('%CONTEST_SEARCH%', searches.join(' OR ')));
     },
 
-    // Parse the results
-    parse: function(response) {
-      return _.values(_.groupBy(response, 'id'));
+    // Parse the results.
+    parse: function(response, options) {
+      // How backbone handles parsing is not helpful given our structure; it'll
+      // pass the model-level parsing but only after it has looked to see if
+      // the model should be added or updated to the collection.  So, we do
+      // parsing here and avoid it on the model.  Luckily backbone passes
+      // a 'collection' option to check for.
+      var parsed = _.map(_.values(_.groupBy(response, 'id')),
+        this.model.prototype.parse, this.model.prototype);
+      return parsed;
     },
 
     initialize: function(models, options) {
@@ -91,10 +98,13 @@ define([
     // polling.  Call right away as well.
     connect: function() {
       var thisCollection = this;
-      this.fetch();
+      var fetchOptions = { reset: false };
+
+      this.fetch(fetchOptions);
       this.pollID = window.setInterval(function() {
-        thisCollection.fetch();
-      }, 30000);
+        console.log(thisCollection.map(function(m) { return m.cid; }));
+        thisCollection.fetch(fetchOptions);
+      }, this.app.options.electionsAPIPollInterval);
     },
 
     // Stop the polling
