@@ -1,5 +1,7 @@
-<div class="contest {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}}{{#(final === true)}}is-final{{/()}}">
-  <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>
+<div class="contest {{#isDashboard}}dashboard-contest{{/isDashboard}} {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}}{{#(final === true)}}is-final{{/()}}">
+  {{^isDashboard}}
+    <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>
+  {{/isDashboard}}
 
   <div>
     {{#((results.length == 0 || results == undefined) && !synced)}}
@@ -13,25 +15,31 @@
 
 
   {{#((results.length > 0) && synced)}}
-    <h3>{{ title }}{{#primary}} &nbsp;<small class="last-updated">primary</small>{{/primary}}</h3>
+    <h3>
+      {{ title }}
+      {{#(show_party != undefined)}} {{ show_party }}{{/()}}
+      {{#primary}} &nbsp;<span class="label xxsmall">primary</span>{{/primary}}
+    </h3>
 
-    <div class="last-updated">Last updated at {{ updated.format('h:mm a') }}</div>
+    {{^isDashboard}}
+      <div class="last-updated">Last updated at {{ updated.format('h:mm a') }}</div>
+    {{/isDashboard}}
 
     {{#(!!question_body)}}
       <p>{{{ question_body }}}</p>
     {{/()}}
   {{/()}}
 
-  <div class="row">
-    <div class="column-medium-70 inner-column-left">
+  <div class="{{^isDashboard}}row{{/isDashboard}}">
+    <div class="{{^isDashboard}}column-medium-70 inner-column-left{{/isDashboard}}">
       <table class="striped">
         <thead>
           <tr class="table-first-heading">
             <th class="winner-column"></th>
             <th>Candidate</th>
-            {{#partisan}}
+            {{#(partisan && show_party === undefined)}}
               <th>Party</th>
-            {{/partisan}}
+            {{/()}}
             {{#(ranked_choice == 1)}}
               <th class="first-choice-column">Results</th>
               <th class="second-choice-column"></th>
@@ -39,16 +47,21 @@
               <th class="final-column">Final</th>
             {{/()}}
             {{#(ranked_choice != 1)}}
-              <th>Percentage</th>
-              <th>Votes</th>
+              {{^isDashboard}}
+                <th class="percentage">Percentage</th>
+                <th class="votes">Votes</th>
+              {{/isDashboard}}
+              {{#isDashboard}}
+                <th class="percentage">Results</th>
+              {{/isDashboard}}
             {{/()}}
           </tr>
           <tr class="table-second-heading">
             <th class="winner-column"></th>
             <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>
-            {{#partisan}}
+            {{#(partisan && show_party === undefined)}}
               <th></th>
-            {{/partisan}}
+            {{/()}}
             {{#(ranked_choice == 1)}}
               <th class="first-choice-column first-choice-heading">1st choice</th>
               <th class="second-choice-column second-choice-heading">2nd choice</th>
@@ -57,21 +70,23 @@
             {{/()}}
             {{#(ranked_choice != 1)}}
               <th></th>
-              <th></th>
+              {{^isDashboard}}
+                <th></th>
+              {{/isDashboard}}
             {{/()}}
           </tr>
         </thead>
 
         <tbody>
-          {{#results:r}}
+          {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party != undefined && party_id == show_party)))}}
             <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? 'even' : 'odd' }}">
-              <td class="winner-column">{{#winner}}<span class="bs-icon bs-icon-won"></span>{{/winner}}{{#(winner === false)}}<span class="bs-icon-spacer"></span>{{/()}}</td>
+              <td class="winner-column">{{#winner}}<span class="fa fa-check"></span>{{/winner}}</td>
 
               <td class="candidate-column">{{ candidate }}</td>
 
-              {{#partisan}}
+              {{#(partisan && show_party === undefined)}}
                 <td>{{ party_id }}</td>
-              {{/partisan}}
+              {{/()}}
 
               {{#(ranked_choice == 1)}}
                 <td class="first-choice-column first-choice-heading">{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>
@@ -81,20 +96,23 @@
               {{/()}}
 
               {{#(ranked_choice != 1)}}
-                <td>{{ formatters.number(percentage) }}%</td>
-                <td>{{ formatters.number(votes_candidate, 0) }}</td>
+                <td class="percentage">{{ formatters.number(percentage) }}%</td>
+                {{^isDashboard}}
+                  <td class="votes">{{ formatters.number(votes_candidate, 0) }}</td>
+                {{/isDashboard}}
               {{/()}}
             </tr>
-          {{/results}}
+          {{/()}} {{/results}}
         </tbody>
       </table>
 
-      <a href="#contest/{{ id }}" class="contest-link">Permalink</a>
+      <a href="#contest/{{ id }}" class="contest-link">{{#isDashboard}}Full results{{/isDashboard}}{{^isDashboard}}Permalink{{/isDashboard}}</a>
     </div>
 
-    <div class="column-medium-30 inner-column-right">
-      <div class="contest-map" id="contest-map-{{ id }}">
+    {{^isDashboard}}
+      <div class="column-medium-30 inner-column-right">
+        <div class="contest-map" id="contest-map-{{ id }}"></div>
       </div>
-    </div>
+    {{/isDashboard}}
   </div>
 </div>

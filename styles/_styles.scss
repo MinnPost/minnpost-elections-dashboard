@@ -105,20 +105,31 @@ $color-dark-gray: #282828;
     padding-left: 1em;
   }
 
-  table .winner-column {
-    padding: 0;
+  // General table
+  table {
+
+    .winner-column {
+      padding: 0;
+      text-align: center;
+    }
+
+    .candidate-column {
+      width: 60%;
+    }
+
+    .percentage,
+    .votes {
+      text-align: right;
+      padding-right: 0.75em;
+    }
+  }
+
+  .is-ranked-choice table .candidate-column {
+    width: 50%;
   }
 
   .is-final table .winner-column {
     padding: .5em;
-  }
-
-  .candidate-column {
-    width: 60%;
-  }
-
-  .is-ranked-choice .candidate-column {
-    width: 50%;
   }
 
   // Contest
@@ -126,14 +137,6 @@ $color-dark-gray: #282828;
     min-height: 1.5em;
     font-weight: bold;
     color: $color-medium-gray;
-    margin-bottom: 1em;
-  }
-
-  .contest .contest-link {
-    display: none;
-  }
-
-  .contest .grid-container {
     margin-bottom: 1em;
   }
 

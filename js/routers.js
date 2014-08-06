@@ -44,6 +44,7 @@ define([
       _.each(this.app.dashboardContests, function(c, ci) {
         thisRouter.app[ci] = new models.ContestModel({ id: c }, { app: thisRouter.app });
         thisRouter.app[ci].connect(false);
+        thisRouter.app[ci].set('isDashboard', true);
         data[ci] = thisRouter.app[ci];
       });
 

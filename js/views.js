@@ -8,13 +8,12 @@ define([
   'bloodhound', 'typeahead-js', 'placeholders-js', 'mpFormatters',
   'text!templates/application.mustache', 'text!templates/footnote.mustache',
   'text!templates/contest.mustache', 'text!templates/contests.mustache',
-  'text!templates/dashboard-contest.mustache', 'text!templates/dashboard.mustache',
-  'text!templates/loading.mustache'
+  'text!templates/dashboard.mustache', 'text!templates/loading.mustache'
 ], function(
   $, _, Backbone, Ractive, RactiveETap, RactiveBackbone, L, models,
   collections, Bloodhound, typeahead, placeholders, mpFormatters,
   tApplication, tFootnote, tContest,
-  tContests, tDContest, tDashboard, tLoading
+  tContests, tDashboard, tLoading
   ) {
   var views = {};
 
@@ -129,7 +128,7 @@ define([
     template: tDashboard,
 
     partials: {
-      dashboardContest: tDContest,
+      contest: tContest,
       loading: tLoading
     },
 
