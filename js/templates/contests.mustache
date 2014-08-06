@@ -2,8 +2,19 @@
   <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>
 
   <div class="row">
-    <div class="column-medium-70 inner-column-left">
-      <h3 class="contests-title {{#(lonlat != undefined)}}with-location{{/()}}">{{ (title) ? title : 'Contests' }}</h3>
+    <div class="column-medium-70 inner-column-left contests-title-section">
+      <h2 class="contests-title {{#(lonlat != undefined)}}with-location{{/()}}">{{ (title) ? title : 'Contests' }}</h2>
+
+      <p class="caption">
+        Found
+          {{#(models.length == 0 && !synced)}}
+            <i class="loading small"></i>
+          {{/())}}
+          {{#synced}}
+            {{ models.length }}
+          {{/synced}}
+        results.
+      </p>
 
       {{#(lonlat != undefined)}}
         <p class="caption">The map below shows the approximate location of your search. If the location is not correct, try <a href="#dashboard">searching for a more specific address</a>.</p>
@@ -12,8 +23,7 @@
       {{/())}}
     </div>
 
-    <div class="column-medium-30 inner-column-right">
-    </div>
+    <div class="column-medium-30 inner-column-right"></div>
   </div>
 
   <div>
@@ -22,7 +32,7 @@
     {{/())}}
 
     {{#(models.length == 0 && synced)}}
-      <p>Unable to find any contests.</p>
+      <p class="large">Unable to find any contests.</p>
     {{/())}}
   </div>
 
