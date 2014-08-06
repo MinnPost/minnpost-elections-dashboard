@@ -98,11 +98,10 @@ define([
     // polling.  Call right away as well.
     connect: function() {
       var thisCollection = this;
-      var fetchOptions = { reset: false };
+      var fetchOptions = { collection: true };
 
       this.fetch(fetchOptions);
       this.pollID = window.setInterval(function() {
-        console.log(thisCollection.map(function(m) { return m.cid; }));
         thisCollection.fetch(fetchOptions);
       }, this.app.options.electionsAPIPollInterval);
     },

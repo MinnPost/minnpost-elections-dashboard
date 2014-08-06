@@ -64,7 +64,7 @@ define('minnpost-elections-dashboard', [
       projectName: 'minnpost-elections-dashboard',
       remoteProxy: '//mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
       el: '.minnpost-elections-dashboard-container',
-      electionsAPIPollInterval: 50000,
+      electionsAPIPollInterval: 10000,
       electionsAPI: 'http://localhost:5000/?q=',
       electionsAPILocal: 'http://localhost:5000/?q=',
       electionsAPIEC2: 'http://50.19.100.197/?box=ubuntu&q=',
