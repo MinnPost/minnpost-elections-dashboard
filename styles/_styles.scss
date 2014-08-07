@@ -184,6 +184,14 @@ $color-dark-gray: #282828;
       color: $color-light-gray;
     }
 
+    .inner-column-left {
+      padding-right: 1.5em;
+    }
+
+    .inner-column-right {
+      padding-left: 1.5em;
+    }
+
     // Dashboard contests
     .dashboard-contest {
 
