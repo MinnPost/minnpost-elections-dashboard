@@ -72,55 +72,35 @@ These instructions have been performed on an EC2 Ubuntu instance.
 
 ### Code, Libraries and prerequisites
 
-1. `sudo apt-get install git-core git python-pip python-dev build-essential python-lxml sqlite3 nginx fcgiwrap && sudo pip install --upgrade pip && sudo pip install --upgrade virtualenv`
-1. `cd ~`
-1. Get the code: `git clone https://github.com/MinnPost/minnpost-scraper-mn-election-results.git`
-1. Change the directory: `cd minnpost-scraper-mn-election-results`
-1. `pip install -r requirements.txt`
+Note that we use root freely
 
-### Setup webserver/API
+1. Make sure Ubuntu is up to date: `sudo aptitude update && sudo aptitude safe-upgrade`
+1. Install system and python base packages: `sudo aptitude install git-core git python-pip python-dev build-essential python-lxml sqlite3 nginx-full fcgiwrap`
+1. Install python base packages: `sudo pip install --upgrade pip && sudo pip install --upgrade virtualenv`
+1. Go to the home directory: `cd ~`
+1. Get the code: `git clone https://github.com/MinnPost/minnpost-scraper-mn-election-results.git && cd minnpost-scraper-mn-election-results`
+1. `sudo pip install -r requirements.txt`
 
-#### Dumptruck
+### Webserver
 
-Dumptruck-web is a Python script that runs through FastCGI to handle API
-requests.
-
-    sudo git clone https://github.com/zzolo/dumptruck-web.git /var/www/dumptruck-web
-    sudo chown -R www-data:www-data /var/www/dumptruck-web
-
-#### FCGIWrap
-
-On Ubuntu, configure fcgiwrap to use more children, check if this file exists, if so
-just copy it.
-
-    ls /etc/default/fcgiwrap
-    sudo cp deploy/fcgiwrap /etc/default/fcgiwrap
-
-#### Nginx
-
-    sudo cp deploy/nginx-scraper-api.conf /etc/nginx/sites-available/nginx-scraper-api.conf
-    sudo ln -s /etc/nginx/sites-available/nginx-scraper-api.conf /etc/nginx/sites-enabled/nginx-scraper-api.conf
-    sudo rm /etc/nginx/sites-enabled/default
-
-#### Deploy
-
-Restart services.
-
-    sudo service fcgiwrap restart
-    sudo service nginx restart
-
-Create the ```scraperwiki.json file```.  (If for some reason, you need a publish token, then update scraperwiki.json
-as needed.)
-
-    echo "{ \"database\": \"scraperwiki.sqlite\" }" > scraperwiki.json
-    ln -s /home/ubuntu/minnpost-scraper-mn-election-results/scraperwiki.json ~/scraperwiki.json
-    ln -s /home/ubuntu/minnpost-scraper-mn-election-results/scraperwiki.sqlite ~/scraperwiki.sqlite
-
-Test with a call like:
-
-    http://ec2-XX-XX-XX.compute-1.amazonaws.com/?box=ubuntu&q=SELECT%20*%20FROM%20results%20LIMIT%2010
+1. [Dumptruck](https://github.com/scraperwiki/dumptruck-web) is a Python script to create an API on-top of an sqlite database.  It's built by ScraperWiki and also handles multiple user location.
+    1. `sudo git clone https://github.com/scraperwiki/dumptruck-web.git /var/www/dumptruck-web && sudo chown -R www-data:www-data /var/www/dumptruck-web`
+    1. Link our database and metadata file for compliance with Dumptruck.
+        * `ln -s /home/ubuntu/minnpost-scraper-mn-election-results/scraperwiki.json ~/scraperwiki.json && ln -s /home/ubuntu/minnpost-scraper-mn-election-results/scraperwiki.sqlite ~/scraperwiki.sqlite`
+1. FCGIWrap is used to create an interface between the Dumptruck and Nginx.  We use a simple script to up the number of children to use.
+    1. `sudo cp deploy/fcgiwrap /etc/default/fcgiwrap`
+    1. Restart service (note that this can take a minute): `sudo service fcgiwrap restart`
+    1. The default is to run via socket, so there's no direct HTTP connection to this service.
+1. Nginx is used at the top level web server.  It allows for caching and other niceties.  This copies our config, enables it and removes the default.
+    1. `sudo cp deploy/nginx-scraper-api.conf /etc/nginx/sites-available/nginx-scraper-api.conf`
+    1. `sudo ln -s /etc/nginx/sites-available/nginx-scraper-api.conf /etc/nginx/sites-enabled/nginx-scraper-api.conf`
+    1. `sudo rm /etc/nginx/sites-enabled/default`
+    1. Restart service: `sudo service nginx restart`
+    1. Test with something like: http://ec2-XX-XX-XX.compute-1.amazonaws.com/?box=ubuntu&method=sql&q=SELECT%20*%20FROM%20results%20LIMIT%2010
 
 #### Cron
+
+We use cron to get the results every few minutes.  This will copy our cron to the crontab.
 
     crontab deploy/crontab
 
