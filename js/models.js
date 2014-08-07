@@ -2,8 +2,8 @@
  * Models
  */
 define([
-  'jquery', 'underscore', 'backbone', 'moment', 'helpers'
-], function($, _, Backbone, moment, helpers) {
+  'jquery', 'underscore', 'backbone', 'moment', 'moment-timezone', 'helpers'
+], function($, _, Backbone, moment, momentTimezone, helpers) {
   var models = {};
 
   models.ContestModel = Backbone.Model.extend({
@@ -210,6 +210,7 @@ define([
     // Parse results
     parse: function(response, options) {
       var parsed = {};
+      var now, testStop;
 
       // Parse out values
       _.each(response, function(r, ri) {
@@ -234,6 +235,18 @@ define([
       }
       if (parsed.updated) {
         parsed.updated = moment.unix(parsed.updated);
+      }
+
+      // If we have a date for the election, make a good guess on whether
+      // we are looking at test results
+      parsed.isTest = false;
+      if (parsed.date) {
+        now = moment().tz('America/Chicago');
+        testStop = parsed.date.clone();
+        testStop.tz('America/Chicago').hour(17).minute(0);
+        if (now.isBefore(testStop, 'minute')) {
+          parsed.isTest = true;
+        }
       }
 
       return parsed;

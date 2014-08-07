@@ -22,7 +22,8 @@
     "typeahead.js": "~0.10.4",
     "Placeholders.js": "~3.0.0",
     "ractive-backbone": "~0.1.1",
-    "backbone": "~1.1.2"
+    "backbone": "~1.1.2",
+    "moment-timezone": "~0.2.1"
   },
   "dependencyMap": {
     "requirejs": {
@@ -97,6 +98,13 @@
         "momentjs/moment"
       ],
       "returns": "moment"
+    },
+    "moment-timezone": {
+      "rname": "moment-timezone",
+      "js": [
+        "moment-timezone/builds/moment-timezone-with-data"
+      ],
+      "returns": "momentTimezone"
     },
     "Placeholders.js": {
       "rname": "placeholders-js",

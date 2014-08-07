@@ -34,6 +34,7 @@ require.config({
     'ractive-backbone': '../bower_components/ractive-backbone/ractive-adaptors-backbone',
     'leaflet': '../bower_components/leaflet/dist/leaflet-src',
     'moment': '../bower_components/momentjs/moment',
+    'moment-timezone': '../bower_components/moment-timezone/builds/moment-timezone-with-data',
     'placeholders-js': '../bower_components/Placeholders.js/build/placeholders.jquery',
     'typeahead-js': '../bower_components/typeahead.js/dist/typeahead.jquery',
     'bloodhound': '../bower_components/typeahead.js/dist/bloodhound',

@@ -118,7 +118,7 @@ define([
     // Base query for the contest
     query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
       "ON c.id = r.contest_id WHERE boundary IN (%CONTEST_SEARCH%) " +
-      "ORDER BY  c.title, r.percentage, r.candidate ASC LIMIT 400",
+      "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
 
     // Construct API call
     url: function() {
