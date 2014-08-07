@@ -520,9 +520,9 @@ class ElectionScraper:
     if parsed_row['scope'] == 'county':
       comissioner_match = re.compile('.*Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
       if comissioner_match is not None:
-        boundary = parsed_row['county_id'] + '-' + parsed_row['district_code'] + '-county-commissioner-district-2012'
+        boundary =  '%s-%s-county-commissioner-district-2012' % (int(parsed_row['county_id']),  parsed_row['district_code'])
       else:
-        boundary = parsed_row['county_id'] + '-county-2010'
+        boundary = '%s-county-2010' % int(parsed_row['county_id'])
 
     # This includes both municpal (city) level results, plus sub-municpal, such
     # as city council results.
