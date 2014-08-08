@@ -17,7 +17,7 @@
   {{#((results.length > 0) && synced)}}
     <h3>
       {{ title }}
-      {{#(show_party != undefined)}}<span class="party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}
+      {{#(show_party != undefined)}}<span class="show-party party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}
     </h3>
 
     {{^isDashboard}}
