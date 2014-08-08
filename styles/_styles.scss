@@ -105,6 +105,21 @@ $color-dark-gray: #282828;
     padding-left: 1em;
   }
 
+  // Highlighting
+  .highlighter {
+
+  }
+
+  .highlight {
+    background-color: #FBD341;
+    @include transition(background-color 50ms linear);
+  }
+
+  .unhighlight {
+    background-color: white;
+    @include transition(background-color 3s ease);
+  }
+
   // General table
   table {
 

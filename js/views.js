@@ -17,6 +17,27 @@ define([
   ) {
   var views = {};
 
+  // Ractive decorator to highlight changes
+  // Sample use: <span class="highlighter" decorator="highlight:{{ election.updated.format('h:mm a') }}">{{ election.updated.format('h:mm a') }}</span>
+  views.highlightDecorator = function(node, content) {
+    return {
+      update: function() {
+        var $node = $(node);
+        $node.removeClass('unhighlight');
+        $node.addClass('highlight');
+
+        setTimeout(function() {
+          $node.addClass('unhighlight');
+        }, 200);
+      },
+      teardown: function() {
+        // Nothing to tear down
+      }
+    };
+  };
+  Ractive.decorators.highlight = views.highlightDecorator;
+
+  // General viesl
   views.ApplicationView = Ractive.extend({
     init: function() {
     },
@@ -29,6 +50,7 @@ define([
     template: tFootnote
   });
 
+  // Base view to extend others from
   views.ContestBaseView = Ractive.extend({
     defaultMapStyle: {
       stroke: true,
