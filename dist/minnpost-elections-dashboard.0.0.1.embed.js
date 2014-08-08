@@ -427,397 +427,6 @@ var requirejs, require, define;
 
 define("almond", function(){});
 
-/**
- * @license RequireJS text 2.0.12 Copyright (c) 2010-2014, The Dojo Foundation All Rights Reserved.
- * Available via the MIT or new BSD license.
- * see: http://github.com/requirejs/text for details
- */
-/*jslint regexp: true */
-/*global require, XMLHttpRequest, ActiveXObject,
-  define, window, process, Packages,
-  java, location, Components, FileUtils */
-
-define('text',['module'], function (module) {
-    
-
-    var text, fs, Cc, Ci, xpcIsWindows,
-        progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'],
-        xmlRegExp = /^\s*<\?xml(\s)+version=[\'\"](\d)*.(\d)*[\'\"](\s)*\?>/im,
-        bodyRegExp = /<body[^>]*>\s*([\s\S]+)\s*<\/body>/im,
-        hasLocation = typeof location !== 'undefined' && location.href,
-        defaultProtocol = hasLocation && location.protocol && location.protocol.replace(/\:/, ''),
-        defaultHostName = hasLocation && location.hostname,
-        defaultPort = hasLocation && (location.port || undefined),
-        buildMap = {},
-        masterConfig = (module.config && module.config()) || {};
-
-    text = {
-        version: '2.0.12',
-
-        strip: function (content) {
-            //Strips <?xml ...?> declarations so that external SVG and XML
-            //documents can be added to a document without worry. Also, if the string
-            //is an HTML document, only the part inside the body tag is returned.
-            if (content) {
-                content = content.replace(xmlRegExp, "");
-                var matches = content.match(bodyRegExp);
-                if (matches) {
-                    content = matches[1];
-                }
-            } else {
-                content = "";
-            }
-            return content;
-        },
-
-        jsEscape: function (content) {
-            return content.replace(/(['\\])/g, '\\$1')
-                .replace(/[\f]/g, "\\f")
-                .replace(/[\b]/g, "\\b")
-                .replace(/[\n]/g, "\\n")
-                .replace(/[\t]/g, "\\t")
-                .replace(/[\r]/g, "\\r")
-                .replace(/[\u2028]/g, "\\u2028")
-                .replace(/[\u2029]/g, "\\u2029");
-        },
-
-        createXhr: masterConfig.createXhr || function () {
-            //Would love to dump the ActiveX crap in here. Need IE 6 to die first.
-            var xhr, i, progId;
-            if (typeof XMLHttpRequest !== "undefined") {
-                return new XMLHttpRequest();
-            } else if (typeof ActiveXObject !== "undefined") {
-                for (i = 0; i < 3; i += 1) {
-                    progId = progIds[i];
-                    try {
-                        xhr = new ActiveXObject(progId);
-                    } catch (e) {}
-
-                    if (xhr) {
-                        progIds = [progId];  // so faster next time
-                        break;
-                    }
-                }
-            }
-
-            return xhr;
-        },
-
-        /**
-         * Parses a resource name into its component parts. Resource names
-         * look like: module/name.ext!strip, where the !strip part is
-         * optional.
-         * @param {String} name the resource name
-         * @returns {Object} with properties "moduleName", "ext" and "strip"
-         * where strip is a boolean.
-         */
-        parseName: function (name) {
-            var modName, ext, temp,
-                strip = false,
-                index = name.indexOf("."),
-                isRelative = name.indexOf('./') === 0 ||
-                             name.indexOf('../') === 0;
-
-            if (index !== -1 && (!isRelative || index > 1)) {
-                modName = name.substring(0, index);
-                ext = name.substring(index + 1, name.length);
-            } else {
-                modName = name;
-            }
-
-            temp = ext || modName;
-            index = temp.indexOf("!");
-            if (index !== -1) {
-                //Pull off the strip arg.
-                strip = temp.substring(index + 1) === "strip";
-                temp = temp.substring(0, index);
-                if (ext) {
-                    ext = temp;
-                } else {
-                    modName = temp;
-                }
-            }
-
-            return {
-                moduleName: modName,
-                ext: ext,
-                strip: strip
-            };
-        },
-
-        xdRegExp: /^((\w+)\:)?\/\/([^\/\\]+)/,
-
-        /**
-         * Is an URL on another domain. Only works for browser use, returns
-         * false in non-browser environments. Only used to know if an
-         * optimized .js version of a text resource should be loaded
-         * instead.
-         * @param {String} url
-         * @returns Boolean
-         */
-        useXhr: function (url, protocol, hostname, port) {
-            var uProtocol, uHostName, uPort,
-                match = text.xdRegExp.exec(url);
-            if (!match) {
-                return true;
-            }
-            uProtocol = match[2];
-            uHostName = match[3];
-
-            uHostName = uHostName.split(':');
-            uPort = uHostName[1];
-            uHostName = uHostName[0];
-
-            return (!uProtocol || uProtocol === protocol) &&
-                   (!uHostName || uHostName.toLowerCase() === hostname.toLowerCase()) &&
-                   ((!uPort && !uHostName) || uPort === port);
-        },
-
-        finishLoad: function (name, strip, content, onLoad) {
-            content = strip ? text.strip(content) : content;
-            if (masterConfig.isBuild) {
-                buildMap[name] = content;
-            }
-            onLoad(content);
-        },
-
-        load: function (name, req, onLoad, config) {
-            //Name has format: some.module.filext!strip
-            //The strip part is optional.
-            //if strip is present, then that means only get the string contents
-            //inside a body tag in an HTML string. For XML/SVG content it means
-            //removing the <?xml ...?> declarations so the content can be inserted
-            //into the current doc without problems.
-
-            // Do not bother with the work if a build and text will
-            // not be inlined.
-            if (config && config.isBuild && !config.inlineText) {
-                onLoad();
-                return;
-            }
-
-            masterConfig.isBuild = config && config.isBuild;
-
-            var parsed = text.parseName(name),
-                nonStripName = parsed.moduleName +
-                    (parsed.ext ? '.' + parsed.ext : ''),
-                url = req.toUrl(nonStripName),
-                useXhr = (masterConfig.useXhr) ||
-                         text.useXhr;
-
-            // Do not load if it is an empty: url
-            if (url.indexOf('empty:') === 0) {
-                onLoad();
-                return;
-            }
-
-            //Load the text. Use XHR if possible and in a browser.
-            if (!hasLocation || useXhr(url, defaultProtocol, defaultHostName, defaultPort)) {
-                text.get(url, function (content) {
-                    text.finishLoad(name, parsed.strip, content, onLoad);
-                }, function (err) {
-                    if (onLoad.error) {
-                        onLoad.error(err);
-                    }
-                });
-            } else {
-                //Need to fetch the resource across domains. Assume
-                //the resource has been optimized into a JS module. Fetch
-                //by the module name + extension, but do not include the
-                //!strip part to avoid file system issues.
-                req([nonStripName], function (content) {
-                    text.finishLoad(parsed.moduleName + '.' + parsed.ext,
-                                    parsed.strip, content, onLoad);
-                });
-            }
-        },
-
-        write: function (pluginName, moduleName, write, config) {
-            if (buildMap.hasOwnProperty(moduleName)) {
-                var content = text.jsEscape(buildMap[moduleName]);
-                write.asModule(pluginName + "!" + moduleName,
-                               "define(function () { return '" +
-                                   content +
-                               "';});\n");
-            }
-        },
-
-        writeFile: function (pluginName, moduleName, req, write, config) {
-            var parsed = text.parseName(moduleName),
-                extPart = parsed.ext ? '.' + parsed.ext : '',
-                nonStripName = parsed.moduleName + extPart,
-                //Use a '.js' file name so that it indicates it is a
-                //script that can be loaded across domains.
-                fileName = req.toUrl(parsed.moduleName + extPart) + '.js';
-
-            //Leverage own load() method to load plugin value, but only
-            //write out values that do not have the strip argument,
-            //to avoid any potential issues with ! in file names.
-            text.load(nonStripName, req, function (value) {
-                //Use own write() method to construct full module value.
-                //But need to create shell that translates writeFile's
-                //write() to the right interface.
-                var textWrite = function (contents) {
-                    return write(fileName, contents);
-                };
-                textWrite.asModule = function (moduleName, contents) {
-                    return write.asModule(moduleName, fileName, contents);
-                };
-
-                text.write(pluginName, nonStripName, textWrite, config);
-            }, config);
-        }
-    };
-
-    if (masterConfig.env === 'node' || (!masterConfig.env &&
-            typeof process !== "undefined" &&
-            process.versions &&
-            !!process.versions.node &&
-            !process.versions['node-webkit'])) {
-        //Using special require.nodeRequire, something added by r.js.
-        fs = require.nodeRequire('fs');
-
-        text.get = function (url, callback, errback) {
-            try {
-                var file = fs.readFileSync(url, 'utf8');
-                //Remove BOM (Byte Mark Order) from utf8 files if it is there.
-                if (file.indexOf('\uFEFF') === 0) {
-                    file = file.substring(1);
-                }
-                callback(file);
-            } catch (e) {
-                if (errback) {
-                    errback(e);
-                }
-            }
-        };
-    } else if (masterConfig.env === 'xhr' || (!masterConfig.env &&
-            text.createXhr())) {
-        text.get = function (url, callback, errback, headers) {
-            var xhr = text.createXhr(), header;
-            xhr.open('GET', url, true);
-
-            //Allow plugins direct access to xhr headers
-            if (headers) {
-                for (header in headers) {
-                    if (headers.hasOwnProperty(header)) {
-                        xhr.setRequestHeader(header.toLowerCase(), headers[header]);
-                    }
-                }
-            }
-
-            //Allow overrides specified in config
-            if (masterConfig.onXhr) {
-                masterConfig.onXhr(xhr, url);
-            }
-
-            xhr.onreadystatechange = function (evt) {
-                var status, err;
-                //Do not explicitly handle errors, those should be
-                //visible via console output in the browser.
-                if (xhr.readyState === 4) {
-                    status = xhr.status || 0;
-                    if (status > 399 && status < 600) {
-                        //An http 4xx or 5xx error. Signal an error.
-                        err = new Error(url + ' HTTP status: ' + status);
-                        err.xhr = xhr;
-                        if (errback) {
-                            errback(err);
-                        }
-                    } else {
-                        callback(xhr.responseText);
-                    }
-
-                    if (masterConfig.onXhrComplete) {
-                        masterConfig.onXhrComplete(xhr, url);
-                    }
-                }
-            };
-            xhr.send(null);
-        };
-    } else if (masterConfig.env === 'rhino' || (!masterConfig.env &&
-            typeof Packages !== 'undefined' && typeof java !== 'undefined')) {
-        //Why Java, why is this so awkward?
-        text.get = function (url, callback) {
-            var stringBuffer, line,
-                encoding = "utf-8",
-                file = new java.io.File(url),
-                lineSeparator = java.lang.System.getProperty("line.separator"),
-                input = new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(file), encoding)),
-                content = '';
-            try {
-                stringBuffer = new java.lang.StringBuffer();
-                line = input.readLine();
-
-                // Byte Order Mark (BOM) - The Unicode Standard, version 3.0, page 324
-                // http://www.unicode.org/faq/utf_bom.html
-
-                // Note that when we use utf-8, the BOM should appear as "EF BB BF", but it doesn't due to this bug in the JDK:
-                // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4508058
-                if (line && line.length() && line.charAt(0) === 0xfeff) {
-                    // Eat the BOM, since we've already found the encoding on this file,
-                    // and we plan to concatenating this buffer with others; the BOM should
-                    // only appear at the top of a file.
-                    line = line.substring(1);
-                }
-
-                if (line !== null) {
-                    stringBuffer.append(line);
-                }
-
-                while ((line = input.readLine()) !== null) {
-                    stringBuffer.append(lineSeparator);
-                    stringBuffer.append(line);
-                }
-                //Make sure we return a JavaScript string and not a Java string.
-                content = String(stringBuffer.toString()); //String
-            } finally {
-                input.close();
-            }
-            callback(content);
-        };
-    } else if (masterConfig.env === 'xpconnect' || (!masterConfig.env &&
-            typeof Components !== 'undefined' && Components.classes &&
-            Components.interfaces)) {
-        //Avert your gaze!
-        Cc = Components.classes;
-        Ci = Components.interfaces;
-        Components.utils['import']('resource://gre/modules/FileUtils.jsm');
-        xpcIsWindows = ('@mozilla.org/windows-registry-key;1' in Cc);
-
-        text.get = function (url, callback) {
-            var inStream, convertStream, fileObj,
-                readData = {};
-
-            if (xpcIsWindows) {
-                url = url.replace(/\//g, '\\');
-            }
-
-            fileObj = new FileUtils.File(url);
-
-            //XPCOM, you so crazy
-            try {
-                inStream = Cc['@mozilla.org/network/file-input-stream;1']
-                           .createInstance(Ci.nsIFileInputStream);
-                inStream.init(fileObj, 1, 0, false);
-
-                convertStream = Cc['@mozilla.org/intl/converter-input-stream;1']
-                                .createInstance(Ci.nsIConverterInputStream);
-                convertStream.init(inStream, "utf-8", inStream.available(),
-                Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-
-                convertStream.readString(inStream.available(), readData);
-                convertStream.close();
-                inStream.close();
-                callback(readData.value);
-            } catch (e) {
-                throw new Error((fileObj && fileObj.path || '') + ': ' + e);
-            }
-        };
-    }
-    return text;
-});
-
 /*!
  * jQuery JavaScript Library v1.11.1
  * http://jquery.com/
@@ -24496,269 +24105,400 @@ define("jquery", function(){});
 
 }( typeof window !== 'undefined' ? window : this ) );
 
-/*
-
-	ractive-events-tap
-	==================
-
-	Version 0.1.1.
-
-	On mobile devices, using `on-click` isn't good enough. Tapping the
-	touchscreen will fire a simulated click event, but only after a 300
-	millisecond delay, which makes your app feel sluggish. It also
-	causes the tapped area to highlight, which in most cases looks a
-	bit messy.
-
-	Instead, use `on-tap`. When you tap an area, the simulated click
-	event will be prevented, and the user's action is responded to
-	instantly. The `on-tap` event also differs from `on-click` in that
-	the click event will (frankly rather bizarrely) fire even if you
-	hold the mouse down over a single element for several seconds and
-	waggle it about.
-
-	Pointer events are also supported, as is pressing the spacebar when
-	the relevant element is focused (which triggers a click event, and
-	is good for accessibility).
-
-	==========================
-
-	Troubleshooting: If you're using a module system in your app (AMD or
-	something more nodey) then you may need to change the paths below,
-	where it says `require( 'ractive' )` or `define([ 'ractive' ]...)`.
-
-	==========================
-
-	Usage: Include this file on your page below Ractive, e.g:
-
-	    <script src='lib/ractive.js'></script>
-	    <script src='lib/ractive-events-tap.js'></script>
-
-	Or, if you're using a module loader, require this module:
-
-	    // requiring the plugin will 'activate' it - no need to use
-	    // the return value
-	    require( 'ractive-events-tap' );
-
-	Add a tap event in the normal fashion:
-
-	    <div on-tap='foo'>tap me!</div>
-
-	Then add a handler:
-
-	    ractive.on( 'foo', function ( event ) {
-	      alert( 'tapped' );
-	    });
-
-*/
-
-(function ( global, factory ) {
-
-	
-
-	// Common JS (i.e. browserify) environment
-	if ( typeof module !== 'undefined' && module.exports && typeof require === 'function' ) {
-		factory( require( 'ractive' ) );
-	}
-
-	// AMD?
-	else if ( typeof define === 'function' && define.amd ) {
-		define('ractive-events-tap',[ 'ractive' ], factory );
-	}
-
-	// browser global
-	else if ( global.Ractive ) {
-		factory( global.Ractive );
-	}
-
-	else {
-		throw new Error( 'Could not find Ractive! It must be loaded before the ractive-events-tap plugin' );
-	}
-
-}( typeof window !== 'undefined' ? window : this, function ( Ractive ) {
-
-	
-
-	var tap = function ( node, fire ) {
-		var mousedown, touchstart, focusHandler, distanceThreshold, timeThreshold;
-
-		distanceThreshold = 5; // maximum pixels pointer can move before cancel
-		timeThreshold = 400;   // maximum milliseconds between down and up before cancel
-
-		mousedown = function ( event ) {
-			var currentTarget, x, y, pointerId, up, move, cancel;
-
-			if ( event.which !== undefined && event.which !== 1 ) {
-				return;
-			}
-
-			x = event.clientX;
-			y = event.clientY;
-			currentTarget = this;
-			// This will be null for mouse events.
-			pointerId = event.pointerId;
-
-			up = function ( event ) {
-				if ( event.pointerId != pointerId ) {
-					return;
-				}
-
-				fire({
-					node: currentTarget,
-					original: event
-				});
-
-				cancel();
-			};
-
-			move = function ( event ) {
-				if ( event.pointerId != pointerId ) {
-					return;
-				}
-
-				if ( ( Math.abs( event.clientX - x ) >= distanceThreshold ) || ( Math.abs( event.clientY - y ) >= distanceThreshold ) ) {
-					cancel();
-				}
-			};
-
-			cancel = function () {
-				node.removeEventListener( 'MSPointerUp', up, false );
-				document.removeEventListener( 'MSPointerMove', move, false );
-				document.removeEventListener( 'MSPointerCancel', cancel, false );
-				node.removeEventListener( 'pointerup', up, false );
-				document.removeEventListener( 'pointermove', move, false );
-				document.removeEventListener( 'pointercancel', cancel, false );
-				node.removeEventListener( 'click', up, false );
-				document.removeEventListener( 'mousemove', move, false );
-			};
-
-			if ( window.navigator.pointerEnabled ) {
-				node.addEventListener( 'pointerup', up, false );
-				document.addEventListener( 'pointermove', move, false );
-				document.addEventListener( 'pointercancel', cancel, false );
-			} else if ( window.navigator.msPointerEnabled ) {
-				node.addEventListener( 'MSPointerUp', up, false );
-				document.addEventListener( 'MSPointerMove', move, false );
-				document.addEventListener( 'MSPointerCancel', cancel, false );
-			} else {
-				node.addEventListener( 'click', up, false );
-				document.addEventListener( 'mousemove', move, false );
-			}
-
-			setTimeout( cancel, timeThreshold );
-		};
-
-		if ( window.navigator.pointerEnabled ) {
-			node.addEventListener( 'pointerdown', mousedown, false );
-		} else if ( window.navigator.msPointerEnabled ) {
-			node.addEventListener( 'MSPointerDown', mousedown, false );
-		} else {
-			node.addEventListener( 'mousedown', mousedown, false );
-		}
-
-
-		touchstart = function ( event ) {
-			var currentTarget, x, y, touch, finger, move, up, cancel;
-
-			if ( event.touches.length !== 1 ) {
-				return;
-			}
-
-			touch = event.touches[0];
-
-			x = touch.clientX;
-			y = touch.clientY;
-			currentTarget = this;
-
-			finger = touch.identifier;
-
-			up = function ( event ) {
-				var touch;
-
-				touch = event.changedTouches[0];
-				if ( touch.identifier !== finger ) {
-					cancel();
-				}
-
-				event.preventDefault();  // prevent compatibility mouse event
-				fire({
-					node: currentTarget,
-					original: event
-				});
-
-				cancel();
-			};
-
-			move = function ( event ) {
-				var touch;
-
-				if ( event.touches.length !== 1 || event.touches[0].identifier !== finger ) {
-					cancel();
-				}
-
-				touch = event.touches[0];
-				if ( ( Math.abs( touch.clientX - x ) >= distanceThreshold ) || ( Math.abs( touch.clientY - y ) >= distanceThreshold ) ) {
-					cancel();
-				}
-			};
-
-			cancel = function () {
-				node.removeEventListener( 'touchend', up, false );
-				window.removeEventListener( 'touchmove', move, false );
-				window.removeEventListener( 'touchcancel', cancel, false );
-			};
-
-			node.addEventListener( 'touchend', up, false );
-			window.addEventListener( 'touchmove', move, false );
-			window.addEventListener( 'touchcancel', cancel, false );
-
-			setTimeout( cancel, timeThreshold );
-		};
-
-		node.addEventListener( 'touchstart', touchstart, false );
-
-
-		// native buttons, and <input type='button'> elements, should fire a tap event
-		// when the space key is pressed
-		if ( node.tagName === 'BUTTON' || node.type === 'button' ) {
-			focusHandler = function () {
-				var blurHandler, keydownHandler;
-
-				keydownHandler = function ( event ) {
-					if ( event.which === 32 ) { // space key
-						fire({
-							node: node,
-							original: event
-						});
-					}
-				};
-
-				blurHandler = function () {
-					node.removeEventListener( 'keydown', keydownHandler, false );
-					node.removeEventListener( 'blur', blurHandler, false );
-				};
-
-				node.addEventListener( 'keydown', keydownHandler, false );
-				node.addEventListener( 'blur', blurHandler, false );
-			};
-
-			node.addEventListener( 'focus', focusHandler, false );
-		}
-
-
-		return {
-			teardown: function () {
-				node.removeEventListener( 'pointerdown', mousedown, false );
-				node.removeEventListener( 'MSPointerDown', mousedown, false );
-				node.removeEventListener( 'mousedown', mousedown, false );
-				node.removeEventListener( 'touchstart', touchstart, false );
-				node.removeEventListener( 'focus', focusHandler, false );
-			}
-		};
-	};
-
-	Ractive.events.tap = tap;
-
-}));
+/**
+ * Gets config from SASS so that it can be refrenced on the front end.
+ */
+
+(function(global, factory) {
+  // Common JS (i.e. browserify) environment
+  if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+    module.exports = factory(require('underscore'), require('jquery'));
+  }
+  // AMD
+  else if (typeof define === 'function' && define.amd) {
+    define('mpConfig',['underscore', 'jquery'], factory);
+  }
+  // Browser global
+  else if (global._ && global.jQuery.fn.dataTable) {
+    global.MP = global.MP || {};
+    global.MP.colors = factory(global._, global.jQuery);
+  }
+  else {
+    throw new Error('Could not find dependencies for MinnPost Styles Config.' );
+  }
+})(typeof window !== 'undefined' ? window : this, function(_, $, dt) {
+  // Placeholder for config and other vars
+  var config = {};
+  var lists;
+
+  // We use the build process to replace this data.  Hacky for sure.
+  config = {
+  "selector-wrapper": ".mp",
+  "responsive-points": [
+    [
+      "all",
+      "0px"
+    ],
+    [
+      "small",
+      "420px"
+    ],
+    [
+      "medium",
+      "640px"
+    ],
+    [
+      "large",
+      "960px"
+    ],
+    [
+      "xlarge",
+      "1200px"
+    ]
+  ],
+  "grid-gutter": "0.5em",
+  "text-line-height": "1.5em",
+  "text-size": "1em",
+  "text-size-small": "0.85em",
+  "text-size-large": "1.25em",
+  "space": "1em",
+  "space-vertical-padding": "0.25em",
+  "space-horizontal-padding": "0.5em",
+  "space-vertical-margin": "1em",
+  "space-horizontal-margin": "1em",
+  "radius": "0.25em",
+  "font-size-base": "16px",
+  "font-text": "\"Open Sans\", Helvetica, Arial, \"Lucida Grande\", sans-serif",
+  "font-heading": "\"Montserrat\", Georgia, \"Times New Roman\", Times, sans-serif",
+  "font-monospace": "Menlo, Monaco, Consolas, \"Courier New\", monospace",
+  "color-white": "#FFFFFF",
+  "color-black": "#000000",
+  "color-dark-gray": "#282828",
+  "color-medium-gray": "#404040",
+  "color-gray": "#7A7A7A",
+  "color-light-gray": "#ABABAB",
+  "color-lighter-gray": "#CCCCCC",
+  "color-lightest-gray": "#F8F8F8",
+  "color-minnpost-red": "#801019",
+  "color-blue": "#0084A8",
+  "color-red": "#C83D2D",
+  "color-green": "#469B61",
+  "color-orange": "#FF6633",
+  "color-yellow": "#FBD341",
+  "colors-interface": [
+    [
+      "dark-gray",
+      "$color-dark-gray"
+    ],
+    [
+      "medium-gray",
+      "$color-medium-gray"
+    ],
+    [
+      "gray",
+      "$color-gray"
+    ],
+    [
+      "light-gray",
+      "$color-light-gray"
+    ],
+    [
+      "lighter-gray",
+      "$color-lighter-gray"
+    ],
+    [
+      "lightest-gray",
+      "$color-lightest-gray"
+    ],
+    [
+      "minnpost-red",
+      "$color-minnpost-red"
+    ],
+    [
+      "blue",
+      "$color-blue"
+    ],
+    [
+      "red",
+      "$color-red"
+    ],
+    [
+      "green",
+      "$color-green"
+    ],
+    [
+      "orange",
+      "$color-orange"
+    ],
+    [
+      "yellow",
+      "$color-yellow"
+    ]
+  ],
+  "color-link": "$color-blue",
+  "color-heading": "$color-dark-gray",
+  "color-text": "$color-medium-gray",
+  "colors-information": [
+    [
+      "primary",
+      "$color-blue"
+    ],
+    [
+      "success",
+      "$color-green"
+    ],
+    [
+      "info",
+      "$color-light-gray"
+    ],
+    [
+      "warning",
+      "$color-yellow"
+    ],
+    [
+      "danger",
+      "$color-red"
+    ]
+  ],
+  "colors-data": [
+    [
+      "green1",
+      "#1D8C47"
+    ],
+    [
+      "green2",
+      "#32955D"
+    ],
+    [
+      "green3",
+      "#36A174"
+    ],
+    [
+      "purple",
+      "#55307E"
+    ],
+    [
+      "blue1",
+      "#0D57A0"
+    ],
+    [
+      "blue2",
+      "#0793AB"
+    ],
+    [
+      "blue3",
+      "#55CBDD"
+    ],
+    [
+      "red",
+      "#C83D2D"
+    ],
+    [
+      "orange",
+      "#FF6633"
+    ],
+    [
+      "yellow",
+      "#FBD341"
+    ]
+  ],
+  "colors-political": [
+    [
+      "dfl",
+      "#0793AB"
+    ],
+    [
+      "d",
+      "#0793AB"
+    ],
+    [
+      "r",
+      "#E62B0A"
+    ],
+    [
+      "ip",
+      "#F75336"
+    ],
+    [
+      "lib",
+      "#7A7A7A"
+    ],
+    [
+      "swp",
+      "#7A7A7A"
+    ],
+    [
+      "cp",
+      "#7A7A7A"
+    ],
+    [
+      "cg",
+      "#7A7A7A"
+    ],
+    [
+      "gp",
+      "#07AB20"
+    ],
+    [
+      "gr",
+      "#7A7A7A"
+    ],
+    [
+      "mop",
+      "#7A7A7A"
+    ],
+    [
+      "edp",
+      "#7A7A7A"
+    ],
+    [
+      "ind",
+      "#7A7A7A"
+    ],
+    [
+      "sl",
+      "#7A7A7A"
+    ],
+    [
+      "jp",
+      "#7A7A7A"
+    ]
+  ]
+};
+
+  // Function to help turn a config value into another if it is a reference
+  function findReference(value) {
+    if (_.isString(value) && value.indexOf('$') === 0 && !_.isUndefined(config[value.substring(1)])) {
+      value = config[value.substring(1)];
+    }
+    return value;
+  }
+
+  // Process config
+  if (_.isObject(config)) {
+    // Process the lists that are meant to be objects
+    lists = ['responsive-points', 'colors-data', 'colors-information', 'colors-interface', 'colors-political'];
+    _.each(lists, function(l, li) {
+      var converted = {};
+
+      if (!_.isUndefined(config[l])) {
+        _.each(config[l], function(i, ii) {
+          converted[i[0]] = findReference(i[1]);
+        });
+
+        config[l] = converted;
+      }
+    });
+  }
+
+  // Political party names
+  config.politicalParties = {
+    ip: 'Independence',
+    r: 'Republican',
+    dfl: 'Democratic-Farmer-Labor',
+    d: 'Democratic',
+    lib: 'Libertarian Party',
+    swp: 'Socialist Workers Party',
+    cp: 'Constitution Party',
+    cg: 'Constitutional Government',
+    gp: 'Green Party',
+    gr: 'Grassroots Party',
+    mop: 'Minnesota Open Progressives',
+    edp: 'Ecology Democracy Party',
+    ind: 'Independent',
+    sl: 'Socialism and Liberation',
+    jp: 'Justice Party',
+    np: 'Nonpartisan',
+    wi: 'Write-In'
+  };
+
+  return config;
+
+});
+
+/**
+ * Formatters
+ */
+
+(function(global, factory) {
+  // Common JS (i.e. browserify) environment
+  if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+    module.exports = factory(require('underscore'));
+  }
+  // AMD
+  else if (typeof define === 'function' && define.amd) {
+    define('mpFormatters',['underscore'], factory);
+  }
+  // Browser global
+  else if (global._) {
+    global.MP = global.MP || {};
+    global.MP.formatters = factory(global._);
+  }
+  else {
+    throw new Error('Could not find dependencies for MinnPost Styles Formatters.' );
+  }
+})(typeof window !== 'undefined' ? window : this, function(_) {
+
+  // Placeholder for formatters stuff
+  var formatters = {};
+
+  // Format number
+  formatters.number = function(num, decimals) {
+    decimals = (decimals || decimals === 0) ? decimals : 2;
+    var rgx = (/(\d+)(\d{3})/);
+    split = num.toFixed(decimals).toString().split('.');
+
+    while (rgx.test(split[0])) {
+      split[0] = split[0].replace(rgx, '$1' + ',' + '$2');
+    }
+    return (decimals) ? split[0] + '.' + split[1] : split[0];
+  };
+
+  // Format integer
+  formatters.integer = function(num, round) {
+    round = round || true;
+    num = (round) ? Math.round(num) : num;
+    return formatters.number(num, 0);
+  };
+
+  // Basic US currency
+  formatters.currency = function(num) {
+    return '$' + formatters.number(num, 2);
+  };
+
+  // Percentage
+  formatters.percent = function(num, decimals) {
+    decimals = (decimals || decimals === 0) ? decimals : 1;
+    return formatters.number(num * 100, decimals) + '%';
+  };
+
+  // Percent change
+  formatters.percentChange = function(num, decimals) {
+    return ((num > 0) ? '+' : '') + formatters.percent(num, decimals);
+  };
+
+  // Number change
+  formatters.change = function(num, decimals) {
+    decimals = (decimals || decimals === 0) ? decimals : 2;
+    return ((num > 0) ? '+' : '') + formatters.number(num);
+  };
+
+  // Converts string into a hash (very basically).
+  formatters.hash = function(str) {
+    return Math.abs(_.reduce(str.split(''), function(a, b) {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0));
+  };
+
+  // Identifier/slug maker
+  formatters.identifier = function(str) {
+    return str.toLowerCase().replace(/[^\w ]+/g,'').replace(/ +/g,'-').replace(/[^\w-]+/g,'');
+  };
+
+  return formatters;
+
+});
 
 //     Backbone.js 1.1.2
 
@@ -26366,6 +26106,396 @@ define("jquery", function(){});
   };
 
   return Backbone;
+
+}));
+
+/**
+ * Some helper functions
+ */
+
+
+/**
+ * Helpers functions such as formatters or extensions
+ * to libraries.
+ */
+define('helpers', ['jquery', 'underscore', 'backbone', 'mpFormatters'],
+  function($, _, Backbone, formatters) {
+
+  var helpers = {};
+  var cacheURLIncrementer = {};
+
+  /**
+   * Override Backbone's ajax call to use JSONP by default as well
+   * as force a specific callback to ensure that server side
+   * caching is effective.
+   */
+  helpers.overrideBackboneAJAX = function() {
+    Backbone.ajax = function() {
+      var options = arguments;
+      var hash;
+
+      if (options[0].dataTypeForce !== true) {
+        hash = formatters.hash(options[0].url);
+        cacheURLIncrementer[hash] = (!_.isUndefined(cacheURLIncrementer[hash])) ?
+          cacheURLIncrementer[hash] + 1 : 0;
+        options[0].dataType = 'jsonp';
+        options[0].jsonpCallback = 'mpServerSideCachingHelper' + hash +
+          cacheURLIncrementer[hash];
+      }
+      return Backbone.$.ajax.apply(Backbone.$, options);
+    };
+  };
+
+  /**
+   * Returns version of MSIE.
+   */
+  helpers.isMSIE = function() {
+    var match = /(msie) ([\w.]+)/i.exec(navigator.userAgent);
+    return match ? parseInt(match[2], 10) : false;
+  };
+
+  /**
+   * Wrapper for a JSONP request, the first set of options are for
+   * the AJAX request, while the other are from the application.
+   */
+  helpers.jsonpRequest = function(requestOptions, appOptions) {
+    var options = requestOptions;
+
+    if (options.dataTypeForce !== true) {
+      hash = formatters.hash(options.url);
+      cacheURLIncrementer[hash] = (!_.isUndefined(cacheURLIncrementer[hash])) ?
+        cacheURLIncrementer[hash] + 1 : 0;
+      options.dataType = 'jsonp';
+      options.jsonpCallback = 'mpServerSideCachingHelper' + hash +
+        cacheURLIncrementer[hash];
+    }
+
+    return $.ajax.apply($, [options]);
+  };
+
+  /**
+   * Data source handling.  For development, we can call
+   * the data directly from the JSON file, but for production
+   * we want to proxy for JSONP.
+   *
+   * `name` should be relative path to dataset
+   * `options` are app options
+   *
+   * Returns jQuery's defferred object.
+   */
+  helpers.getLocalData = function(name, options) {
+    var useJSONP = false;
+    var defers = [];
+    name = (_.isArray(name)) ? name : [ name ];
+
+    // If the data path is not relative, then use JSONP
+    if (options && options.paths && options.paths.data.indexOf('http') === 0) {
+      useJSONP = true;
+    }
+
+    // Go through each file and add to defers
+    _.each(name, function(d) {
+      var defer;
+
+      if (useJSONP) {
+        defer = helpers.jsonpRequest({
+          url: proxyPrefix + encodeURI(options.paths.data + d)
+        }, options);
+      }
+      else {
+        defer = $.getJSON(options.paths.data + d);
+      }
+      defers.push(defer);
+    });
+
+    return $.when.apply($, defers);
+  };
+
+  /**
+   * Reads query string and turns into object.
+   */
+  helpers.parseQueryString = function() {
+    var assoc  = {};
+    var decode = function(s) {
+      return decodeURIComponent(s.replace(/\+/g, " "));
+    };
+    var queryString = location.search.substring(1);
+    var keyValues = queryString.split('&');
+
+    _.each(keyValues, function(v, vi) {
+      var key = v.split('=');
+      if (key.length > 1) {
+        assoc[decode(key[0])] = decode(key[1]);
+      }
+    });
+
+    return assoc;
+  };
+
+  return helpers;
+});
+
+/*
+
+	ractive-events-tap
+	==================
+
+	Version 0.1.1.
+
+	On mobile devices, using `on-click` isn't good enough. Tapping the
+	touchscreen will fire a simulated click event, but only after a 300
+	millisecond delay, which makes your app feel sluggish. It also
+	causes the tapped area to highlight, which in most cases looks a
+	bit messy.
+
+	Instead, use `on-tap`. When you tap an area, the simulated click
+	event will be prevented, and the user's action is responded to
+	instantly. The `on-tap` event also differs from `on-click` in that
+	the click event will (frankly rather bizarrely) fire even if you
+	hold the mouse down over a single element for several seconds and
+	waggle it about.
+
+	Pointer events are also supported, as is pressing the spacebar when
+	the relevant element is focused (which triggers a click event, and
+	is good for accessibility).
+
+	==========================
+
+	Troubleshooting: If you're using a module system in your app (AMD or
+	something more nodey) then you may need to change the paths below,
+	where it says `require( 'ractive' )` or `define([ 'ractive' ]...)`.
+
+	==========================
+
+	Usage: Include this file on your page below Ractive, e.g:
+
+	    <script src='lib/ractive.js'></script>
+	    <script src='lib/ractive-events-tap.js'></script>
+
+	Or, if you're using a module loader, require this module:
+
+	    // requiring the plugin will 'activate' it - no need to use
+	    // the return value
+	    require( 'ractive-events-tap' );
+
+	Add a tap event in the normal fashion:
+
+	    <div on-tap='foo'>tap me!</div>
+
+	Then add a handler:
+
+	    ractive.on( 'foo', function ( event ) {
+	      alert( 'tapped' );
+	    });
+
+*/
+
+(function ( global, factory ) {
+
+	
+
+	// Common JS (i.e. browserify) environment
+	if ( typeof module !== 'undefined' && module.exports && typeof require === 'function' ) {
+		factory( require( 'ractive' ) );
+	}
+
+	// AMD?
+	else if ( typeof define === 'function' && define.amd ) {
+		define('ractive-events-tap',[ 'ractive' ], factory );
+	}
+
+	// browser global
+	else if ( global.Ractive ) {
+		factory( global.Ractive );
+	}
+
+	else {
+		throw new Error( 'Could not find Ractive! It must be loaded before the ractive-events-tap plugin' );
+	}
+
+}( typeof window !== 'undefined' ? window : this, function ( Ractive ) {
+
+	
+
+	var tap = function ( node, fire ) {
+		var mousedown, touchstart, focusHandler, distanceThreshold, timeThreshold;
+
+		distanceThreshold = 5; // maximum pixels pointer can move before cancel
+		timeThreshold = 400;   // maximum milliseconds between down and up before cancel
+
+		mousedown = function ( event ) {
+			var currentTarget, x, y, pointerId, up, move, cancel;
+
+			if ( event.which !== undefined && event.which !== 1 ) {
+				return;
+			}
+
+			x = event.clientX;
+			y = event.clientY;
+			currentTarget = this;
+			// This will be null for mouse events.
+			pointerId = event.pointerId;
+
+			up = function ( event ) {
+				if ( event.pointerId != pointerId ) {
+					return;
+				}
+
+				fire({
+					node: currentTarget,
+					original: event
+				});
+
+				cancel();
+			};
+
+			move = function ( event ) {
+				if ( event.pointerId != pointerId ) {
+					return;
+				}
+
+				if ( ( Math.abs( event.clientX - x ) >= distanceThreshold ) || ( Math.abs( event.clientY - y ) >= distanceThreshold ) ) {
+					cancel();
+				}
+			};
+
+			cancel = function () {
+				node.removeEventListener( 'MSPointerUp', up, false );
+				document.removeEventListener( 'MSPointerMove', move, false );
+				document.removeEventListener( 'MSPointerCancel', cancel, false );
+				node.removeEventListener( 'pointerup', up, false );
+				document.removeEventListener( 'pointermove', move, false );
+				document.removeEventListener( 'pointercancel', cancel, false );
+				node.removeEventListener( 'click', up, false );
+				document.removeEventListener( 'mousemove', move, false );
+			};
+
+			if ( window.navigator.pointerEnabled ) {
+				node.addEventListener( 'pointerup', up, false );
+				document.addEventListener( 'pointermove', move, false );
+				document.addEventListener( 'pointercancel', cancel, false );
+			} else if ( window.navigator.msPointerEnabled ) {
+				node.addEventListener( 'MSPointerUp', up, false );
+				document.addEventListener( 'MSPointerMove', move, false );
+				document.addEventListener( 'MSPointerCancel', cancel, false );
+			} else {
+				node.addEventListener( 'click', up, false );
+				document.addEventListener( 'mousemove', move, false );
+			}
+
+			setTimeout( cancel, timeThreshold );
+		};
+
+		if ( window.navigator.pointerEnabled ) {
+			node.addEventListener( 'pointerdown', mousedown, false );
+		} else if ( window.navigator.msPointerEnabled ) {
+			node.addEventListener( 'MSPointerDown', mousedown, false );
+		} else {
+			node.addEventListener( 'mousedown', mousedown, false );
+		}
+
+
+		touchstart = function ( event ) {
+			var currentTarget, x, y, touch, finger, move, up, cancel;
+
+			if ( event.touches.length !== 1 ) {
+				return;
+			}
+
+			touch = event.touches[0];
+
+			x = touch.clientX;
+			y = touch.clientY;
+			currentTarget = this;
+
+			finger = touch.identifier;
+
+			up = function ( event ) {
+				var touch;
+
+				touch = event.changedTouches[0];
+				if ( touch.identifier !== finger ) {
+					cancel();
+				}
+
+				event.preventDefault();  // prevent compatibility mouse event
+				fire({
+					node: currentTarget,
+					original: event
+				});
+
+				cancel();
+			};
+
+			move = function ( event ) {
+				var touch;
+
+				if ( event.touches.length !== 1 || event.touches[0].identifier !== finger ) {
+					cancel();
+				}
+
+				touch = event.touches[0];
+				if ( ( Math.abs( touch.clientX - x ) >= distanceThreshold ) || ( Math.abs( touch.clientY - y ) >= distanceThreshold ) ) {
+					cancel();
+				}
+			};
+
+			cancel = function () {
+				node.removeEventListener( 'touchend', up, false );
+				window.removeEventListener( 'touchmove', move, false );
+				window.removeEventListener( 'touchcancel', cancel, false );
+			};
+
+			node.addEventListener( 'touchend', up, false );
+			window.addEventListener( 'touchmove', move, false );
+			window.addEventListener( 'touchcancel', cancel, false );
+
+			setTimeout( cancel, timeThreshold );
+		};
+
+		node.addEventListener( 'touchstart', touchstart, false );
+
+
+		// native buttons, and <input type='button'> elements, should fire a tap event
+		// when the space key is pressed
+		if ( node.tagName === 'BUTTON' || node.type === 'button' ) {
+			focusHandler = function () {
+				var blurHandler, keydownHandler;
+
+				keydownHandler = function ( event ) {
+					if ( event.which === 32 ) { // space key
+						fire({
+							node: node,
+							original: event
+						});
+					}
+				};
+
+				blurHandler = function () {
+					node.removeEventListener( 'keydown', keydownHandler, false );
+					node.removeEventListener( 'blur', blurHandler, false );
+				};
+
+				node.addEventListener( 'keydown', keydownHandler, false );
+				node.addEventListener( 'blur', blurHandler, false );
+			};
+
+			node.addEventListener( 'focus', focusHandler, false );
+		}
+
+
+		return {
+			teardown: function () {
+				node.removeEventListener( 'pointerdown', mousedown, false );
+				node.removeEventListener( 'MSPointerDown', mousedown, false );
+				node.removeEventListener( 'mousedown', mousedown, false );
+				node.removeEventListener( 'touchstart', touchstart, false );
+				node.removeEventListener( 'focus', focusHandler, false );
+			}
+		};
+	};
+
+	Ractive.events.tap = tap;
 
 }));
 
@@ -39509,469 +39639,1203 @@ L.Map.include({
 	return moment;
 }));
 
-/* 
- * The MIT License
- *
- * Copyright (c) 2012 James Allardice
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), 
- * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+/**
+ * Models
+ */
+define('models',[
+  'jquery', 'underscore', 'backbone', 'moment', 'moment-timezone', 'helpers'
+], function($, _, Backbone, moment, momentTimezone, helpers) {
+  var models = {};
+
+  models.ContestModel = Backbone.Model.extend({
+    // Base query for the contest
+    query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
+      "ON c.id = r.contest_id WHERE c.id = '%CONTEST_ID%' " +
+      "ORDER BY r.percentage ASC, r.candidate",
+
+    // Fields that are for contests (not result)
+    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code', 'office_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help', 'primary', 'scope', 'partisan'],
+
+    // Non-Partisan parties
+    npParties: ['NP', 'WI'],
+
+    // Initializer
+    initialize: function(model, options) {
+      this.options = options || {};
+      this.app = options.app;
+
+      // Changes that should come in from the API
+      this.on('sync', this.contestUpdate);
+    },
+
+    // Construct API call
+    url: function() {
+      return this.app.options.electionsAPI +
+        encodeURIComponent(this.query.replace('%CONTEST_ID%', this.id));
+    },
+
+    // Parse results
+    parse: function(response, options) {
+      var thisModel = this;
+      var parsed = {};
+      var rankedChoiceFinal = false;
+      parsed.results = [];
+
+      // Given how collections process fetching new data, we want to avoid
+      // parsing here and parse on the collection part
+      if (options.collection) {
+        return response;
+      }
+
+      // Separate out what is contest level properties and what is
+      // results
+      _.each(response, function(r) {
+        var result = {};
+        _.each(r, function(v, k) {
+          if (_.indexOf(thisModel.contestFields, k) >= 0) {
+            parsed[k] = v;
+          }
+          else {
+            result[k] = v;
+          }
+        });
+        parsed.results.push(result);
+      });
+
+      // Ranked choice handling.  Group each candidate and add array
+      // for results per rank
+      if (parsed.ranked_choice) {
+        var groupedResults = {};
+        _.each(parsed.results, function(r) {
+          var c = r.ranked_choice_place;
+          groupedResults[r.candidate_id] = groupedResults[r.candidate_id] || {};
+          groupedResults[r.candidate_id].ranked_choices = groupedResults[r.candidate_id].ranked_choices || {};
+          groupedResults[r.candidate_id].ranked_choices[c] = {
+            'ranked_choice': c,
+            'percentage': r.percentage,
+            'votes_candidate': r.votes_candidate,
+            'office_name': r.office_name
+          };
+
+          // If the first choice, use this information to fill in results
+          if (c === 1) {
+            groupedResults[r.candidate_id] = _.extend(groupedResults[r.candidate_id], r);
+          }
+
+          // If the final choice, get some values
+          if (c === 100) {
+            groupedResults[r.candidate_id].percentage = r.percentage;
+            groupedResults[r.candidate_id].votes_candidate = r.votes_candidate;
+          }
+        });
+        parsed.results = _.values(groupedResults);
+      }
+
+      // Put results in a basic order.
+      parsed.results = _.sortBy(parsed.results, 'candidate');
+      parsed.results = _.sortBy(parsed.results, function(r) {
+        return r.percentage * -1;
+      });
+      // If primary, sort by party
+      if (parsed.primary) {
+        parsed.results = _.sortBy(parsed.results, 'party_id');
+      }
+
+      // Mark who won.  Overall having all precincts reporting is good
+      // enough but with ranked choice, we need have all the final data
+      // in.  Primaries need to choose winners per parties
+      parsed.done = (parsed.precincts_reporting === parsed.total_effected_precincts);
+
+      if (parsed.ranked_choice) {
+        rankedChoiceFinal = (_.size(parsed.results) == _.size(_.filter(parsed.results, function(r) {
+          return (!_.isUndefined(r.ranked_choices[100]));
+        })));
+      }
+      if ((parsed.done && !parsed.ranked_choice && !parsed.primary) ||
+        (parsed.done && parsed.ranked_choice && rankedChoiceFinal && !parsed.primary) ||
+        (parsed.done && parsed.primary && !parsed.partisan)) {
+        parsed.results = _.map(parsed.results, function(r, ri) {
+          r.winner = false;
+          if (ri < parsed.seats) {
+            r.winner = true;
+          }
+          return r;
+        });
+        parsed.final = true;
+      }
+      else if (parsed.done && parsed.primary && parsed.partisan) {
+        _.each(_.groupBy(parsed.results, 'party_id'), function(p, pi) {
+          _.each(p, function(r, ri) {
+            r.winner = false;
+            if (ri < parsed.seats) {
+              r.winner = true;
+            }
+            return r;
+          });
+        });
+
+        parsed.final = true;
+      }
+
+      // Further formatting
+      parsed.updated = moment.unix(parsed.updated);
+      return parsed;
+    },
+
+    // When data comes is, handle it
+    contestUpdate: function() {
+      this.set('synced', true);
+
+      // Only handle once
+      if (!this.get('fetchedBoundary') && _.isString(this.get('boundary'))) {
+        this.fetchBoundary();
+      }
+    },
+
+    // Gets boundary data from boundary service.  Unfortunately
+    // some contests have multiple boundaries (issue with the
+    // original boundary datasets)
+    fetchBoundary: function() {
+      var thisModel = this;
+
+      helpers.jsonpRequest({
+        url: this.app.options.boundaryAPI + 'boundary/?limit=10&slug__in=' +
+          encodeURIComponent(this.get('boundary'))
+      }, this.app.options)
+      .done(function(response) {
+        if (_.isArray(response.objects)) {
+          thisModel.set('boundarySets', response.objects);
+          thisModel.set('fetchedBoundary', true);
+        }
+      });
+    },
+
+    // Our API is pretty simple, so we do a basic time based
+    // polling.  Call right away as well.
+    connect: function(fetchBoundary) {
+      var thisModel = this;
+
+      // Allow to turn off boundary fetching
+      this.set('fetchedBoundary', (fetchBoundary !== false) ? false : true);
+
+      this.fetch();
+      this.pollID = window.setInterval(function() {
+        thisModel.fetch();
+      }, this.app.options.electionsAPIPollInterval);
+    },
+
+    // Stop the polling
+    disconnect: function() {
+      window.clearInterval(this.pollID);
+    }
+  });
+
+
+  // Model for election wide data
+  models.ElectionModel = Backbone.Model.extend({
+    // Base query for the metadata
+    query: "SELECT * FROM swvariables",
+
+    // Initializer
+    initialize: function(model, options) {
+      this.options = options || {};
+      this.app = options.app;
+    },
+
+    // Construct API call
+    url: function() {
+      return this.app.options.electionsAPI +
+        encodeURIComponent(this.query);
+    },
+
+    // Parse results
+    parse: function(response, options) {
+      var parsed = {};
+      var now, testStop;
+
+      // Parse out values
+      _.each(response, function(r, ri) {
+        // Parsing large ints in JS :(
+        if (r.type === 'integer') {
+          parsed[r.name] = parseInt(r.value_blob, 10);
+        }
+        else if (r.type === 'float') {
+          parsed[r.name] = parseFloat(r.value_blob);
+        }
+        else if (r.type === 'boolean') {
+          parsed[r.name] = !!r.value_blob;
+        }
+        else {
+          parsed[r.name] = r.value_blob;
+        }
+      });
+
+      // Some specifics
+      if (parsed.date) {
+        parsed.date = moment(parsed.date);
+      }
+      if (parsed.updated) {
+        parsed.updated = moment.unix(parsed.updated);
+      }
+
+      // If we have a date for the election, make a good guess on whether
+      // we are looking at test results
+      parsed.isTest = false;
+      if (parsed.date) {
+        now = moment().tz('America/Chicago');
+        testStop = parsed.date.clone();
+        testStop.tz('America/Chicago').hour(17).minute(0);
+        if (now.isBefore(testStop, 'minute')) {
+          parsed.isTest = true;
+        }
+      }
+
+      return parsed;
+    },
+
+    // Our API is pretty simple, so we do a basic time based
+    // polling.  Call right away as well.
+    connect: function() {
+      var thisModel = this;
+      this.fetch();
+      this.pollID = window.setInterval(function() {
+        thisModel.fetch();
+      }, this.app.options.electionsAPIPollInterval);
+    },
+
+    // Stop the polling
+    disconnect: function() {
+      window.clearInterval(this.pollID);
+    }
+  });
+
+
+  return models;
+
+});
+
+/**
+ * Collections
+ */
+define('collections',[
+  'jquery', 'underscore', 'backbone', 'models', 'helpers'
+], function($, _, Backbone, models, helpers) {
+
+  var collections = {};
+
+  collections.ContestsCollection = Backbone.Collection.extend({
+    model: models.ContestModel,
+
+    // Base query for the contest
+    query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
+      "ON c.id = r.contest_id WHERE (%CONTEST_SEARCH%) " +
+      "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
+
+    // Construct API call
+    url: function() {
+      var filter = '';
+      var searches = this.options.search.split('|');
+      searches = _.map(searches, function(s) {
+        s = s.split(' ').join('%');
+        s = s.split('+').join('%');
+        return "title LIKE '%" + s + "%'";
+      });
+
+      return this.app.options.electionsAPI +
+        encodeURIComponent(this.query.replace('%CONTEST_SEARCH%', searches.join(' OR ')));
+    },
+
+    // Parse the results.
+    parse: function(response, options) {
+      // How backbone handles parsing is not helpful given our structure; it'll
+      // pass the model-level parsing but only after it has looked to see if
+      // the model should be added or updated to the collection.  So, we do
+      // parsing here and avoid it on the model.  Luckily backbone passes
+      // a 'collection' option to check for.
+      var parsed = _.map(_.values(_.groupBy(response, 'id')),
+        this.model.prototype.parse, this.model.prototype);
+      return parsed;
+    },
+
+    initialize: function(models, options) {
+      this.options = options || {};
+      this.app = options.app;
+
+      // Add references to options and app
+      this.on('add', function(m) {
+        m.options = options;
+        m.app = options.app;
+      });
+      // When data comes in, react
+      this.on('sync', function() {
+        this.contestUpdate();
+      });
+    },
+
+    // When data comes is, handle it
+    contestUpdate: function() {
+      // Only handle once
+      if (!this.fetchedBoundary) {
+        this.fetchBoundary();
+      }
+    },
+
+    // Gets boundary data from boundary service in one call.
+    fetchBoundary: function() {
+      var thisCollection = this;
+
+      helpers.jsonpRequest({
+        url: this.app.options.boundaryAPI + 'boundary/?limit=30&slug__in=' +
+          encodeURIComponent(this.pluck('boundary').join(','))
+      }, this.app.options)
+      .done(function(response) {
+        if (_.isArray(response.objects)) {
+          // Match up slugs to models
+          _.each(response.objects, function(b) {
+            _.each(thisCollection.filter(function(m) {
+              return (m.get('boundary').indexOf(b.slug) >= 0);
+            }), function(m) {
+              m.set('boundarySets', [b]);
+            });
+          });
+          thisCollection.fetchedBoundary = true;
+
+          // Since Ractive's backbone adaptor does not seem to
+          // react to properties that are not attributes of a model
+          // or a model in a collection
+          thisCollection.each(function(m) {
+            m.set('fetchedBoundary', true);
+          });
+        }
+      });
+    },
+
+    // Our API is pretty simple, so we do a basic time based
+    // polling.  Call right away as well.
+    connect: function() {
+      var thisCollection = this;
+      var fetchOptions = { collection: true };
+
+      this.fetch(fetchOptions);
+      this.pollID = window.setInterval(function() {
+        thisCollection.fetch(fetchOptions);
+      }, this.app.options.electionsAPIPollInterval);
+    },
+
+    // Stop the polling
+    disconnect: function() {
+      window.clearInterval(this.pollID);
+    }
+  });
+
+  // A collection based a location
+  collections.ContestsLocationCollection = collections.ContestsCollection.extend({
+
+    // Base query for the contest
+    query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
+      "ON c.id = r.contest_id WHERE boundary IN (%CONTEST_SEARCH%) " +
+      "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
+
+    // Construct API call
+    url: function() {
+      return this.app.options.electionsAPI +
+        encodeURIComponent(this.query.replace('%CONTEST_SEARCH%',
+          "'" + this.boundaries.join("','") + "'"));
+    },
+
+    initialize: function(models, options) {
+      // Call parent intializer
+      collections.ContestsLocationCollection.__super__.initialize.apply(this, arguments);
+
+      this.on('fetchedBoundary', function() {
+        this.connect();
+      });
+    },
+
+    // Override this, as we actually get the boundaries first
+    contestUpdate: function() {
+      // Only handle once
+      if (!this.matchedBoundary) {
+        this.matchBoundary();
+      }
+    },
+
+    // Match the already recieved boundaries
+    matchBoundary: function() {
+      var thisCollection = this;
+      _.each(this.fullBoundaries, function(b) {
+        _.each(thisCollection.where({ boundary: b.slug }), function(m) {
+          m.set('boundarySets', [b]);
+        });
+      });
+
+      // Since Ractive's backbone adaptor does not seem to
+      // react to properties that are not attributes of a model
+      // or a model in a collection
+      this.each(function(m) {
+        m.set('fetchedBoundary', true);
+      });
+
+      this.matchedBoundary = true;
+    },
+
+    // Get Bundaries from coordinates
+    fetchBoundaryFromCoordinates: function() {
+      var thisCollection = this;
+
+      helpers.jsonpRequest({
+        url: this.app.options.boundaryAPI + 'boundary/?contains=' +
+          encodeURIComponent(this.options.lonlat[1]) + ',' +
+          encodeURIComponent(this.options.lonlat[0]) + '&sets=' +
+          encodeURIComponent(this.app.options.boundarySets.join(','))
+      }, this.app.options)
+      .done(function(response) {
+        if (_.isArray(response.objects)) {
+          thisCollection.fullBoundaries = response.objects;
+          thisCollection.boundaries = _.pluck(response.objects, 'slug');
+          thisCollection.trigger('fetchedBoundary');
+        }
+      });
+    }
+  });
+
+  return collections;
+
+});
+
+/*!
+ * typeahead.js 0.10.4
+ * https://github.com/twitter/typeahead.js
+ * Copyright 2013-2014 Twitter, Inc. and other contributors; Licensed MIT
  */
 
-// Defines the global Placeholders object along with various utility methods
-(function (global) {
-
-    
-
-    // Cross-browser DOM event binding
-    function addEventListener(elem, event, fn) {
-        if (elem.addEventListener) {
-            return elem.addEventListener(event, fn, false);
+(function($) {
+    var _ = function() {
+        
+        return {
+            isMsie: function() {
+                return /(msie|trident)/i.test(navigator.userAgent) ? navigator.userAgent.match(/(msie |rv:)(\d+(.\d+)?)/i)[2] : false;
+            },
+            isBlankString: function(str) {
+                return !str || /^\s*$/.test(str);
+            },
+            escapeRegExChars: function(str) {
+                return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+            },
+            isString: function(obj) {
+                return typeof obj === "string";
+            },
+            isNumber: function(obj) {
+                return typeof obj === "number";
+            },
+            isArray: $.isArray,
+            isFunction: $.isFunction,
+            isObject: $.isPlainObject,
+            isUndefined: function(obj) {
+                return typeof obj === "undefined";
+            },
+            toStr: function toStr(s) {
+                return _.isUndefined(s) || s === null ? "" : s + "";
+            },
+            bind: $.proxy,
+            each: function(collection, cb) {
+                $.each(collection, reverseArgs);
+                function reverseArgs(index, value) {
+                    return cb(value, index);
+                }
+            },
+            map: $.map,
+            filter: $.grep,
+            every: function(obj, test) {
+                var result = true;
+                if (!obj) {
+                    return result;
+                }
+                $.each(obj, function(key, val) {
+                    if (!(result = test.call(null, val, key, obj))) {
+                        return false;
+                    }
+                });
+                return !!result;
+            },
+            some: function(obj, test) {
+                var result = false;
+                if (!obj) {
+                    return result;
+                }
+                $.each(obj, function(key, val) {
+                    if (result = test.call(null, val, key, obj)) {
+                        return false;
+                    }
+                });
+                return !!result;
+            },
+            mixin: $.extend,
+            getUniqueId: function() {
+                var counter = 0;
+                return function() {
+                    return counter++;
+                };
+            }(),
+            templatify: function templatify(obj) {
+                return $.isFunction(obj) ? obj : template;
+                function template() {
+                    return String(obj);
+                }
+            },
+            defer: function(fn) {
+                setTimeout(fn, 0);
+            },
+            debounce: function(func, wait, immediate) {
+                var timeout, result;
+                return function() {
+                    var context = this, args = arguments, later, callNow;
+                    later = function() {
+                        timeout = null;
+                        if (!immediate) {
+                            result = func.apply(context, args);
+                        }
+                    };
+                    callNow = immediate && !timeout;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                    if (callNow) {
+                        result = func.apply(context, args);
+                    }
+                    return result;
+                };
+            },
+            throttle: function(func, wait) {
+                var context, args, timeout, result, previous, later;
+                previous = 0;
+                later = function() {
+                    previous = new Date();
+                    timeout = null;
+                    result = func.apply(context, args);
+                };
+                return function() {
+                    var now = new Date(), remaining = wait - (now - previous);
+                    context = this;
+                    args = arguments;
+                    if (remaining <= 0) {
+                        clearTimeout(timeout);
+                        timeout = null;
+                        previous = now;
+                        result = func.apply(context, args);
+                    } else if (!timeout) {
+                        timeout = setTimeout(later, remaining);
+                    }
+                    return result;
+                };
+            },
+            noop: function() {}
+        };
+    }();
+    var VERSION = "0.10.4";
+    var tokenizers = function() {
+        
+        return {
+            nonword: nonword,
+            whitespace: whitespace,
+            obj: {
+                nonword: getObjTokenizer(nonword),
+                whitespace: getObjTokenizer(whitespace)
+            }
+        };
+        function whitespace(str) {
+            str = _.toStr(str);
+            return str ? str.split(/\s+/) : [];
         }
-        if (elem.attachEvent) {
-            return elem.attachEvent("on" + event, fn);
+        function nonword(str) {
+            str = _.toStr(str);
+            return str ? str.split(/\W+/) : [];
         }
-    }
-
-    // Check whether an item is in an array (we don't use Array.prototype.indexOf so we don't clobber any existing polyfills - this is a really simple alternative)
-    function inArray(arr, item) {
-        var i, len;
-        for (i = 0, len = arr.length; i < len; i++) {
-            if (arr[i] === item) {
-                return true;
+        function getObjTokenizer(tokenizer) {
+            return function setKey() {
+                var args = [].slice.call(arguments, 0);
+                return function tokenize(o) {
+                    var tokens = [];
+                    _.each(args, function(k) {
+                        tokens = tokens.concat(tokenizer(_.toStr(o[k])));
+                    });
+                    return tokens;
+                };
+            };
+        }
+    }();
+    var LruCache = function() {
+        
+        function LruCache(maxSize) {
+            this.maxSize = _.isNumber(maxSize) ? maxSize : 100;
+            this.reset();
+            if (this.maxSize <= 0) {
+                this.set = this.get = $.noop;
             }
         }
-        return false;
-    }
-
-    // Move the caret to the index position specified. Assumes that the element has focus
-    function moveCaret(elem, index) {
-        var range;
-        if (elem.createTextRange) {
-            range = elem.createTextRange();
-            range.move("character", index);
-            range.select();
-        } else if (elem.selectionStart) {
-            elem.focus();
-            elem.setSelectionRange(index, index);
+        _.mixin(LruCache.prototype, {
+            set: function set(key, val) {
+                var tailItem = this.list.tail, node;
+                if (this.size >= this.maxSize) {
+                    this.list.remove(tailItem);
+                    delete this.hash[tailItem.key];
+                }
+                if (node = this.hash[key]) {
+                    node.val = val;
+                    this.list.moveToFront(node);
+                } else {
+                    node = new Node(key, val);
+                    this.list.add(node);
+                    this.hash[key] = node;
+                    this.size++;
+                }
+            },
+            get: function get(key) {
+                var node = this.hash[key];
+                if (node) {
+                    this.list.moveToFront(node);
+                    return node.val;
+                }
+            },
+            reset: function reset() {
+                this.size = 0;
+                this.hash = {};
+                this.list = new List();
+            }
+        });
+        function List() {
+            this.head = this.tail = null;
         }
-    }
-
-    // Attempt to change the type property of an input element
-    function changeType(elem, type) {
+        _.mixin(List.prototype, {
+            add: function add(node) {
+                if (this.head) {
+                    node.next = this.head;
+                    this.head.prev = node;
+                }
+                this.head = node;
+                this.tail = this.tail || node;
+            },
+            remove: function remove(node) {
+                node.prev ? node.prev.next = node.next : this.head = node.next;
+                node.next ? node.next.prev = node.prev : this.tail = node.prev;
+            },
+            moveToFront: function(node) {
+                this.remove(node);
+                this.add(node);
+            }
+        });
+        function Node(key, val) {
+            this.key = key;
+            this.val = val;
+            this.prev = this.next = null;
+        }
+        return LruCache;
+    }();
+    var PersistentStorage = function() {
+        
+        var ls, methods;
         try {
-            elem.type = type;
-            return true;
-        } catch (e) {
-            // You can't change input type in IE8 and below
+            ls = window.localStorage;
+            ls.setItem("~~~", "!");
+            ls.removeItem("~~~");
+        } catch (err) {
+            ls = null;
+        }
+        function PersistentStorage(namespace) {
+            this.prefix = [ "__", namespace, "__" ].join("");
+            this.ttlKey = "__ttl__";
+            this.keyMatcher = new RegExp("^" + _.escapeRegExChars(this.prefix));
+        }
+        if (ls && window.JSON) {
+            methods = {
+                _prefix: function(key) {
+                    return this.prefix + key;
+                },
+                _ttlKey: function(key) {
+                    return this._prefix(key) + this.ttlKey;
+                },
+                get: function(key) {
+                    if (this.isExpired(key)) {
+                        this.remove(key);
+                    }
+                    return decode(ls.getItem(this._prefix(key)));
+                },
+                set: function(key, val, ttl) {
+                    if (_.isNumber(ttl)) {
+                        ls.setItem(this._ttlKey(key), encode(now() + ttl));
+                    } else {
+                        ls.removeItem(this._ttlKey(key));
+                    }
+                    return ls.setItem(this._prefix(key), encode(val));
+                },
+                remove: function(key) {
+                    ls.removeItem(this._ttlKey(key));
+                    ls.removeItem(this._prefix(key));
+                    return this;
+                },
+                clear: function() {
+                    var i, key, keys = [], len = ls.length;
+                    for (i = 0; i < len; i++) {
+                        if ((key = ls.key(i)).match(this.keyMatcher)) {
+                            keys.push(key.replace(this.keyMatcher, ""));
+                        }
+                    }
+                    for (i = keys.length; i--; ) {
+                        this.remove(keys[i]);
+                    }
+                    return this;
+                },
+                isExpired: function(key) {
+                    var ttl = decode(ls.getItem(this._ttlKey(key)));
+                    return _.isNumber(ttl) && now() > ttl ? true : false;
+                }
+            };
+        } else {
+            methods = {
+                get: _.noop,
+                set: _.noop,
+                remove: _.noop,
+                clear: _.noop,
+                isExpired: _.noop
+            };
+        }
+        _.mixin(PersistentStorage.prototype, methods);
+        return PersistentStorage;
+        function now() {
+            return new Date().getTime();
+        }
+        function encode(val) {
+            return JSON.stringify(_.isUndefined(val) ? null : val);
+        }
+        function decode(val) {
+            return JSON.parse(val);
+        }
+    }();
+    var Transport = function() {
+        
+        var pendingRequestsCount = 0, pendingRequests = {}, maxPendingRequests = 6, sharedCache = new LruCache(10);
+        function Transport(o) {
+            o = o || {};
+            this.cancelled = false;
+            this.lastUrl = null;
+            this._send = o.transport ? callbackToDeferred(o.transport) : $.ajax;
+            this._get = o.rateLimiter ? o.rateLimiter(this._get) : this._get;
+            this._cache = o.cache === false ? new LruCache(0) : sharedCache;
+        }
+        Transport.setMaxPendingRequests = function setMaxPendingRequests(num) {
+            maxPendingRequests = num;
+        };
+        Transport.resetCache = function resetCache() {
+            sharedCache.reset();
+        };
+        _.mixin(Transport.prototype, {
+            _get: function(url, o, cb) {
+                var that = this, jqXhr;
+                if (this.cancelled || url !== this.lastUrl) {
+                    return;
+                }
+                if (jqXhr = pendingRequests[url]) {
+                    jqXhr.done(done).fail(fail);
+                } else if (pendingRequestsCount < maxPendingRequests) {
+                    pendingRequestsCount++;
+                    pendingRequests[url] = this._send(url, o).done(done).fail(fail).always(always);
+                } else {
+                    this.onDeckRequestArgs = [].slice.call(arguments, 0);
+                }
+                function done(resp) {
+                    cb && cb(null, resp);
+                    that._cache.set(url, resp);
+                }
+                function fail() {
+                    cb && cb(true);
+                }
+                function always() {
+                    pendingRequestsCount--;
+                    delete pendingRequests[url];
+                    if (that.onDeckRequestArgs) {
+                        that._get.apply(that, that.onDeckRequestArgs);
+                        that.onDeckRequestArgs = null;
+                    }
+                }
+            },
+            get: function(url, o, cb) {
+                var resp;
+                if (_.isFunction(o)) {
+                    cb = o;
+                    o = {};
+                }
+                this.cancelled = false;
+                this.lastUrl = url;
+                if (resp = this._cache.get(url)) {
+                    _.defer(function() {
+                        cb && cb(null, resp);
+                    });
+                } else {
+                    this._get(url, o, cb);
+                }
+                return !!resp;
+            },
+            cancel: function() {
+                this.cancelled = true;
+            }
+        });
+        return Transport;
+        function callbackToDeferred(fn) {
+            return function customSendWrapper(url, o) {
+                var deferred = $.Deferred();
+                fn(url, o, onSuccess, onError);
+                return deferred;
+                function onSuccess(resp) {
+                    _.defer(function() {
+                        deferred.resolve(resp);
+                    });
+                }
+                function onError(err) {
+                    _.defer(function() {
+                        deferred.reject(err);
+                    });
+                }
+            };
+        }
+    }();
+    var SearchIndex = function() {
+        
+        function SearchIndex(o) {
+            o = o || {};
+            if (!o.datumTokenizer || !o.queryTokenizer) {
+                $.error("datumTokenizer and queryTokenizer are both required");
+            }
+            this.datumTokenizer = o.datumTokenizer;
+            this.queryTokenizer = o.queryTokenizer;
+            this.reset();
+        }
+        _.mixin(SearchIndex.prototype, {
+            bootstrap: function bootstrap(o) {
+                this.datums = o.datums;
+                this.trie = o.trie;
+            },
+            add: function(data) {
+                var that = this;
+                data = _.isArray(data) ? data : [ data ];
+                _.each(data, function(datum) {
+                    var id, tokens;
+                    id = that.datums.push(datum) - 1;
+                    tokens = normalizeTokens(that.datumTokenizer(datum));
+                    _.each(tokens, function(token) {
+                        var node, chars, ch;
+                        node = that.trie;
+                        chars = token.split("");
+                        while (ch = chars.shift()) {
+                            node = node.children[ch] || (node.children[ch] = newNode());
+                            node.ids.push(id);
+                        }
+                    });
+                });
+            },
+            get: function get(query) {
+                var that = this, tokens, matches;
+                tokens = normalizeTokens(this.queryTokenizer(query));
+                _.each(tokens, function(token) {
+                    var node, chars, ch, ids;
+                    if (matches && matches.length === 0) {
+                        return false;
+                    }
+                    node = that.trie;
+                    chars = token.split("");
+                    while (node && (ch = chars.shift())) {
+                        node = node.children[ch];
+                    }
+                    if (node && chars.length === 0) {
+                        ids = node.ids.slice(0);
+                        matches = matches ? getIntersection(matches, ids) : ids;
+                    } else {
+                        matches = [];
+                        return false;
+                    }
+                });
+                return matches ? _.map(unique(matches), function(id) {
+                    return that.datums[id];
+                }) : [];
+            },
+            reset: function reset() {
+                this.datums = [];
+                this.trie = newNode();
+            },
+            serialize: function serialize() {
+                return {
+                    datums: this.datums,
+                    trie: this.trie
+                };
+            }
+        });
+        return SearchIndex;
+        function normalizeTokens(tokens) {
+            tokens = _.filter(tokens, function(token) {
+                return !!token;
+            });
+            tokens = _.map(tokens, function(token) {
+                return token.toLowerCase();
+            });
+            return tokens;
+        }
+        function newNode() {
+            return {
+                ids: [],
+                children: {}
+            };
+        }
+        function unique(array) {
+            var seen = {}, uniques = [];
+            for (var i = 0, len = array.length; i < len; i++) {
+                if (!seen[array[i]]) {
+                    seen[array[i]] = true;
+                    uniques.push(array[i]);
+                }
+            }
+            return uniques;
+        }
+        function getIntersection(arrayA, arrayB) {
+            var ai = 0, bi = 0, intersection = [];
+            arrayA = arrayA.sort(compare);
+            arrayB = arrayB.sort(compare);
+            var lenArrayA = arrayA.length, lenArrayB = arrayB.length;
+            while (ai < lenArrayA && bi < lenArrayB) {
+                if (arrayA[ai] < arrayB[bi]) {
+                    ai++;
+                } else if (arrayA[ai] > arrayB[bi]) {
+                    bi++;
+                } else {
+                    intersection.push(arrayA[ai]);
+                    ai++;
+                    bi++;
+                }
+            }
+            return intersection;
+            function compare(a, b) {
+                return a - b;
+            }
+        }
+    }();
+    var oParser = function() {
+        
+        return {
+            local: getLocal,
+            prefetch: getPrefetch,
+            remote: getRemote
+        };
+        function getLocal(o) {
+            return o.local || null;
+        }
+        function getPrefetch(o) {
+            var prefetch, defaults;
+            defaults = {
+                url: null,
+                thumbprint: "",
+                ttl: 24 * 60 * 60 * 1e3,
+                filter: null,
+                ajax: {}
+            };
+            if (prefetch = o.prefetch || null) {
+                prefetch = _.isString(prefetch) ? {
+                    url: prefetch
+                } : prefetch;
+                prefetch = _.mixin(defaults, prefetch);
+                prefetch.thumbprint = VERSION + prefetch.thumbprint;
+                prefetch.ajax.type = prefetch.ajax.type || "GET";
+                prefetch.ajax.dataType = prefetch.ajax.dataType || "json";
+                !prefetch.url && $.error("prefetch requires url to be set");
+            }
+            return prefetch;
+        }
+        function getRemote(o) {
+            var remote, defaults;
+            defaults = {
+                url: null,
+                cache: true,
+                wildcard: "%QUERY",
+                replace: null,
+                rateLimitBy: "debounce",
+                rateLimitWait: 300,
+                send: null,
+                filter: null,
+                ajax: {}
+            };
+            if (remote = o.remote || null) {
+                remote = _.isString(remote) ? {
+                    url: remote
+                } : remote;
+                remote = _.mixin(defaults, remote);
+                remote.rateLimiter = /^throttle$/i.test(remote.rateLimitBy) ? byThrottle(remote.rateLimitWait) : byDebounce(remote.rateLimitWait);
+                remote.ajax.type = remote.ajax.type || "GET";
+                remote.ajax.dataType = remote.ajax.dataType || "json";
+                delete remote.rateLimitBy;
+                delete remote.rateLimitWait;
+                !remote.url && $.error("remote requires url to be set");
+            }
+            return remote;
+            function byDebounce(wait) {
+                return function(fn) {
+                    return _.debounce(fn, wait);
+                };
+            }
+            function byThrottle(wait) {
+                return function(fn) {
+                    return _.throttle(fn, wait);
+                };
+            }
+        }
+    }();
+    (function(root) {
+        
+        var old, keys;
+        old = root.Bloodhound;
+        keys = {
+            data: "data",
+            protocol: "protocol",
+            thumbprint: "thumbprint"
+        };
+        root.Bloodhound = Bloodhound;
+        function Bloodhound(o) {
+            if (!o || !o.local && !o.prefetch && !o.remote) {
+                $.error("one of local, prefetch, or remote is required");
+            }
+            this.limit = o.limit || 5;
+            this.sorter = getSorter(o.sorter);
+            this.dupDetector = o.dupDetector || ignoreDuplicates;
+            this.local = oParser.local(o);
+            this.prefetch = oParser.prefetch(o);
+            this.remote = oParser.remote(o);
+            this.cacheKey = this.prefetch ? this.prefetch.cacheKey || this.prefetch.url : null;
+            this.index = new SearchIndex({
+                datumTokenizer: o.datumTokenizer,
+                queryTokenizer: o.queryTokenizer
+            });
+            this.storage = this.cacheKey ? new PersistentStorage(this.cacheKey) : null;
+        }
+        Bloodhound.noConflict = function noConflict() {
+            root.Bloodhound = old;
+            return Bloodhound;
+        };
+        Bloodhound.tokenizers = tokenizers;
+        _.mixin(Bloodhound.prototype, {
+            _loadPrefetch: function loadPrefetch(o) {
+                var that = this, serialized, deferred;
+                if (serialized = this._readFromStorage(o.thumbprint)) {
+                    this.index.bootstrap(serialized);
+                    deferred = $.Deferred().resolve();
+                } else {
+                    deferred = $.ajax(o.url, o.ajax).done(handlePrefetchResponse);
+                }
+                return deferred;
+                function handlePrefetchResponse(resp) {
+                    that.clear();
+                    that.add(o.filter ? o.filter(resp) : resp);
+                    that._saveToStorage(that.index.serialize(), o.thumbprint, o.ttl);
+                }
+            },
+            _getFromRemote: function getFromRemote(query, cb) {
+                var that = this, url, uriEncodedQuery;
+                if (!this.transport) {
+                    return;
+                }
+                query = query || "";
+                uriEncodedQuery = encodeURIComponent(query);
+                url = this.remote.replace ? this.remote.replace(this.remote.url, query) : this.remote.url.replace(this.remote.wildcard, uriEncodedQuery);
+                return this.transport.get(url, this.remote.ajax, handleRemoteResponse);
+                function handleRemoteResponse(err, resp) {
+                    err ? cb([]) : cb(that.remote.filter ? that.remote.filter(resp) : resp);
+                }
+            },
+            _cancelLastRemoteRequest: function cancelLastRemoteRequest() {
+                this.transport && this.transport.cancel();
+            },
+            _saveToStorage: function saveToStorage(data, thumbprint, ttl) {
+                if (this.storage) {
+                    this.storage.set(keys.data, data, ttl);
+                    this.storage.set(keys.protocol, location.protocol, ttl);
+                    this.storage.set(keys.thumbprint, thumbprint, ttl);
+                }
+            },
+            _readFromStorage: function readFromStorage(thumbprint) {
+                var stored = {}, isExpired;
+                if (this.storage) {
+                    stored.data = this.storage.get(keys.data);
+                    stored.protocol = this.storage.get(keys.protocol);
+                    stored.thumbprint = this.storage.get(keys.thumbprint);
+                }
+                isExpired = stored.thumbprint !== thumbprint || stored.protocol !== location.protocol;
+                return stored.data && !isExpired ? stored.data : null;
+            },
+            _initialize: function initialize() {
+                var that = this, local = this.local, deferred;
+                deferred = this.prefetch ? this._loadPrefetch(this.prefetch) : $.Deferred().resolve();
+                local && deferred.done(addLocalToIndex);
+                this.transport = this.remote ? new Transport(this.remote) : null;
+                return this.initPromise = deferred.promise();
+                function addLocalToIndex() {
+                    that.add(_.isFunction(local) ? local() : local);
+                }
+            },
+            initialize: function initialize(force) {
+                return !this.initPromise || force ? this._initialize() : this.initPromise;
+            },
+            add: function add(data) {
+                this.index.add(data);
+            },
+            get: function get(query, cb) {
+                var that = this, matches = [], cacheHit = false;
+                matches = this.index.get(query);
+                matches = this.sorter(matches).slice(0, this.limit);
+                matches.length < this.limit ? cacheHit = this._getFromRemote(query, returnRemoteMatches) : this._cancelLastRemoteRequest();
+                if (!cacheHit) {
+                    (matches.length > 0 || !this.transport) && cb && cb(matches);
+                }
+                function returnRemoteMatches(remoteMatches) {
+                    var matchesWithBackfill = matches.slice(0);
+                    _.each(remoteMatches, function(remoteMatch) {
+                        var isDuplicate;
+                        isDuplicate = _.some(matchesWithBackfill, function(match) {
+                            return that.dupDetector(remoteMatch, match);
+                        });
+                        !isDuplicate && matchesWithBackfill.push(remoteMatch);
+                        return matchesWithBackfill.length < that.limit;
+                    });
+                    cb && cb(that.sorter(matchesWithBackfill));
+                }
+            },
+            clear: function clear() {
+                this.index.reset();
+            },
+            clearPrefetchCache: function clearPrefetchCache() {
+                this.storage && this.storage.clear();
+            },
+            clearRemoteCache: function clearRemoteCache() {
+                this.transport && Transport.resetCache();
+            },
+            ttAdapter: function ttAdapter() {
+                return _.bind(this.get, this);
+            }
+        });
+        return Bloodhound;
+        function getSorter(sortFn) {
+            return _.isFunction(sortFn) ? sort : noSort;
+            function sort(array) {
+                return array.sort(sortFn);
+            }
+            function noSort(array) {
+                return array;
+            }
+        }
+        function ignoreDuplicates() {
             return false;
         }
-    }
-
-    // Expose public methods
-    global.Placeholders = {
-        Utils: {
-            addEventListener: addEventListener,
-            inArray: inArray,
-            moveCaret: moveCaret,
-            changeType: changeType
-        }
+    })(this);
+})(window.jQuery);
+define("bloodhound", (function (global) {
+    return function () {
+        var ret, fn;
+        return ret || global.Bloodhound;
     };
-
-}(this));
-
-(function (global) {
-
-    
-
-    var validTypes = [
-            "text",
-            "search",
-            "url",
-            "tel",
-            "email",
-            "password",
-            "number",
-            "textarea"
-        ],
-
-        // The list of keycodes that are not allowed when the polyfill is configured to hide-on-input
-        badKeys = [
-
-            // The following keys all cause the caret to jump to the end of the input value
-            27, // Escape
-            33, // Page up
-            34, // Page down
-            35, // End
-            36, // Home
-
-            // Arrow keys allow you to move the caret manually, which should be prevented when the placeholder is visible
-            37, // Left
-            38, // Up
-            39, // Right
-            40, // Down
-
-            // The following keys allow you to modify the placeholder text by removing characters, which should be prevented when the placeholder is visible
-            8, // Backspace
-            46 // Delete
-        ],
-
-        // Styling variables
-        placeholderStyleColor = "#ccc",
-        placeholderClassName = "placeholdersjs",
-        classNameRegExp = new RegExp("(?:^|\\s)" + placeholderClassName + "(?!\\S)"),
-
-        // These will hold references to all elements that can be affected. NodeList objects are live, so we only need to get those references once
-        inputs, textareas,
-
-        // The various data-* attributes used by the polyfill
-        ATTR_CURRENT_VAL = "data-placeholder-value",
-        ATTR_ACTIVE = "data-placeholder-active",
-        ATTR_INPUT_TYPE = "data-placeholder-type",
-        ATTR_FORM_HANDLED = "data-placeholder-submit",
-        ATTR_EVENTS_BOUND = "data-placeholder-bound",
-        ATTR_OPTION_FOCUS = "data-placeholder-focus",
-        ATTR_OPTION_LIVE = "data-placeholder-live",
-        ATTR_MAXLENGTH = "data-placeholder-maxlength",
-
-        // Various other variables used throughout the rest of the script
-        test = document.createElement("input"),
-        head = document.getElementsByTagName("head")[0],
-        root = document.documentElement,
-        Placeholders = global.Placeholders,
-        Utils = Placeholders.Utils,
-        hideOnInput, liveUpdates, keydownVal, styleElem, styleRules, placeholder, timer, form, elem, len, i;
-
-    // No-op (used in place of public methods when native support is detected)
-    function noop() {}
-
-    // Hide the placeholder value on a single element. Returns true if the placeholder was hidden and false if it was not (because it wasn't visible in the first place)
-    function hidePlaceholder(elem, keydownValue) {
-        var type,
-            maxLength,
-            valueChanged = (!!keydownValue && elem.value !== keydownValue),
-            isPlaceholderValue = (elem.value === elem.getAttribute(ATTR_CURRENT_VAL));
-
-        if ((valueChanged || isPlaceholderValue) && elem.getAttribute(ATTR_ACTIVE) === "true") {
-            elem.removeAttribute(ATTR_ACTIVE);
-            elem.value = elem.value.replace(elem.getAttribute(ATTR_CURRENT_VAL), "");
-            elem.className = elem.className.replace(classNameRegExp, "");
-
-            // Restore the maxlength value
-            maxLength = elem.getAttribute(ATTR_MAXLENGTH);
-            if (maxLength) {
-                elem.setAttribute("maxLength", maxLength);
-                elem.removeAttribute(ATTR_MAXLENGTH);
-            }
-
-            // If the polyfill has changed the type of the element we need to change it back
-            type = elem.getAttribute(ATTR_INPUT_TYPE);
-            if (type) {
-                elem.type = type;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    // Show the placeholder value on a single element. Returns true if the placeholder was shown and false if it was not (because it was already visible)
-    function showPlaceholder(elem) {
-        var type,
-            maxLength,
-            val = elem.getAttribute(ATTR_CURRENT_VAL);
-        if (elem.value === "" && val) {
-            elem.setAttribute(ATTR_ACTIVE, "true");
-            elem.value = val;
-            elem.className += " " + placeholderClassName;
-
-            // Store and remove the maxlength value
-            maxLength = elem.getAttribute(ATTR_MAXLENGTH);
-            if (!maxLength) {
-                elem.setAttribute(ATTR_MAXLENGTH, elem.maxLength);
-                elem.removeAttribute("maxLength");
-            }
-
-            // If the type of element needs to change, change it (e.g. password inputs)
-            type = elem.getAttribute(ATTR_INPUT_TYPE);
-            if (type) {
-                elem.type = "text";
-            } else if (elem.type === "password") {
-                if (Utils.changeType(elem, "text")) {
-                    elem.setAttribute(ATTR_INPUT_TYPE, "password");
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
-    function handleElem(node, callback) {
-
-        var handleInputs, handleTextareas, elem, len, i;
-
-        // Check if the passed in node is an input/textarea (in which case it can't have any affected descendants)
-        if (node && node.getAttribute(ATTR_CURRENT_VAL)) {
-            callback(node);
-        } else {
-
-            // If an element was passed in, get all affected descendants. Otherwise, get all affected elements in document
-            handleInputs = node ? node.getElementsByTagName("input") : inputs;
-            handleTextareas = node ? node.getElementsByTagName("textarea") : textareas;
-
-            // Run the callback for each element
-            for (i = 0, len = handleInputs.length + handleTextareas.length; i < len; i++) {
-                elem = i < handleInputs.length ? handleInputs[i] : handleTextareas[i - handleInputs.length];
-                callback(elem);
-            }
-        }
-    }
-
-    // Return all affected elements to their normal state (remove placeholder value if present)
-    function disablePlaceholders(node) {
-        handleElem(node, hidePlaceholder);
-    }
-
-    // Show the placeholder value on all appropriate elements
-    function enablePlaceholders(node) {
-        handleElem(node, showPlaceholder);
-    }
-
-    // Returns a function that is used as a focus event handler
-    function makeFocusHandler(elem) {
-        return function () {
-
-            // Only hide the placeholder value if the (default) hide-on-focus behaviour is enabled
-            if (hideOnInput && elem.value === elem.getAttribute(ATTR_CURRENT_VAL) && elem.getAttribute(ATTR_ACTIVE) === "true") {
-
-                // Move the caret to the start of the input (this mimics the behaviour of all browsers that do not hide the placeholder on focus)
-                Utils.moveCaret(elem, 0);
-
-            } else {
-
-                // Remove the placeholder
-                hidePlaceholder(elem);
-            }
-        };
-    }
-
-    // Returns a function that is used as a blur event handler
-    function makeBlurHandler(elem) {
-        return function () {
-            showPlaceholder(elem);
-        };
-    }
-
-    // Functions that are used as a event handlers when the hide-on-input behaviour has been activated - very basic implementation of the "input" event
-    function makeKeydownHandler(elem) {
-        return function (e) {
-            keydownVal = elem.value;
-
-            //Prevent the use of the arrow keys (try to keep the cursor before the placeholder)
-            if (elem.getAttribute(ATTR_ACTIVE) === "true") {
-                if (keydownVal === elem.getAttribute(ATTR_CURRENT_VAL) && Utils.inArray(badKeys, e.keyCode)) {
-                    if (e.preventDefault) {
-                        e.preventDefault();
-                    }
-                    return false;
-                }
-            }
-        };
-    }
-    function makeKeyupHandler(elem) {
-        return function () {
-            hidePlaceholder(elem, keydownVal);
-
-            // If the element is now empty we need to show the placeholder
-            if (elem.value === "") {
-                elem.blur();
-                Utils.moveCaret(elem, 0);
-            }
-        };
-    }
-    function makeClickHandler(elem) {
-        return function () {
-            if (elem === document.activeElement && elem.value === elem.getAttribute(ATTR_CURRENT_VAL) && elem.getAttribute(ATTR_ACTIVE) === "true") {
-                Utils.moveCaret(elem, 0);
-            }
-        };
-    }
-
-    // Returns a function that is used as a submit event handler on form elements that have children affected by this polyfill
-    function makeSubmitHandler(form) {
-        return function () {
-
-            // Turn off placeholders on all appropriate descendant elements
-            disablePlaceholders(form);
-        };
-    }
-
-    // Bind event handlers to an element that we need to affect with the polyfill
-    function newElement(elem) {
-
-        // If the element is part of a form, make sure the placeholder string is not submitted as a value
-        if (elem.form) {
-            form = elem.form;
-
-            // Set a flag on the form so we know it's been handled (forms can contain multiple inputs)
-            if (!form.getAttribute(ATTR_FORM_HANDLED)) {
-                Utils.addEventListener(form, "submit", makeSubmitHandler(form));
-                form.setAttribute(ATTR_FORM_HANDLED, "true");
-            }
-        }
-
-        // Bind event handlers to the element so we can hide/show the placeholder as appropriate
-        Utils.addEventListener(elem, "focus", makeFocusHandler(elem));
-        Utils.addEventListener(elem, "blur", makeBlurHandler(elem));
-
-        // If the placeholder should hide on input rather than on focus we need additional event handlers
-        if (hideOnInput) {
-            Utils.addEventListener(elem, "keydown", makeKeydownHandler(elem));
-            Utils.addEventListener(elem, "keyup", makeKeyupHandler(elem));
-            Utils.addEventListener(elem, "click", makeClickHandler(elem));
-        }
-
-        // Remember that we've bound event handlers to this element
-        elem.setAttribute(ATTR_EVENTS_BOUND, "true");
-        elem.setAttribute(ATTR_CURRENT_VAL, placeholder);
-
-        // If the element doesn't have a value and is not focussed, set it to the placeholder string
-        if (hideOnInput || elem !== document.activeElement) {
-            showPlaceholder(elem);
-        }
-    }
-
-    Placeholders.nativeSupport = test.placeholder !== void 0;
-
-    if (!Placeholders.nativeSupport) {
-
-        // Get references to all the input and textarea elements currently in the DOM (live NodeList objects to we only need to do this once)
-        inputs = document.getElementsByTagName("input");
-        textareas = document.getElementsByTagName("textarea");
-
-        // Get any settings declared as data-* attributes on the root element (currently the only options are whether to hide the placeholder on focus or input and whether to auto-update)
-        hideOnInput = root.getAttribute(ATTR_OPTION_FOCUS) === "false";
-        liveUpdates = root.getAttribute(ATTR_OPTION_LIVE) !== "false";
-
-        // Create style element for placeholder styles (instead of directly setting style properties on elements - allows for better flexibility alongside user-defined styles)
-        styleElem = document.createElement("style");
-        styleElem.type = "text/css";
-
-        // Create style rules as text node
-        styleRules = document.createTextNode("." + placeholderClassName + " { color:" + placeholderStyleColor + "; }");
-
-        // Append style rules to newly created stylesheet
-        if (styleElem.styleSheet) {
-            styleElem.styleSheet.cssText = styleRules.nodeValue;
-        } else {
-            styleElem.appendChild(styleRules);
-        }
-
-        // Prepend new style element to the head (before any existing stylesheets, so user-defined rules take precedence)
-        head.insertBefore(styleElem, head.firstChild);
-
-        // Set up the placeholders
-        for (i = 0, len = inputs.length + textareas.length; i < len; i++) {
-            elem = i < inputs.length ? inputs[i] : textareas[i - inputs.length];
-
-            // Get the value of the placeholder attribute, if any. IE10 emulating IE7 fails with getAttribute, hence the use of the attributes node
-            placeholder = elem.attributes.placeholder;
-            if (placeholder) {
-
-                // IE returns an empty object instead of undefined if the attribute is not present
-                placeholder = placeholder.nodeValue;
-
-                // Only apply the polyfill if this element is of a type that supports placeholders, and has a placeholder attribute with a non-empty value
-                if (placeholder && Utils.inArray(validTypes, elem.type)) {
-                    newElement(elem);
-                }
-            }
-        }
-
-        // If enabled, the polyfill will repeatedly check for changed/added elements and apply to those as well
-        timer = setInterval(function () {
-            for (i = 0, len = inputs.length + textareas.length; i < len; i++) {
-                elem = i < inputs.length ? inputs[i] : textareas[i - inputs.length];
-
-                // Only apply the polyfill if this element is of a type that supports placeholders, and has a placeholder attribute with a non-empty value
-                placeholder = elem.attributes.placeholder;
-                if (placeholder) {
-                    placeholder = placeholder.nodeValue;
-                    if (placeholder && Utils.inArray(validTypes, elem.type)) {
-
-                        // If the element hasn't had event handlers bound to it then add them
-                        if (!elem.getAttribute(ATTR_EVENTS_BOUND)) {
-                            newElement(elem);
-                        }
-
-                        // If the placeholder value has changed or not been initialised yet we need to update the display
-                        if (placeholder !== elem.getAttribute(ATTR_CURRENT_VAL) || (elem.type === "password" && !elem.getAttribute(ATTR_INPUT_TYPE))) {
-
-                            // Attempt to change the type of password inputs (fails in IE < 9)
-                            if (elem.type === "password" && !elem.getAttribute(ATTR_INPUT_TYPE) && Utils.changeType(elem, "text")) {
-                                elem.setAttribute(ATTR_INPUT_TYPE, "password");
-                            }
-
-                            // If the placeholder value has changed and the placeholder is currently on display we need to change it
-                            if (elem.value === elem.getAttribute(ATTR_CURRENT_VAL)) {
-                                elem.value = placeholder;
-                            }
-
-                            // Keep a reference to the current placeholder value in case it changes via another script
-                            elem.setAttribute(ATTR_CURRENT_VAL, placeholder);
-                        }
-                    }
-                } else if (elem.getAttribute(ATTR_ACTIVE)) {
-                    hidePlaceholder(elem);
-                    elem.removeAttribute(ATTR_CURRENT_VAL);
-                }
-            }
-
-            // If live updates are not enabled cancel the timer
-            if (!liveUpdates) {
-                clearInterval(timer);
-            }
-        }, 100);
-    }
-
-    // Expose public methods
-    Placeholders.disable = Placeholders.nativeSupport ? noop : disablePlaceholders;
-    Placeholders.enable = Placeholders.nativeSupport ? noop : enablePlaceholders;
-
-}(this));
-
-(function ($) {
-
-    
-
-    var originalValFn = $.fn.val,
-        originalPropFn = $.fn.prop;
-
-    if (!Placeholders.nativeSupport) {
-        $.fn.val = function (val) {
-            if (val === undefined && this.eq(0).data("placeholder-active")) {
-                return "";
-            }
-            return originalValFn.apply(this, arguments);
-        };
-
-        $.fn.prop = function (name, val) {
-            if (val === undefined && this.eq(0).data("placeholder-active") && name === "value") {
-                return "";
-            }
-            return originalPropFn.apply(this, arguments);
-        };
-    }
-
-}(jQuery));
-define("placeholders-js", ["jquery"], function(){});
+}(this)));
 
 /*!
  * typeahead.js 0.10.4
@@ -41159,1267 +42023,1675 @@ define("placeholders-js", ["jquery"], function(){});
 })(window.jQuery);
 define("typeahead-js", ["jquery"], function(){});
 
-/*!
- * typeahead.js 0.10.4
- * https://github.com/twitter/typeahead.js
- * Copyright 2013-2014 Twitter, Inc. and other contributors; Licensed MIT
+/* 
+ * The MIT License
+ *
+ * Copyright (c) 2012 James Allardice
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), 
+ * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
-(function($) {
-    var _ = function() {
-        
-        return {
-            isMsie: function() {
-                return /(msie|trident)/i.test(navigator.userAgent) ? navigator.userAgent.match(/(msie |rv:)(\d+(.\d+)?)/i)[2] : false;
-            },
-            isBlankString: function(str) {
-                return !str || /^\s*$/.test(str);
-            },
-            escapeRegExChars: function(str) {
-                return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-            },
-            isString: function(obj) {
-                return typeof obj === "string";
-            },
-            isNumber: function(obj) {
-                return typeof obj === "number";
-            },
-            isArray: $.isArray,
-            isFunction: $.isFunction,
-            isObject: $.isPlainObject,
-            isUndefined: function(obj) {
-                return typeof obj === "undefined";
-            },
-            toStr: function toStr(s) {
-                return _.isUndefined(s) || s === null ? "" : s + "";
-            },
-            bind: $.proxy,
-            each: function(collection, cb) {
-                $.each(collection, reverseArgs);
-                function reverseArgs(index, value) {
-                    return cb(value, index);
-                }
-            },
-            map: $.map,
-            filter: $.grep,
-            every: function(obj, test) {
-                var result = true;
-                if (!obj) {
-                    return result;
-                }
-                $.each(obj, function(key, val) {
-                    if (!(result = test.call(null, val, key, obj))) {
-                        return false;
-                    }
-                });
-                return !!result;
-            },
-            some: function(obj, test) {
-                var result = false;
-                if (!obj) {
-                    return result;
-                }
-                $.each(obj, function(key, val) {
-                    if (result = test.call(null, val, key, obj)) {
-                        return false;
-                    }
-                });
-                return !!result;
-            },
-            mixin: $.extend,
-            getUniqueId: function() {
-                var counter = 0;
-                return function() {
-                    return counter++;
-                };
-            }(),
-            templatify: function templatify(obj) {
-                return $.isFunction(obj) ? obj : template;
-                function template() {
-                    return String(obj);
-                }
-            },
-            defer: function(fn) {
-                setTimeout(fn, 0);
-            },
-            debounce: function(func, wait, immediate) {
-                var timeout, result;
-                return function() {
-                    var context = this, args = arguments, later, callNow;
-                    later = function() {
-                        timeout = null;
-                        if (!immediate) {
-                            result = func.apply(context, args);
-                        }
-                    };
-                    callNow = immediate && !timeout;
-                    clearTimeout(timeout);
-                    timeout = setTimeout(later, wait);
-                    if (callNow) {
-                        result = func.apply(context, args);
-                    }
-                    return result;
-                };
-            },
-            throttle: function(func, wait) {
-                var context, args, timeout, result, previous, later;
-                previous = 0;
-                later = function() {
-                    previous = new Date();
-                    timeout = null;
-                    result = func.apply(context, args);
-                };
-                return function() {
-                    var now = new Date(), remaining = wait - (now - previous);
-                    context = this;
-                    args = arguments;
-                    if (remaining <= 0) {
-                        clearTimeout(timeout);
-                        timeout = null;
-                        previous = now;
-                        result = func.apply(context, args);
-                    } else if (!timeout) {
-                        timeout = setTimeout(later, remaining);
-                    }
-                    return result;
-                };
-            },
-            noop: function() {}
-        };
-    }();
-    var VERSION = "0.10.4";
-    var tokenizers = function() {
-        
-        return {
-            nonword: nonword,
-            whitespace: whitespace,
-            obj: {
-                nonword: getObjTokenizer(nonword),
-                whitespace: getObjTokenizer(whitespace)
-            }
-        };
-        function whitespace(str) {
-            str = _.toStr(str);
-            return str ? str.split(/\s+/) : [];
+// Defines the global Placeholders object along with various utility methods
+(function (global) {
+
+    
+
+    // Cross-browser DOM event binding
+    function addEventListener(elem, event, fn) {
+        if (elem.addEventListener) {
+            return elem.addEventListener(event, fn, false);
         }
-        function nonword(str) {
-            str = _.toStr(str);
-            return str ? str.split(/\W+/) : [];
+        if (elem.attachEvent) {
+            return elem.attachEvent("on" + event, fn);
         }
-        function getObjTokenizer(tokenizer) {
-            return function setKey() {
-                var args = [].slice.call(arguments, 0);
-                return function tokenize(o) {
-                    var tokens = [];
-                    _.each(args, function(k) {
-                        tokens = tokens.concat(tokenizer(_.toStr(o[k])));
-                    });
-                    return tokens;
-                };
-            };
-        }
-    }();
-    var LruCache = function() {
-        
-        function LruCache(maxSize) {
-            this.maxSize = _.isNumber(maxSize) ? maxSize : 100;
-            this.reset();
-            if (this.maxSize <= 0) {
-                this.set = this.get = $.noop;
+    }
+
+    // Check whether an item is in an array (we don't use Array.prototype.indexOf so we don't clobber any existing polyfills - this is a really simple alternative)
+    function inArray(arr, item) {
+        var i, len;
+        for (i = 0, len = arr.length; i < len; i++) {
+            if (arr[i] === item) {
+                return true;
             }
         }
-        _.mixin(LruCache.prototype, {
-            set: function set(key, val) {
-                var tailItem = this.list.tail, node;
-                if (this.size >= this.maxSize) {
-                    this.list.remove(tailItem);
-                    delete this.hash[tailItem.key];
-                }
-                if (node = this.hash[key]) {
-                    node.val = val;
-                    this.list.moveToFront(node);
-                } else {
-                    node = new Node(key, val);
-                    this.list.add(node);
-                    this.hash[key] = node;
-                    this.size++;
-                }
-            },
-            get: function get(key) {
-                var node = this.hash[key];
-                if (node) {
-                    this.list.moveToFront(node);
-                    return node.val;
-                }
-            },
-            reset: function reset() {
-                this.size = 0;
-                this.hash = {};
-                this.list = new List();
-            }
-        });
-        function List() {
-            this.head = this.tail = null;
+        return false;
+    }
+
+    // Move the caret to the index position specified. Assumes that the element has focus
+    function moveCaret(elem, index) {
+        var range;
+        if (elem.createTextRange) {
+            range = elem.createTextRange();
+            range.move("character", index);
+            range.select();
+        } else if (elem.selectionStart) {
+            elem.focus();
+            elem.setSelectionRange(index, index);
         }
-        _.mixin(List.prototype, {
-            add: function add(node) {
-                if (this.head) {
-                    node.next = this.head;
-                    this.head.prev = node;
-                }
-                this.head = node;
-                this.tail = this.tail || node;
-            },
-            remove: function remove(node) {
-                node.prev ? node.prev.next = node.next : this.head = node.next;
-                node.next ? node.next.prev = node.prev : this.tail = node.prev;
-            },
-            moveToFront: function(node) {
-                this.remove(node);
-                this.add(node);
-            }
-        });
-        function Node(key, val) {
-            this.key = key;
-            this.val = val;
-            this.prev = this.next = null;
-        }
-        return LruCache;
-    }();
-    var PersistentStorage = function() {
-        
-        var ls, methods;
+    }
+
+    // Attempt to change the type property of an input element
+    function changeType(elem, type) {
         try {
-            ls = window.localStorage;
-            ls.setItem("~~~", "!");
-            ls.removeItem("~~~");
-        } catch (err) {
-            ls = null;
-        }
-        function PersistentStorage(namespace) {
-            this.prefix = [ "__", namespace, "__" ].join("");
-            this.ttlKey = "__ttl__";
-            this.keyMatcher = new RegExp("^" + _.escapeRegExChars(this.prefix));
-        }
-        if (ls && window.JSON) {
-            methods = {
-                _prefix: function(key) {
-                    return this.prefix + key;
-                },
-                _ttlKey: function(key) {
-                    return this._prefix(key) + this.ttlKey;
-                },
-                get: function(key) {
-                    if (this.isExpired(key)) {
-                        this.remove(key);
-                    }
-                    return decode(ls.getItem(this._prefix(key)));
-                },
-                set: function(key, val, ttl) {
-                    if (_.isNumber(ttl)) {
-                        ls.setItem(this._ttlKey(key), encode(now() + ttl));
-                    } else {
-                        ls.removeItem(this._ttlKey(key));
-                    }
-                    return ls.setItem(this._prefix(key), encode(val));
-                },
-                remove: function(key) {
-                    ls.removeItem(this._ttlKey(key));
-                    ls.removeItem(this._prefix(key));
-                    return this;
-                },
-                clear: function() {
-                    var i, key, keys = [], len = ls.length;
-                    for (i = 0; i < len; i++) {
-                        if ((key = ls.key(i)).match(this.keyMatcher)) {
-                            keys.push(key.replace(this.keyMatcher, ""));
-                        }
-                    }
-                    for (i = keys.length; i--; ) {
-                        this.remove(keys[i]);
-                    }
-                    return this;
-                },
-                isExpired: function(key) {
-                    var ttl = decode(ls.getItem(this._ttlKey(key)));
-                    return _.isNumber(ttl) && now() > ttl ? true : false;
-                }
-            };
-        } else {
-            methods = {
-                get: _.noop,
-                set: _.noop,
-                remove: _.noop,
-                clear: _.noop,
-                isExpired: _.noop
-            };
-        }
-        _.mixin(PersistentStorage.prototype, methods);
-        return PersistentStorage;
-        function now() {
-            return new Date().getTime();
-        }
-        function encode(val) {
-            return JSON.stringify(_.isUndefined(val) ? null : val);
-        }
-        function decode(val) {
-            return JSON.parse(val);
-        }
-    }();
-    var Transport = function() {
-        
-        var pendingRequestsCount = 0, pendingRequests = {}, maxPendingRequests = 6, sharedCache = new LruCache(10);
-        function Transport(o) {
-            o = o || {};
-            this.cancelled = false;
-            this.lastUrl = null;
-            this._send = o.transport ? callbackToDeferred(o.transport) : $.ajax;
-            this._get = o.rateLimiter ? o.rateLimiter(this._get) : this._get;
-            this._cache = o.cache === false ? new LruCache(0) : sharedCache;
-        }
-        Transport.setMaxPendingRequests = function setMaxPendingRequests(num) {
-            maxPendingRequests = num;
-        };
-        Transport.resetCache = function resetCache() {
-            sharedCache.reset();
-        };
-        _.mixin(Transport.prototype, {
-            _get: function(url, o, cb) {
-                var that = this, jqXhr;
-                if (this.cancelled || url !== this.lastUrl) {
-                    return;
-                }
-                if (jqXhr = pendingRequests[url]) {
-                    jqXhr.done(done).fail(fail);
-                } else if (pendingRequestsCount < maxPendingRequests) {
-                    pendingRequestsCount++;
-                    pendingRequests[url] = this._send(url, o).done(done).fail(fail).always(always);
-                } else {
-                    this.onDeckRequestArgs = [].slice.call(arguments, 0);
-                }
-                function done(resp) {
-                    cb && cb(null, resp);
-                    that._cache.set(url, resp);
-                }
-                function fail() {
-                    cb && cb(true);
-                }
-                function always() {
-                    pendingRequestsCount--;
-                    delete pendingRequests[url];
-                    if (that.onDeckRequestArgs) {
-                        that._get.apply(that, that.onDeckRequestArgs);
-                        that.onDeckRequestArgs = null;
-                    }
-                }
-            },
-            get: function(url, o, cb) {
-                var resp;
-                if (_.isFunction(o)) {
-                    cb = o;
-                    o = {};
-                }
-                this.cancelled = false;
-                this.lastUrl = url;
-                if (resp = this._cache.get(url)) {
-                    _.defer(function() {
-                        cb && cb(null, resp);
-                    });
-                } else {
-                    this._get(url, o, cb);
-                }
-                return !!resp;
-            },
-            cancel: function() {
-                this.cancelled = true;
-            }
-        });
-        return Transport;
-        function callbackToDeferred(fn) {
-            return function customSendWrapper(url, o) {
-                var deferred = $.Deferred();
-                fn(url, o, onSuccess, onError);
-                return deferred;
-                function onSuccess(resp) {
-                    _.defer(function() {
-                        deferred.resolve(resp);
-                    });
-                }
-                function onError(err) {
-                    _.defer(function() {
-                        deferred.reject(err);
-                    });
-                }
-            };
-        }
-    }();
-    var SearchIndex = function() {
-        
-        function SearchIndex(o) {
-            o = o || {};
-            if (!o.datumTokenizer || !o.queryTokenizer) {
-                $.error("datumTokenizer and queryTokenizer are both required");
-            }
-            this.datumTokenizer = o.datumTokenizer;
-            this.queryTokenizer = o.queryTokenizer;
-            this.reset();
-        }
-        _.mixin(SearchIndex.prototype, {
-            bootstrap: function bootstrap(o) {
-                this.datums = o.datums;
-                this.trie = o.trie;
-            },
-            add: function(data) {
-                var that = this;
-                data = _.isArray(data) ? data : [ data ];
-                _.each(data, function(datum) {
-                    var id, tokens;
-                    id = that.datums.push(datum) - 1;
-                    tokens = normalizeTokens(that.datumTokenizer(datum));
-                    _.each(tokens, function(token) {
-                        var node, chars, ch;
-                        node = that.trie;
-                        chars = token.split("");
-                        while (ch = chars.shift()) {
-                            node = node.children[ch] || (node.children[ch] = newNode());
-                            node.ids.push(id);
-                        }
-                    });
-                });
-            },
-            get: function get(query) {
-                var that = this, tokens, matches;
-                tokens = normalizeTokens(this.queryTokenizer(query));
-                _.each(tokens, function(token) {
-                    var node, chars, ch, ids;
-                    if (matches && matches.length === 0) {
-                        return false;
-                    }
-                    node = that.trie;
-                    chars = token.split("");
-                    while (node && (ch = chars.shift())) {
-                        node = node.children[ch];
-                    }
-                    if (node && chars.length === 0) {
-                        ids = node.ids.slice(0);
-                        matches = matches ? getIntersection(matches, ids) : ids;
-                    } else {
-                        matches = [];
-                        return false;
-                    }
-                });
-                return matches ? _.map(unique(matches), function(id) {
-                    return that.datums[id];
-                }) : [];
-            },
-            reset: function reset() {
-                this.datums = [];
-                this.trie = newNode();
-            },
-            serialize: function serialize() {
-                return {
-                    datums: this.datums,
-                    trie: this.trie
-                };
-            }
-        });
-        return SearchIndex;
-        function normalizeTokens(tokens) {
-            tokens = _.filter(tokens, function(token) {
-                return !!token;
-            });
-            tokens = _.map(tokens, function(token) {
-                return token.toLowerCase();
-            });
-            return tokens;
-        }
-        function newNode() {
-            return {
-                ids: [],
-                children: {}
-            };
-        }
-        function unique(array) {
-            var seen = {}, uniques = [];
-            for (var i = 0, len = array.length; i < len; i++) {
-                if (!seen[array[i]]) {
-                    seen[array[i]] = true;
-                    uniques.push(array[i]);
-                }
-            }
-            return uniques;
-        }
-        function getIntersection(arrayA, arrayB) {
-            var ai = 0, bi = 0, intersection = [];
-            arrayA = arrayA.sort(compare);
-            arrayB = arrayB.sort(compare);
-            var lenArrayA = arrayA.length, lenArrayB = arrayB.length;
-            while (ai < lenArrayA && bi < lenArrayB) {
-                if (arrayA[ai] < arrayB[bi]) {
-                    ai++;
-                } else if (arrayA[ai] > arrayB[bi]) {
-                    bi++;
-                } else {
-                    intersection.push(arrayA[ai]);
-                    ai++;
-                    bi++;
-                }
-            }
-            return intersection;
-            function compare(a, b) {
-                return a - b;
-            }
-        }
-    }();
-    var oParser = function() {
-        
-        return {
-            local: getLocal,
-            prefetch: getPrefetch,
-            remote: getRemote
-        };
-        function getLocal(o) {
-            return o.local || null;
-        }
-        function getPrefetch(o) {
-            var prefetch, defaults;
-            defaults = {
-                url: null,
-                thumbprint: "",
-                ttl: 24 * 60 * 60 * 1e3,
-                filter: null,
-                ajax: {}
-            };
-            if (prefetch = o.prefetch || null) {
-                prefetch = _.isString(prefetch) ? {
-                    url: prefetch
-                } : prefetch;
-                prefetch = _.mixin(defaults, prefetch);
-                prefetch.thumbprint = VERSION + prefetch.thumbprint;
-                prefetch.ajax.type = prefetch.ajax.type || "GET";
-                prefetch.ajax.dataType = prefetch.ajax.dataType || "json";
-                !prefetch.url && $.error("prefetch requires url to be set");
-            }
-            return prefetch;
-        }
-        function getRemote(o) {
-            var remote, defaults;
-            defaults = {
-                url: null,
-                cache: true,
-                wildcard: "%QUERY",
-                replace: null,
-                rateLimitBy: "debounce",
-                rateLimitWait: 300,
-                send: null,
-                filter: null,
-                ajax: {}
-            };
-            if (remote = o.remote || null) {
-                remote = _.isString(remote) ? {
-                    url: remote
-                } : remote;
-                remote = _.mixin(defaults, remote);
-                remote.rateLimiter = /^throttle$/i.test(remote.rateLimitBy) ? byThrottle(remote.rateLimitWait) : byDebounce(remote.rateLimitWait);
-                remote.ajax.type = remote.ajax.type || "GET";
-                remote.ajax.dataType = remote.ajax.dataType || "json";
-                delete remote.rateLimitBy;
-                delete remote.rateLimitWait;
-                !remote.url && $.error("remote requires url to be set");
-            }
-            return remote;
-            function byDebounce(wait) {
-                return function(fn) {
-                    return _.debounce(fn, wait);
-                };
-            }
-            function byThrottle(wait) {
-                return function(fn) {
-                    return _.throttle(fn, wait);
-                };
-            }
-        }
-    }();
-    (function(root) {
-        
-        var old, keys;
-        old = root.Bloodhound;
-        keys = {
-            data: "data",
-            protocol: "protocol",
-            thumbprint: "thumbprint"
-        };
-        root.Bloodhound = Bloodhound;
-        function Bloodhound(o) {
-            if (!o || !o.local && !o.prefetch && !o.remote) {
-                $.error("one of local, prefetch, or remote is required");
-            }
-            this.limit = o.limit || 5;
-            this.sorter = getSorter(o.sorter);
-            this.dupDetector = o.dupDetector || ignoreDuplicates;
-            this.local = oParser.local(o);
-            this.prefetch = oParser.prefetch(o);
-            this.remote = oParser.remote(o);
-            this.cacheKey = this.prefetch ? this.prefetch.cacheKey || this.prefetch.url : null;
-            this.index = new SearchIndex({
-                datumTokenizer: o.datumTokenizer,
-                queryTokenizer: o.queryTokenizer
-            });
-            this.storage = this.cacheKey ? new PersistentStorage(this.cacheKey) : null;
-        }
-        Bloodhound.noConflict = function noConflict() {
-            root.Bloodhound = old;
-            return Bloodhound;
-        };
-        Bloodhound.tokenizers = tokenizers;
-        _.mixin(Bloodhound.prototype, {
-            _loadPrefetch: function loadPrefetch(o) {
-                var that = this, serialized, deferred;
-                if (serialized = this._readFromStorage(o.thumbprint)) {
-                    this.index.bootstrap(serialized);
-                    deferred = $.Deferred().resolve();
-                } else {
-                    deferred = $.ajax(o.url, o.ajax).done(handlePrefetchResponse);
-                }
-                return deferred;
-                function handlePrefetchResponse(resp) {
-                    that.clear();
-                    that.add(o.filter ? o.filter(resp) : resp);
-                    that._saveToStorage(that.index.serialize(), o.thumbprint, o.ttl);
-                }
-            },
-            _getFromRemote: function getFromRemote(query, cb) {
-                var that = this, url, uriEncodedQuery;
-                if (!this.transport) {
-                    return;
-                }
-                query = query || "";
-                uriEncodedQuery = encodeURIComponent(query);
-                url = this.remote.replace ? this.remote.replace(this.remote.url, query) : this.remote.url.replace(this.remote.wildcard, uriEncodedQuery);
-                return this.transport.get(url, this.remote.ajax, handleRemoteResponse);
-                function handleRemoteResponse(err, resp) {
-                    err ? cb([]) : cb(that.remote.filter ? that.remote.filter(resp) : resp);
-                }
-            },
-            _cancelLastRemoteRequest: function cancelLastRemoteRequest() {
-                this.transport && this.transport.cancel();
-            },
-            _saveToStorage: function saveToStorage(data, thumbprint, ttl) {
-                if (this.storage) {
-                    this.storage.set(keys.data, data, ttl);
-                    this.storage.set(keys.protocol, location.protocol, ttl);
-                    this.storage.set(keys.thumbprint, thumbprint, ttl);
-                }
-            },
-            _readFromStorage: function readFromStorage(thumbprint) {
-                var stored = {}, isExpired;
-                if (this.storage) {
-                    stored.data = this.storage.get(keys.data);
-                    stored.protocol = this.storage.get(keys.protocol);
-                    stored.thumbprint = this.storage.get(keys.thumbprint);
-                }
-                isExpired = stored.thumbprint !== thumbprint || stored.protocol !== location.protocol;
-                return stored.data && !isExpired ? stored.data : null;
-            },
-            _initialize: function initialize() {
-                var that = this, local = this.local, deferred;
-                deferred = this.prefetch ? this._loadPrefetch(this.prefetch) : $.Deferred().resolve();
-                local && deferred.done(addLocalToIndex);
-                this.transport = this.remote ? new Transport(this.remote) : null;
-                return this.initPromise = deferred.promise();
-                function addLocalToIndex() {
-                    that.add(_.isFunction(local) ? local() : local);
-                }
-            },
-            initialize: function initialize(force) {
-                return !this.initPromise || force ? this._initialize() : this.initPromise;
-            },
-            add: function add(data) {
-                this.index.add(data);
-            },
-            get: function get(query, cb) {
-                var that = this, matches = [], cacheHit = false;
-                matches = this.index.get(query);
-                matches = this.sorter(matches).slice(0, this.limit);
-                matches.length < this.limit ? cacheHit = this._getFromRemote(query, returnRemoteMatches) : this._cancelLastRemoteRequest();
-                if (!cacheHit) {
-                    (matches.length > 0 || !this.transport) && cb && cb(matches);
-                }
-                function returnRemoteMatches(remoteMatches) {
-                    var matchesWithBackfill = matches.slice(0);
-                    _.each(remoteMatches, function(remoteMatch) {
-                        var isDuplicate;
-                        isDuplicate = _.some(matchesWithBackfill, function(match) {
-                            return that.dupDetector(remoteMatch, match);
-                        });
-                        !isDuplicate && matchesWithBackfill.push(remoteMatch);
-                        return matchesWithBackfill.length < that.limit;
-                    });
-                    cb && cb(that.sorter(matchesWithBackfill));
-                }
-            },
-            clear: function clear() {
-                this.index.reset();
-            },
-            clearPrefetchCache: function clearPrefetchCache() {
-                this.storage && this.storage.clear();
-            },
-            clearRemoteCache: function clearRemoteCache() {
-                this.transport && Transport.resetCache();
-            },
-            ttAdapter: function ttAdapter() {
-                return _.bind(this.get, this);
-            }
-        });
-        return Bloodhound;
-        function getSorter(sortFn) {
-            return _.isFunction(sortFn) ? sort : noSort;
-            function sort(array) {
-                return array.sort(sortFn);
-            }
-            function noSort(array) {
-                return array;
-            }
-        }
-        function ignoreDuplicates() {
+            elem.type = type;
+            return true;
+        } catch (e) {
+            // You can't change input type in IE8 and below
             return false;
         }
-    })(this);
-})(window.jQuery);
-define("bloodhound", (function (global) {
-    return function () {
-        var ret, fn;
-        return ret || global.Bloodhound;
+    }
+
+    // Expose public methods
+    global.Placeholders = {
+        Utils: {
+            addEventListener: addEventListener,
+            inArray: inArray,
+            moveCaret: moveCaret,
+            changeType: changeType
+        }
     };
-}(this)));
+
+}(this));
+
+(function (global) {
+
+    
+
+    var validTypes = [
+            "text",
+            "search",
+            "url",
+            "tel",
+            "email",
+            "password",
+            "number",
+            "textarea"
+        ],
+
+        // The list of keycodes that are not allowed when the polyfill is configured to hide-on-input
+        badKeys = [
+
+            // The following keys all cause the caret to jump to the end of the input value
+            27, // Escape
+            33, // Page up
+            34, // Page down
+            35, // End
+            36, // Home
+
+            // Arrow keys allow you to move the caret manually, which should be prevented when the placeholder is visible
+            37, // Left
+            38, // Up
+            39, // Right
+            40, // Down
+
+            // The following keys allow you to modify the placeholder text by removing characters, which should be prevented when the placeholder is visible
+            8, // Backspace
+            46 // Delete
+        ],
+
+        // Styling variables
+        placeholderStyleColor = "#ccc",
+        placeholderClassName = "placeholdersjs",
+        classNameRegExp = new RegExp("(?:^|\\s)" + placeholderClassName + "(?!\\S)"),
+
+        // These will hold references to all elements that can be affected. NodeList objects are live, so we only need to get those references once
+        inputs, textareas,
+
+        // The various data-* attributes used by the polyfill
+        ATTR_CURRENT_VAL = "data-placeholder-value",
+        ATTR_ACTIVE = "data-placeholder-active",
+        ATTR_INPUT_TYPE = "data-placeholder-type",
+        ATTR_FORM_HANDLED = "data-placeholder-submit",
+        ATTR_EVENTS_BOUND = "data-placeholder-bound",
+        ATTR_OPTION_FOCUS = "data-placeholder-focus",
+        ATTR_OPTION_LIVE = "data-placeholder-live",
+        ATTR_MAXLENGTH = "data-placeholder-maxlength",
+
+        // Various other variables used throughout the rest of the script
+        test = document.createElement("input"),
+        head = document.getElementsByTagName("head")[0],
+        root = document.documentElement,
+        Placeholders = global.Placeholders,
+        Utils = Placeholders.Utils,
+        hideOnInput, liveUpdates, keydownVal, styleElem, styleRules, placeholder, timer, form, elem, len, i;
+
+    // No-op (used in place of public methods when native support is detected)
+    function noop() {}
+
+    // Hide the placeholder value on a single element. Returns true if the placeholder was hidden and false if it was not (because it wasn't visible in the first place)
+    function hidePlaceholder(elem, keydownValue) {
+        var type,
+            maxLength,
+            valueChanged = (!!keydownValue && elem.value !== keydownValue),
+            isPlaceholderValue = (elem.value === elem.getAttribute(ATTR_CURRENT_VAL));
+
+        if ((valueChanged || isPlaceholderValue) && elem.getAttribute(ATTR_ACTIVE) === "true") {
+            elem.removeAttribute(ATTR_ACTIVE);
+            elem.value = elem.value.replace(elem.getAttribute(ATTR_CURRENT_VAL), "");
+            elem.className = elem.className.replace(classNameRegExp, "");
+
+            // Restore the maxlength value
+            maxLength = elem.getAttribute(ATTR_MAXLENGTH);
+            if (maxLength) {
+                elem.setAttribute("maxLength", maxLength);
+                elem.removeAttribute(ATTR_MAXLENGTH);
+            }
+
+            // If the polyfill has changed the type of the element we need to change it back
+            type = elem.getAttribute(ATTR_INPUT_TYPE);
+            if (type) {
+                elem.type = type;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // Show the placeholder value on a single element. Returns true if the placeholder was shown and false if it was not (because it was already visible)
+    function showPlaceholder(elem) {
+        var type,
+            maxLength,
+            val = elem.getAttribute(ATTR_CURRENT_VAL);
+        if (elem.value === "" && val) {
+            elem.setAttribute(ATTR_ACTIVE, "true");
+            elem.value = val;
+            elem.className += " " + placeholderClassName;
+
+            // Store and remove the maxlength value
+            maxLength = elem.getAttribute(ATTR_MAXLENGTH);
+            if (!maxLength) {
+                elem.setAttribute(ATTR_MAXLENGTH, elem.maxLength);
+                elem.removeAttribute("maxLength");
+            }
+
+            // If the type of element needs to change, change it (e.g. password inputs)
+            type = elem.getAttribute(ATTR_INPUT_TYPE);
+            if (type) {
+                elem.type = "text";
+            } else if (elem.type === "password") {
+                if (Utils.changeType(elem, "text")) {
+                    elem.setAttribute(ATTR_INPUT_TYPE, "password");
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function handleElem(node, callback) {
+
+        var handleInputs, handleTextareas, elem, len, i;
+
+        // Check if the passed in node is an input/textarea (in which case it can't have any affected descendants)
+        if (node && node.getAttribute(ATTR_CURRENT_VAL)) {
+            callback(node);
+        } else {
+
+            // If an element was passed in, get all affected descendants. Otherwise, get all affected elements in document
+            handleInputs = node ? node.getElementsByTagName("input") : inputs;
+            handleTextareas = node ? node.getElementsByTagName("textarea") : textareas;
+
+            // Run the callback for each element
+            for (i = 0, len = handleInputs.length + handleTextareas.length; i < len; i++) {
+                elem = i < handleInputs.length ? handleInputs[i] : handleTextareas[i - handleInputs.length];
+                callback(elem);
+            }
+        }
+    }
+
+    // Return all affected elements to their normal state (remove placeholder value if present)
+    function disablePlaceholders(node) {
+        handleElem(node, hidePlaceholder);
+    }
+
+    // Show the placeholder value on all appropriate elements
+    function enablePlaceholders(node) {
+        handleElem(node, showPlaceholder);
+    }
+
+    // Returns a function that is used as a focus event handler
+    function makeFocusHandler(elem) {
+        return function () {
+
+            // Only hide the placeholder value if the (default) hide-on-focus behaviour is enabled
+            if (hideOnInput && elem.value === elem.getAttribute(ATTR_CURRENT_VAL) && elem.getAttribute(ATTR_ACTIVE) === "true") {
+
+                // Move the caret to the start of the input (this mimics the behaviour of all browsers that do not hide the placeholder on focus)
+                Utils.moveCaret(elem, 0);
+
+            } else {
+
+                // Remove the placeholder
+                hidePlaceholder(elem);
+            }
+        };
+    }
+
+    // Returns a function that is used as a blur event handler
+    function makeBlurHandler(elem) {
+        return function () {
+            showPlaceholder(elem);
+        };
+    }
+
+    // Functions that are used as a event handlers when the hide-on-input behaviour has been activated - very basic implementation of the "input" event
+    function makeKeydownHandler(elem) {
+        return function (e) {
+            keydownVal = elem.value;
+
+            //Prevent the use of the arrow keys (try to keep the cursor before the placeholder)
+            if (elem.getAttribute(ATTR_ACTIVE) === "true") {
+                if (keydownVal === elem.getAttribute(ATTR_CURRENT_VAL) && Utils.inArray(badKeys, e.keyCode)) {
+                    if (e.preventDefault) {
+                        e.preventDefault();
+                    }
+                    return false;
+                }
+            }
+        };
+    }
+    function makeKeyupHandler(elem) {
+        return function () {
+            hidePlaceholder(elem, keydownVal);
+
+            // If the element is now empty we need to show the placeholder
+            if (elem.value === "") {
+                elem.blur();
+                Utils.moveCaret(elem, 0);
+            }
+        };
+    }
+    function makeClickHandler(elem) {
+        return function () {
+            if (elem === document.activeElement && elem.value === elem.getAttribute(ATTR_CURRENT_VAL) && elem.getAttribute(ATTR_ACTIVE) === "true") {
+                Utils.moveCaret(elem, 0);
+            }
+        };
+    }
+
+    // Returns a function that is used as a submit event handler on form elements that have children affected by this polyfill
+    function makeSubmitHandler(form) {
+        return function () {
+
+            // Turn off placeholders on all appropriate descendant elements
+            disablePlaceholders(form);
+        };
+    }
+
+    // Bind event handlers to an element that we need to affect with the polyfill
+    function newElement(elem) {
+
+        // If the element is part of a form, make sure the placeholder string is not submitted as a value
+        if (elem.form) {
+            form = elem.form;
+
+            // Set a flag on the form so we know it's been handled (forms can contain multiple inputs)
+            if (!form.getAttribute(ATTR_FORM_HANDLED)) {
+                Utils.addEventListener(form, "submit", makeSubmitHandler(form));
+                form.setAttribute(ATTR_FORM_HANDLED, "true");
+            }
+        }
+
+        // Bind event handlers to the element so we can hide/show the placeholder as appropriate
+        Utils.addEventListener(elem, "focus", makeFocusHandler(elem));
+        Utils.addEventListener(elem, "blur", makeBlurHandler(elem));
+
+        // If the placeholder should hide on input rather than on focus we need additional event handlers
+        if (hideOnInput) {
+            Utils.addEventListener(elem, "keydown", makeKeydownHandler(elem));
+            Utils.addEventListener(elem, "keyup", makeKeyupHandler(elem));
+            Utils.addEventListener(elem, "click", makeClickHandler(elem));
+        }
+
+        // Remember that we've bound event handlers to this element
+        elem.setAttribute(ATTR_EVENTS_BOUND, "true");
+        elem.setAttribute(ATTR_CURRENT_VAL, placeholder);
+
+        // If the element doesn't have a value and is not focussed, set it to the placeholder string
+        if (hideOnInput || elem !== document.activeElement) {
+            showPlaceholder(elem);
+        }
+    }
+
+    Placeholders.nativeSupport = test.placeholder !== void 0;
+
+    if (!Placeholders.nativeSupport) {
+
+        // Get references to all the input and textarea elements currently in the DOM (live NodeList objects to we only need to do this once)
+        inputs = document.getElementsByTagName("input");
+        textareas = document.getElementsByTagName("textarea");
+
+        // Get any settings declared as data-* attributes on the root element (currently the only options are whether to hide the placeholder on focus or input and whether to auto-update)
+        hideOnInput = root.getAttribute(ATTR_OPTION_FOCUS) === "false";
+        liveUpdates = root.getAttribute(ATTR_OPTION_LIVE) !== "false";
+
+        // Create style element for placeholder styles (instead of directly setting style properties on elements - allows for better flexibility alongside user-defined styles)
+        styleElem = document.createElement("style");
+        styleElem.type = "text/css";
+
+        // Create style rules as text node
+        styleRules = document.createTextNode("." + placeholderClassName + " { color:" + placeholderStyleColor + "; }");
+
+        // Append style rules to newly created stylesheet
+        if (styleElem.styleSheet) {
+            styleElem.styleSheet.cssText = styleRules.nodeValue;
+        } else {
+            styleElem.appendChild(styleRules);
+        }
+
+        // Prepend new style element to the head (before any existing stylesheets, so user-defined rules take precedence)
+        head.insertBefore(styleElem, head.firstChild);
+
+        // Set up the placeholders
+        for (i = 0, len = inputs.length + textareas.length; i < len; i++) {
+            elem = i < inputs.length ? inputs[i] : textareas[i - inputs.length];
+
+            // Get the value of the placeholder attribute, if any. IE10 emulating IE7 fails with getAttribute, hence the use of the attributes node
+            placeholder = elem.attributes.placeholder;
+            if (placeholder) {
+
+                // IE returns an empty object instead of undefined if the attribute is not present
+                placeholder = placeholder.nodeValue;
+
+                // Only apply the polyfill if this element is of a type that supports placeholders, and has a placeholder attribute with a non-empty value
+                if (placeholder && Utils.inArray(validTypes, elem.type)) {
+                    newElement(elem);
+                }
+            }
+        }
+
+        // If enabled, the polyfill will repeatedly check for changed/added elements and apply to those as well
+        timer = setInterval(function () {
+            for (i = 0, len = inputs.length + textareas.length; i < len; i++) {
+                elem = i < inputs.length ? inputs[i] : textareas[i - inputs.length];
+
+                // Only apply the polyfill if this element is of a type that supports placeholders, and has a placeholder attribute with a non-empty value
+                placeholder = elem.attributes.placeholder;
+                if (placeholder) {
+                    placeholder = placeholder.nodeValue;
+                    if (placeholder && Utils.inArray(validTypes, elem.type)) {
+
+                        // If the element hasn't had event handlers bound to it then add them
+                        if (!elem.getAttribute(ATTR_EVENTS_BOUND)) {
+                            newElement(elem);
+                        }
+
+                        // If the placeholder value has changed or not been initialised yet we need to update the display
+                        if (placeholder !== elem.getAttribute(ATTR_CURRENT_VAL) || (elem.type === "password" && !elem.getAttribute(ATTR_INPUT_TYPE))) {
+
+                            // Attempt to change the type of password inputs (fails in IE < 9)
+                            if (elem.type === "password" && !elem.getAttribute(ATTR_INPUT_TYPE) && Utils.changeType(elem, "text")) {
+                                elem.setAttribute(ATTR_INPUT_TYPE, "password");
+                            }
+
+                            // If the placeholder value has changed and the placeholder is currently on display we need to change it
+                            if (elem.value === elem.getAttribute(ATTR_CURRENT_VAL)) {
+                                elem.value = placeholder;
+                            }
+
+                            // Keep a reference to the current placeholder value in case it changes via another script
+                            elem.setAttribute(ATTR_CURRENT_VAL, placeholder);
+                        }
+                    }
+                } else if (elem.getAttribute(ATTR_ACTIVE)) {
+                    hidePlaceholder(elem);
+                    elem.removeAttribute(ATTR_CURRENT_VAL);
+                }
+            }
+
+            // If live updates are not enabled cancel the timer
+            if (!liveUpdates) {
+                clearInterval(timer);
+            }
+        }, 100);
+    }
+
+    // Expose public methods
+    Placeholders.disable = Placeholders.nativeSupport ? noop : disablePlaceholders;
+    Placeholders.enable = Placeholders.nativeSupport ? noop : enablePlaceholders;
+
+}(this));
+
+(function ($) {
+
+    
+
+    var originalValFn = $.fn.val,
+        originalPropFn = $.fn.prop;
+
+    if (!Placeholders.nativeSupport) {
+        $.fn.val = function (val) {
+            if (val === undefined && this.eq(0).data("placeholder-active")) {
+                return "";
+            }
+            return originalValFn.apply(this, arguments);
+        };
+
+        $.fn.prop = function (name, val) {
+            if (val === undefined && this.eq(0).data("placeholder-active") && name === "value") {
+                return "";
+            }
+            return originalPropFn.apply(this, arguments);
+        };
+    }
+
+}(jQuery));
+define("placeholders-js", ["jquery"], function(){});
 
 /**
- * Gets config from SASS so that it can be refrenced on the front end.
+ * @license RequireJS text 2.0.12 Copyright (c) 2010-2014, The Dojo Foundation All Rights Reserved.
+ * Available via the MIT or new BSD license.
+ * see: http://github.com/requirejs/text for details
+ */
+/*jslint regexp: true */
+/*global require, XMLHttpRequest, ActiveXObject,
+  define, window, process, Packages,
+  java, location, Components, FileUtils */
+
+define('text',['module'], function (module) {
+    
+
+    var text, fs, Cc, Ci, xpcIsWindows,
+        progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'],
+        xmlRegExp = /^\s*<\?xml(\s)+version=[\'\"](\d)*.(\d)*[\'\"](\s)*\?>/im,
+        bodyRegExp = /<body[^>]*>\s*([\s\S]+)\s*<\/body>/im,
+        hasLocation = typeof location !== 'undefined' && location.href,
+        defaultProtocol = hasLocation && location.protocol && location.protocol.replace(/\:/, ''),
+        defaultHostName = hasLocation && location.hostname,
+        defaultPort = hasLocation && (location.port || undefined),
+        buildMap = {},
+        masterConfig = (module.config && module.config()) || {};
+
+    text = {
+        version: '2.0.12',
+
+        strip: function (content) {
+            //Strips <?xml ...?> declarations so that external SVG and XML
+            //documents can be added to a document without worry. Also, if the string
+            //is an HTML document, only the part inside the body tag is returned.
+            if (content) {
+                content = content.replace(xmlRegExp, "");
+                var matches = content.match(bodyRegExp);
+                if (matches) {
+                    content = matches[1];
+                }
+            } else {
+                content = "";
+            }
+            return content;
+        },
+
+        jsEscape: function (content) {
+            return content.replace(/(['\\])/g, '\\$1')
+                .replace(/[\f]/g, "\\f")
+                .replace(/[\b]/g, "\\b")
+                .replace(/[\n]/g, "\\n")
+                .replace(/[\t]/g, "\\t")
+                .replace(/[\r]/g, "\\r")
+                .replace(/[\u2028]/g, "\\u2028")
+                .replace(/[\u2029]/g, "\\u2029");
+        },
+
+        createXhr: masterConfig.createXhr || function () {
+            //Would love to dump the ActiveX crap in here. Need IE 6 to die first.
+            var xhr, i, progId;
+            if (typeof XMLHttpRequest !== "undefined") {
+                return new XMLHttpRequest();
+            } else if (typeof ActiveXObject !== "undefined") {
+                for (i = 0; i < 3; i += 1) {
+                    progId = progIds[i];
+                    try {
+                        xhr = new ActiveXObject(progId);
+                    } catch (e) {}
+
+                    if (xhr) {
+                        progIds = [progId];  // so faster next time
+                        break;
+                    }
+                }
+            }
+
+            return xhr;
+        },
+
+        /**
+         * Parses a resource name into its component parts. Resource names
+         * look like: module/name.ext!strip, where the !strip part is
+         * optional.
+         * @param {String} name the resource name
+         * @returns {Object} with properties "moduleName", "ext" and "strip"
+         * where strip is a boolean.
+         */
+        parseName: function (name) {
+            var modName, ext, temp,
+                strip = false,
+                index = name.indexOf("."),
+                isRelative = name.indexOf('./') === 0 ||
+                             name.indexOf('../') === 0;
+
+            if (index !== -1 && (!isRelative || index > 1)) {
+                modName = name.substring(0, index);
+                ext = name.substring(index + 1, name.length);
+            } else {
+                modName = name;
+            }
+
+            temp = ext || modName;
+            index = temp.indexOf("!");
+            if (index !== -1) {
+                //Pull off the strip arg.
+                strip = temp.substring(index + 1) === "strip";
+                temp = temp.substring(0, index);
+                if (ext) {
+                    ext = temp;
+                } else {
+                    modName = temp;
+                }
+            }
+
+            return {
+                moduleName: modName,
+                ext: ext,
+                strip: strip
+            };
+        },
+
+        xdRegExp: /^((\w+)\:)?\/\/([^\/\\]+)/,
+
+        /**
+         * Is an URL on another domain. Only works for browser use, returns
+         * false in non-browser environments. Only used to know if an
+         * optimized .js version of a text resource should be loaded
+         * instead.
+         * @param {String} url
+         * @returns Boolean
+         */
+        useXhr: function (url, protocol, hostname, port) {
+            var uProtocol, uHostName, uPort,
+                match = text.xdRegExp.exec(url);
+            if (!match) {
+                return true;
+            }
+            uProtocol = match[2];
+            uHostName = match[3];
+
+            uHostName = uHostName.split(':');
+            uPort = uHostName[1];
+            uHostName = uHostName[0];
+
+            return (!uProtocol || uProtocol === protocol) &&
+                   (!uHostName || uHostName.toLowerCase() === hostname.toLowerCase()) &&
+                   ((!uPort && !uHostName) || uPort === port);
+        },
+
+        finishLoad: function (name, strip, content, onLoad) {
+            content = strip ? text.strip(content) : content;
+            if (masterConfig.isBuild) {
+                buildMap[name] = content;
+            }
+            onLoad(content);
+        },
+
+        load: function (name, req, onLoad, config) {
+            //Name has format: some.module.filext!strip
+            //The strip part is optional.
+            //if strip is present, then that means only get the string contents
+            //inside a body tag in an HTML string. For XML/SVG content it means
+            //removing the <?xml ...?> declarations so the content can be inserted
+            //into the current doc without problems.
+
+            // Do not bother with the work if a build and text will
+            // not be inlined.
+            if (config && config.isBuild && !config.inlineText) {
+                onLoad();
+                return;
+            }
+
+            masterConfig.isBuild = config && config.isBuild;
+
+            var parsed = text.parseName(name),
+                nonStripName = parsed.moduleName +
+                    (parsed.ext ? '.' + parsed.ext : ''),
+                url = req.toUrl(nonStripName),
+                useXhr = (masterConfig.useXhr) ||
+                         text.useXhr;
+
+            // Do not load if it is an empty: url
+            if (url.indexOf('empty:') === 0) {
+                onLoad();
+                return;
+            }
+
+            //Load the text. Use XHR if possible and in a browser.
+            if (!hasLocation || useXhr(url, defaultProtocol, defaultHostName, defaultPort)) {
+                text.get(url, function (content) {
+                    text.finishLoad(name, parsed.strip, content, onLoad);
+                }, function (err) {
+                    if (onLoad.error) {
+                        onLoad.error(err);
+                    }
+                });
+            } else {
+                //Need to fetch the resource across domains. Assume
+                //the resource has been optimized into a JS module. Fetch
+                //by the module name + extension, but do not include the
+                //!strip part to avoid file system issues.
+                req([nonStripName], function (content) {
+                    text.finishLoad(parsed.moduleName + '.' + parsed.ext,
+                                    parsed.strip, content, onLoad);
+                });
+            }
+        },
+
+        write: function (pluginName, moduleName, write, config) {
+            if (buildMap.hasOwnProperty(moduleName)) {
+                var content = text.jsEscape(buildMap[moduleName]);
+                write.asModule(pluginName + "!" + moduleName,
+                               "define(function () { return '" +
+                                   content +
+                               "';});\n");
+            }
+        },
+
+        writeFile: function (pluginName, moduleName, req, write, config) {
+            var parsed = text.parseName(moduleName),
+                extPart = parsed.ext ? '.' + parsed.ext : '',
+                nonStripName = parsed.moduleName + extPart,
+                //Use a '.js' file name so that it indicates it is a
+                //script that can be loaded across domains.
+                fileName = req.toUrl(parsed.moduleName + extPart) + '.js';
+
+            //Leverage own load() method to load plugin value, but only
+            //write out values that do not have the strip argument,
+            //to avoid any potential issues with ! in file names.
+            text.load(nonStripName, req, function (value) {
+                //Use own write() method to construct full module value.
+                //But need to create shell that translates writeFile's
+                //write() to the right interface.
+                var textWrite = function (contents) {
+                    return write(fileName, contents);
+                };
+                textWrite.asModule = function (moduleName, contents) {
+                    return write.asModule(moduleName, fileName, contents);
+                };
+
+                text.write(pluginName, nonStripName, textWrite, config);
+            }, config);
+        }
+    };
+
+    if (masterConfig.env === 'node' || (!masterConfig.env &&
+            typeof process !== "undefined" &&
+            process.versions &&
+            !!process.versions.node &&
+            !process.versions['node-webkit'])) {
+        //Using special require.nodeRequire, something added by r.js.
+        fs = require.nodeRequire('fs');
+
+        text.get = function (url, callback, errback) {
+            try {
+                var file = fs.readFileSync(url, 'utf8');
+                //Remove BOM (Byte Mark Order) from utf8 files if it is there.
+                if (file.indexOf('\uFEFF') === 0) {
+                    file = file.substring(1);
+                }
+                callback(file);
+            } catch (e) {
+                if (errback) {
+                    errback(e);
+                }
+            }
+        };
+    } else if (masterConfig.env === 'xhr' || (!masterConfig.env &&
+            text.createXhr())) {
+        text.get = function (url, callback, errback, headers) {
+            var xhr = text.createXhr(), header;
+            xhr.open('GET', url, true);
+
+            //Allow plugins direct access to xhr headers
+            if (headers) {
+                for (header in headers) {
+                    if (headers.hasOwnProperty(header)) {
+                        xhr.setRequestHeader(header.toLowerCase(), headers[header]);
+                    }
+                }
+            }
+
+            //Allow overrides specified in config
+            if (masterConfig.onXhr) {
+                masterConfig.onXhr(xhr, url);
+            }
+
+            xhr.onreadystatechange = function (evt) {
+                var status, err;
+                //Do not explicitly handle errors, those should be
+                //visible via console output in the browser.
+                if (xhr.readyState === 4) {
+                    status = xhr.status || 0;
+                    if (status > 399 && status < 600) {
+                        //An http 4xx or 5xx error. Signal an error.
+                        err = new Error(url + ' HTTP status: ' + status);
+                        err.xhr = xhr;
+                        if (errback) {
+                            errback(err);
+                        }
+                    } else {
+                        callback(xhr.responseText);
+                    }
+
+                    if (masterConfig.onXhrComplete) {
+                        masterConfig.onXhrComplete(xhr, url);
+                    }
+                }
+            };
+            xhr.send(null);
+        };
+    } else if (masterConfig.env === 'rhino' || (!masterConfig.env &&
+            typeof Packages !== 'undefined' && typeof java !== 'undefined')) {
+        //Why Java, why is this so awkward?
+        text.get = function (url, callback) {
+            var stringBuffer, line,
+                encoding = "utf-8",
+                file = new java.io.File(url),
+                lineSeparator = java.lang.System.getProperty("line.separator"),
+                input = new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(file), encoding)),
+                content = '';
+            try {
+                stringBuffer = new java.lang.StringBuffer();
+                line = input.readLine();
+
+                // Byte Order Mark (BOM) - The Unicode Standard, version 3.0, page 324
+                // http://www.unicode.org/faq/utf_bom.html
+
+                // Note that when we use utf-8, the BOM should appear as "EF BB BF", but it doesn't due to this bug in the JDK:
+                // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4508058
+                if (line && line.length() && line.charAt(0) === 0xfeff) {
+                    // Eat the BOM, since we've already found the encoding on this file,
+                    // and we plan to concatenating this buffer with others; the BOM should
+                    // only appear at the top of a file.
+                    line = line.substring(1);
+                }
+
+                if (line !== null) {
+                    stringBuffer.append(line);
+                }
+
+                while ((line = input.readLine()) !== null) {
+                    stringBuffer.append(lineSeparator);
+                    stringBuffer.append(line);
+                }
+                //Make sure we return a JavaScript string and not a Java string.
+                content = String(stringBuffer.toString()); //String
+            } finally {
+                input.close();
+            }
+            callback(content);
+        };
+    } else if (masterConfig.env === 'xpconnect' || (!masterConfig.env &&
+            typeof Components !== 'undefined' && Components.classes &&
+            Components.interfaces)) {
+        //Avert your gaze!
+        Cc = Components.classes;
+        Ci = Components.interfaces;
+        Components.utils['import']('resource://gre/modules/FileUtils.jsm');
+        xpcIsWindows = ('@mozilla.org/windows-registry-key;1' in Cc);
+
+        text.get = function (url, callback) {
+            var inStream, convertStream, fileObj,
+                readData = {};
+
+            if (xpcIsWindows) {
+                url = url.replace(/\//g, '\\');
+            }
+
+            fileObj = new FileUtils.File(url);
+
+            //XPCOM, you so crazy
+            try {
+                inStream = Cc['@mozilla.org/network/file-input-stream;1']
+                           .createInstance(Ci.nsIFileInputStream);
+                inStream.init(fileObj, 1, 0, false);
+
+                convertStream = Cc['@mozilla.org/intl/converter-input-stream;1']
+                                .createInstance(Ci.nsIConverterInputStream);
+                convertStream.init(inStream, "utf-8", inStream.available(),
+                Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+
+                convertStream.readString(inStream.available(), readData);
+                convertStream.close();
+                inStream.close();
+                callback(readData.value);
+            } catch (e) {
+                throw new Error((fileObj && fileObj.path || '') + ': ' + e);
+            }
+        };
+    }
+    return text;
+});
+
+
+define('text!templates/application.mustache',[],function () { return '<div class="message-container"></div>\n\n<div class="content-container"></div>\n\n<div class="footnote-container"></div>';});
+
+
+define('text!templates/footnote.mustache',[],function () { return '<div class="footnote">\n  <p>Unofficial election data provided by the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a>.  For ranked-choice contests data is supplemented manually from the <a href="http://vote.minneapolismn.gov/" target="_blank">City of Minneapolis</a> and the <a href="http://www.stpaul.gov/index.aspx?NID=188" target="_blank">City of St. Paul</a>.  Test data will be provided until 8PM on Election Night.</p>\n\n  <p>The geographical boundaries, though received from official sources and queried from our <a href="http://boundaries.minnpost.com" target="_blank">boundary service</a>, may not represent the exact, offical area for a contest, race, or election.  It is also possible that for a given location the contests may not be accurate due to data quality with multiple agencies.  Please refer to your local and state election officials to know exactly what contests happen for a given location.</p>\n\n  <p>Some map data © OpenStreetMap contributors; licensed under the <a href="http://www.openstreetmap.org/copyright" target="_blank">Open Data Commons Open Database License</a>.  Some map design © MapBox; licensed according to the <a href="http://mapbox.com/tos/" target="_blank">MapBox Terms of Service</a>.  Location geocoding provided by <a href="http://www.mapquest.com/" target="_blank">Mapquest</a> and is not guaranteed to be accurate.</p>\n\n  <p>Some code, techniques, and data on <a href="https://github.com/minnpost/minnpost-elections-dashboard" target="_blank">Github</a>.</p>\n</div>\n';});
+
+
+define('text!templates/contest.mustache',[],function () { return '<div class="contest {{#isDashboard}}dashboard-contest{{/isDashboard}} {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}}{{#(final === true)}}is-final{{/()}}">\n  {{^isDashboard}}\n    <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n  {{/isDashboard}}\n\n  <div>\n    {{#((results.length == 0 || results == undefined) && !synced)}}\n      {{>loading}}\n    {{/()}}\n  </div>\n\n  {{#((results.length == 0 || results == undefined) && synced)}}\n    <h3>Did not find any contests</h3>\n  {{/()}}\n\n\n  {{#((results.length > 0) && synced)}}\n    <h3>\n      {{ title }}\n      {{#(show_party != undefined)}}<span class="show-party party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}\n    </h3>\n\n    {{^isDashboard}}\n      <div class="last-updated">Last updated at {{ updated.format(\'h:mm a\') }}</div>\n    {{/isDashboard}}\n\n    {{#(!!question_body)}}\n      <p>{{{ question_body }}}</p>\n    {{/()}}\n  {{/()}}\n\n  <div class="{{^isDashboard}}row{{/isDashboard}}">\n    <div class="{{^isDashboard}}column-medium-70 inner-column-left{{/isDashboard}}">\n      <table class="striped">\n        <thead>\n          <tr class="table-first-heading">\n            <th class="winner-column"></th>\n            <th>Candidate</th>\n            {{#(partisan && show_party === undefined)}}\n              <th>Party</th>\n            {{/()}}\n            {{#(ranked_choice == 1)}}\n              <th class="first-choice-column">Results</th>\n              <th class="second-choice-column"></th>\n              <th class="third-choice-column"></th>\n              <th class="final-column">Final</th>\n            {{/()}}\n            {{#(ranked_choice != 1)}}\n              {{^isDashboard}}\n                <th class="percentage">Percentage</th>\n                <th class="votes">Votes</th>\n              {{/isDashboard}}\n              {{#isDashboard}}\n                <th class="percentage">Results</th>\n              {{/isDashboard}}\n            {{/()}}\n          </tr>\n          <tr class="table-second-heading">\n            <th class="winner-column"></th>\n            <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>\n            {{#(partisan && show_party === undefined)}}\n              <th></th>\n            {{/()}}\n            {{#(ranked_choice == 1)}}\n              <th class="first-choice-column first-choice-heading">1st choice</th>\n              <th class="second-choice-column second-choice-heading">2nd choice</th>\n              <th class="third-choice-column third-choice-heading">3rd choice</th>\n              <th class="final-column"></th>\n            {{/()}}\n            {{#(ranked_choice != 1)}}\n              <th></th>\n              {{^isDashboard}}\n                <th></th>\n              {{/isDashboard}}\n            {{/()}}\n          </tr>\n        </thead>\n\n        <tbody>\n          {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party != undefined && party_id == show_party)))}}\n            <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? \'even\' : \'odd\' }}">\n              <td class="winner-column">{{#winner}}<span class="fa fa-check"></span>{{/winner}}</td>\n\n              <td class="candidate-column">{{ candidate }}</td>\n\n              {{#(partisan && show_party === undefined)}}\n                <td><span class="party-label bg-color-political-{{ party_id.toLowerCase() }}" title="{{ parties[party_id.toLowerCase()] }}">{{ party_id }}</span></td>\n              {{/()}}\n\n              {{#(ranked_choice == 1)}}\n                <td class="first-choice-column first-choice-heading">{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>\n                <td class="second-choice-column first-choice-heading">{{ formatters.number(ranked_choices.2.percentage) }}% ({{ formatters.number(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>\n                <td class="third-choice-column first-choice-heading">{{ formatters.number(ranked_choices.3.percentage) }}% ({{ formatters.number(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>\n                <td class="final-column first-choice-heading">{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% ({{ formatters.number(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>\n              {{/()}}\n\n              {{#(ranked_choice != 1)}}\n                <td class="percentage">{{ formatters.number(percentage) }}%</td>\n                {{^isDashboard}}\n                  <td class="votes">{{ formatters.number(votes_candidate, 0) }}</td>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n          {{/()}} {{/results}}\n        </tbody>\n      </table>\n\n      <a href="#contest/{{ id }}" class="contest-link">{{#isDashboard}}Full results{{/isDashboard}}{{^isDashboard}}Permalink{{/isDashboard}}</a>\n    </div>\n\n    {{^isDashboard}}\n      <div class="column-medium-30 inner-column-right">\n        <div class="contest-map" id="contest-map-{{ id }}"></div>\n      </div>\n    {{/isDashboard}}\n  </div>\n</div>\n';});
+
+
+define('text!templates/contests.mustache',[],function () { return '<div class="contests">\n  <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n\n  <div class="row">\n    <div class="column-medium-70 inner-column-left contests-title-section">\n      <h2 class="contests-title {{#(lonlat != undefined)}}with-location{{/()}}">{{ (title) ? title : \'Contests\' }}</h2>\n\n      <p class="caption">\n        Found\n          {{#(models.length == 0 && !synced)}}\n            <i class="loading small"></i>\n          {{/())}}\n          {{#synced}}\n            {{ models.length }}\n          {{/synced}}\n        results.\n      </p>\n\n      {{#(lonlat != undefined)}}\n        <p class="caption">The map below shows the approximate location of your search. If the location is not correct, try <a href="#dashboard">searching for a more specific address</a>.</p>\n\n        <div id="location-map"></div>\n      {{/())}}\n    </div>\n\n    <div class="column-medium-30 inner-column-right"></div>\n  </div>\n\n  <div>\n    {{#(models.length == 0 && !synced)}}\n      {{>loading}}\n    {{/())}}\n\n    {{#(models.length == 0 && synced)}}\n      <p class="large">Unable to find any contests.</p>\n    {{/())}}\n  </div>\n\n  <div class="contest-list">\n    {{#models:i}}\n      {{>contest}}\n    {{/models}}\n  </div>\n</div>\n';});
+
+
+define('text!templates/dashboard.mustache',[],function () { return '<div class="dashboard {{ classes }}">\n\n  <div class="location-search-section">\n    <form role="form" class="" on-submit="addresssSearch">\n\n      <div class="location-search-group">\n        <div class="form-input-group">\n          <label for="address" class="sr-only">Search address for results</label>\n          <input type="text" id="address-search" placeholder="Search address for results">\n\n          <div class="button-group">\n            <button type="submit" class="button primary address-search-submit">Search</button>\n          </div>\n        </div>\n      </div>\n\n      {{#geolocationEnabled}}\n        <div class="geolocation">\n          <a href="#location">Or view contests at your current location <i class="fa fa-location-arrow"></i></a>\n        </div>\n      {{/geolocationEnabled}}\n    </form>\n  </div>\n\n  <div class="last-updated-section">\n    <div>\n      {{#election.date}}\n        {{ election.date.format(\'MMM DD, YYYY\') }} {{ (election.primary) ? \'primary\' : \'general\' }} election {{#election.isTest}}<em>test</em>{{/election.isTest}} results.\n      {{/election.date}}\n      {{#election.updated}}\n        Last updated at {{ election.updated.format(\'h:mm a\') }}\n      {{/election.updated}}\n    </div>\n  </div>\n\n  <div class="row">\n    <div class="column-medium-50">\n      <div class="inner-column-left">\n\n        <div class="contest-governor-r dashboard-section">\n          {{#contestGovernorR}}\n            {{>contest}}\n          {{/contestGovernorR}}\n        </div>\n\n        <div class="contest-auditor-dfl dashboard-section">\n          {{#contestAuditorDFL}}\n            {{>contest}}\n          {{/contestAuditorDFL}}\n        </div>\n\n        <div class="elections-search dashboard-section">\n          <h4>Other elections</h4>\n\n          <form role="form" class="" on-submit="contestSearch">\n\n            <p class="caption" for="contest-search">{{#capabilities.typeahead}}Search contests by title or candidate.  Start typing to see suggestions for specific contests, or search by {{/capabilities.typeahead}}{{^capabilities.typeahead}}Search contests by title with {{/capabilities.typeahead}} keywords (e.g., "<a href="#search/state+representative">state representative</a>" or "<a href="#search/school+board">school board</a>").</p>\n\n            <div class="form-input-group">\n              <input type="text" id="contest-search" placeholder="Search by title{{#capabilities.typeahead}} or candidate{{/capabilities.typeahead}}" />\n\n              <div class="button-group">\n                <button type="submit" class="button primary contest-search-submit">Search</button>\n              </div>\n            </div>\n          </form>\n        </div>\n      </div>\n    </div>\n\n    <div class="column-medium-50">\n      <div class="inner-column-right">\n\n        <div class="contest-senate-r dashboard-section">\n          {{#contestSenateR}}\n            {{>contest}}\n          {{/contestSenateR}}\n        </div>\n\n        <div class="contest-house-60b-dfl dashboard-section">\n          {{#contestHouse60BDFL}}\n            {{>contest}}\n          {{/contestHouse60BDFL}}\n        </div>\n\n        <div class="contest-house-48b-r dashboard-section">\n          {{#contestHouse48BR}}\n            {{>contest}}\n          {{/contestHouse48BR}}\n        </div>\n\n      </div>\n    </div>\n  </div>\n</div>\n';});
+
+
+define('text!templates/loading.mustache',[],function () { return '<div class="loading-container">\n  <i class="loading"></i> Loading...\n</div> \n';});
+
+/**
+ * Views
  */
 
-(function(global, factory) {
-  // Common JS (i.e. browserify) environment
-  if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
-    module.exports = factory(require('underscore'), require('jquery'));
-  }
-  // AMD
-  else if (typeof define === 'function' && define.amd) {
-    define('mpConfig',['underscore', 'jquery'], factory);
-  }
-  // Browser global
-  else if (global._ && global.jQuery.fn.dataTable) {
-    global.MP = global.MP || {};
-    global.MP.colors = factory(global._, global.jQuery);
-  }
-  else {
-    throw new Error('Could not find dependencies for MinnPost Styles Config.' );
-  }
-})(typeof window !== 'undefined' ? window : this, function(_, $, dt) {
-  // Placeholder for config and other vars
-  var config = {};
-  var lists;
+define('views',[
+  'jquery', 'underscore', 'backbone', 'ractive', 'ractive-events-tap',
+  'ractive-backbone', 'leaflet', 'models', 'collections',
+  'bloodhound', 'typeahead-js', 'placeholders-js', 'mpConfig', 'mpFormatters',
+  'text!templates/application.mustache', 'text!templates/footnote.mustache',
+  'text!templates/contest.mustache', 'text!templates/contests.mustache',
+  'text!templates/dashboard.mustache', 'text!templates/loading.mustache'
+], function(
+  $, _, Backbone, Ractive, RactiveETap, RactiveBackbone, L, models,
+  collections, Bloodhound, typeahead, placeholders, mpConfig, mpFormatters,
+  tApplication, tFootnote, tContest,
+  tContests, tDashboard, tLoading
+  ) {
+  var views = {};
 
-  // We use the build process to replace this data.  Hacky for sure.
-  config = {
-  "selector-wrapper": ".mp",
-  "responsive-points": [
-    [
-      "all",
-      "0px"
-    ],
-    [
-      "small",
-      "420px"
-    ],
-    [
-      "medium",
-      "640px"
-    ],
-    [
-      "large",
-      "960px"
-    ],
-    [
-      "xlarge",
-      "1200px"
-    ]
-  ],
-  "grid-gutter": "0.5em",
-  "text-line-height": "1.5em",
-  "text-size": "1em",
-  "text-size-small": "0.85em",
-  "text-size-large": "1.25em",
-  "space": "1em",
-  "space-vertical-padding": "0.25em",
-  "space-horizontal-padding": "0.5em",
-  "space-vertical-margin": "1em",
-  "space-horizontal-margin": "1em",
-  "radius": "0.25em",
-  "font-size-base": "16px",
-  "font-text": "\"Open Sans\", Helvetica, Arial, \"Lucida Grande\", sans-serif",
-  "font-heading": "\"Montserrat\", Georgia, \"Times New Roman\", Times, sans-serif",
-  "font-monospace": "Menlo, Monaco, Consolas, \"Courier New\", monospace",
-  "color-white": "#FFFFFF",
-  "color-black": "#000000",
-  "color-dark-gray": "#282828",
-  "color-medium-gray": "#404040",
-  "color-gray": "#7A7A7A",
-  "color-light-gray": "#ABABAB",
-  "color-lighter-gray": "#CCCCCC",
-  "color-lightest-gray": "#F8F8F8",
-  "color-minnpost-red": "#801019",
-  "color-blue": "#0084A8",
-  "color-red": "#C83D2D",
-  "color-green": "#469B61",
-  "color-orange": "#FF6633",
-  "color-yellow": "#FBD341",
-  "colors-interface": [
-    [
-      "dark-gray",
-      "$color-dark-gray"
-    ],
-    [
-      "medium-gray",
-      "$color-medium-gray"
-    ],
-    [
-      "gray",
-      "$color-gray"
-    ],
-    [
-      "light-gray",
-      "$color-light-gray"
-    ],
-    [
-      "lighter-gray",
-      "$color-lighter-gray"
-    ],
-    [
-      "lightest-gray",
-      "$color-lightest-gray"
-    ],
-    [
-      "minnpost-red",
-      "$color-minnpost-red"
-    ],
-    [
-      "blue",
-      "$color-blue"
-    ],
-    [
-      "red",
-      "$color-red"
-    ],
-    [
-      "green",
-      "$color-green"
-    ],
-    [
-      "orange",
-      "$color-orange"
-    ],
-    [
-      "yellow",
-      "$color-yellow"
-    ]
-  ],
-  "color-link": "$color-blue",
-  "color-heading": "$color-dark-gray",
-  "color-text": "$color-medium-gray",
-  "colors-information": [
-    [
-      "primary",
-      "$color-blue"
-    ],
-    [
-      "success",
-      "$color-green"
-    ],
-    [
-      "info",
-      "$color-light-gray"
-    ],
-    [
-      "warning",
-      "$color-yellow"
-    ],
-    [
-      "danger",
-      "$color-red"
-    ]
-  ],
-  "colors-data": [
-    [
-      "green1",
-      "#1D8C47"
-    ],
-    [
-      "green2",
-      "#32955D"
-    ],
-    [
-      "green3",
-      "#36A174"
-    ],
-    [
-      "purple",
-      "#55307E"
-    ],
-    [
-      "blue1",
-      "#0D57A0"
-    ],
-    [
-      "blue2",
-      "#0793AB"
-    ],
-    [
-      "blue3",
-      "#55CBDD"
-    ],
-    [
-      "red",
-      "#C83D2D"
-    ],
-    [
-      "orange",
-      "#FF6633"
-    ],
-    [
-      "yellow",
-      "#FBD341"
-    ]
-  ],
-  "colors-political": [
-    [
-      "dfl",
-      "#0793AB"
-    ],
-    [
-      "d",
-      "#0793AB"
-    ],
-    [
-      "r",
-      "#E62B0A"
-    ],
-    [
-      "ip",
-      "#F75336"
-    ],
-    [
-      "lib",
-      "#7A7A7A"
-    ],
-    [
-      "swp",
-      "#7A7A7A"
-    ],
-    [
-      "cp",
-      "#7A7A7A"
-    ],
-    [
-      "cg",
-      "#7A7A7A"
-    ],
-    [
-      "gp",
-      "#07AB20"
-    ],
-    [
-      "gr",
-      "#7A7A7A"
-    ],
-    [
-      "mop",
-      "#7A7A7A"
-    ],
-    [
-      "edp",
-      "#7A7A7A"
-    ],
-    [
-      "ind",
-      "#7A7A7A"
-    ],
-    [
-      "sl",
-      "#7A7A7A"
-    ],
-    [
-      "jp",
-      "#7A7A7A"
-    ]
-  ]
-};
+  // Ractive decorator to highlight changes
+  // Sample use: <span class="highlighter" decorator="highlight:{{ election.updated.format('h:mm a') }}">{{ election.updated.format('h:mm a') }}</span>
+  views.highlightDecorator = function(node, content) {
+    return {
+      update: function() {
+        var $node = $(node);
+        $node.removeClass('unhighlight');
+        $node.addClass('highlight');
 
-  // Function to help turn a config value into another if it is a reference
-  function findReference(value) {
-    if (_.isString(value) && value.indexOf('$') === 0 && !_.isUndefined(config[value.substring(1)])) {
-      value = config[value.substring(1)];
-    }
-    return value;
-  }
-
-  // Process config
-  if (_.isObject(config)) {
-    // Process the lists that are meant to be objects
-    lists = ['responsive-points', 'colors-data', 'colors-information', 'colors-interface', 'colors-political'];
-    _.each(lists, function(l, li) {
-      var converted = {};
-
-      if (!_.isUndefined(config[l])) {
-        _.each(config[l], function(i, ii) {
-          converted[i[0]] = findReference(i[1]);
-        });
-
-        config[l] = converted;
+        setTimeout(function() {
+          $node.addClass('unhighlight');
+        }, 200);
+      },
+      teardown: function() {
+        // Nothing to tear down
       }
-    });
-  }
-
-  // Political party names
-  config.politicalParties = {
-    ip: 'Independence',
-    r: 'Republican',
-    dfl: 'Democratic-Farmer-Labor',
-    d: 'Democratic',
-    lib: 'Libertarian Party',
-    swp: 'Socialist Workers Party',
-    cp: 'Constitution Party',
-    cg: 'Constitutional Government',
-    gp: 'Green Party',
-    gr: 'Grassroots Party',
-    mop: 'Minnesota Open Progressives',
-    edp: 'Ecology Democracy Party',
-    ind: 'Independent',
-    sl: 'Socialism and Liberation',
-    jp: 'Justice Party',
-    np: 'Nonpartisan',
-    wi: 'Write-In'
-  };
-
-  return config;
-
-});
-
-/**
- * Formatters
- */
-
-(function(global, factory) {
-  // Common JS (i.e. browserify) environment
-  if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
-    module.exports = factory(require('underscore'));
-  }
-  // AMD
-  else if (typeof define === 'function' && define.amd) {
-    define('mpFormatters',['underscore'], factory);
-  }
-  // Browser global
-  else if (global._) {
-    global.MP = global.MP || {};
-    global.MP.formatters = factory(global._);
-  }
-  else {
-    throw new Error('Could not find dependencies for MinnPost Styles Formatters.' );
-  }
-})(typeof window !== 'undefined' ? window : this, function(_) {
-
-  // Placeholder for formatters stuff
-  var formatters = {};
-
-  // Format number
-  formatters.number = function(num, decimals) {
-    decimals = (decimals || decimals === 0) ? decimals : 2;
-    var rgx = (/(\d+)(\d{3})/);
-    split = num.toFixed(decimals).toString().split('.');
-
-    while (rgx.test(split[0])) {
-      split[0] = split[0].replace(rgx, '$1' + ',' + '$2');
-    }
-    return (decimals) ? split[0] + '.' + split[1] : split[0];
-  };
-
-  // Format integer
-  formatters.integer = function(num, round) {
-    round = round || true;
-    num = (round) ? Math.round(num) : num;
-    return formatters.number(num, 0);
-  };
-
-  // Basic US currency
-  formatters.currency = function(num) {
-    return '$' + formatters.number(num, 2);
-  };
-
-  // Percentage
-  formatters.percent = function(num, decimals) {
-    decimals = (decimals || decimals === 0) ? decimals : 1;
-    return formatters.number(num * 100, decimals) + '%';
-  };
-
-  // Percent change
-  formatters.percentChange = function(num, decimals) {
-    return ((num > 0) ? '+' : '') + formatters.percent(num, decimals);
-  };
-
-  // Number change
-  formatters.change = function(num, decimals) {
-    decimals = (decimals || decimals === 0) ? decimals : 2;
-    return ((num > 0) ? '+' : '') + formatters.number(num);
-  };
-
-  // Converts string into a hash (very basically).
-  formatters.hash = function(str) {
-    return Math.abs(_.reduce(str.split(''), function(a, b) {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0));
-  };
-
-  // Identifier/slug maker
-  formatters.identifier = function(str) {
-    return str.toLowerCase().replace(/[^\w ]+/g,'').replace(/ +/g,'-').replace(/[^\w-]+/g,'');
-  };
-
-  return formatters;
-
-});
-
-/**
- * Stylings and interactions for maps
- */
-
-(function(global, factory) {
-  // Common JS (i.e. browserify) environment
-  if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
-    module.exports = factory(require('leaflet'));
-  }
-  // AMD
-  else if (typeof define === 'function' && define.amd) {
-    define('mpMaps',['leaflet'], factory);
-  }
-  // Browser global
-  else if (global.MP && global.Leaflet) {
-    global.MP = global.MP || {};
-    global.MP.maps = factory(global.Leaflet);
-  }
-  else {
-    throw new Error('Could not find dependencies for MinnPost Styles Maps.' );
-  }
-})(typeof window !== 'undefined' ? window : this, function(L) {
-
-  // Placeholder for maps stuff
-  var maps = {};
-
-  // Some general helpful values
-  maps.minneapolisPoint = L.latLng(44.983333998267824, -93.26667000248563);
-  maps.stPaulPoint = L.latLng(44.95370289870105, -93.08995780069381);
-  maps.minnesotaPoint = L.latLng(46.518286790004616, -94.55406386114191);
-  maps.mapboxSatelliteStreets = 'minnpost.map-95lgm5jf';
-  maps.mapboxStreetsDarkLabels = 'minnpost.map-4v6echxm';
-  maps.mapboxStreetsLightLabels = 'minnpost.map-wi88b700';
-  maps.mapboxTerrainLight = 'minnpost.map-vhjzpwel';
-  maps.mapboxTerrainDark = 'minnpost.map-dhba3e3l';
-  maps.mapOptions = {
-    scrollWheelZoom: false,
-    trackResize: true
-  };
-  maps.mapStyle = {
-    stroke: true,
-    color: '#2DA51D',
-    weight: 1.5,
-    opacity: 0.9,
-    fill: true,
-    fillColor: '#2DA51D',
-    fillOpacity: 0.2
-  };
-  maps.mapboxAttribution = 'Some map imagery provided by <a href="https://www.mapbox.com/about/maps/" target="_blank">Mapbox</a>.';
-  maps.openstreetmapAttribution = 'Some map data provided by &copy; <a href="http://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors.';
-
-  // Make basic Leaflet map.  Takes id of container and mapbox ID
-  // in the maps object
-  maps.makeLeafletMap = function(id, baseName, center) {
-    baseName = baseName || maps.mapboxStreetsLightLabels;
-    center = center || maps.minneapolisPoint;
-
-    var map = new L.Map(id, maps.mapOptions);
-    var base = new L.tileLayer('//{s}.tiles.mapbox.com/v3/' + baseName + '/{z}/{x}/{y}.png');
-    map.addLayer(base);
-    map.setView(center, 8);
-
-    // This removes the embedded attribution which should be in the footnote
-    // but ensure that attribution is given correctly
-    map.removeControl(map.attributionControl);
-
-    return map;
-  };
-
-  // Make a Maki icon.  Icon should refer to maki icon short name,
-  // size should be s, m, or l and color should be hex without the #.
-  //
-  // See list of icons: https://www.mapbox.com/maki/
-  // Leave icon blank for blank pin
-  maps.makeMakiIcon = function(icon, size, color) {
-    icon = icon || null;
-    color = color || '094C86';
-    size = size || 'm';
-
-    var url = 'https://api.tiles.mapbox.com/v3/marker/';
-    var iconSizes = {
-      's': { iconSize: [20, 50], popupAnchor: [0, -20] },
-      'm': { iconSize: [30, 70], popupAnchor: [0, -30] },
-      'l': { iconSize: [36,90], popupAnchor: [0, -40] }
     };
-    url = url + 'pin-' + size + ((icon === null) ? '' : '-' + icon) + '+' + color + '.png';
-
-    return new L.Icon(L.extend(iconSizes[size], {
-      iconUrl: url,
-      shadowAnchor: null,
-      shadowSize: null,
-      shadowUrl: null,
-      className: 'maki-marker'
-    }));
   };
+  Ractive.decorators.highlight = views.highlightDecorator;
 
-  // Basic control for a staticly places tooltip
-  maps.TooltipControl = L.Control.extend({
-    options: {
-      position: 'topright'
+  // General viesl
+  views.ApplicationView = Ractive.extend({
+    init: function() {
+      // Add parties for reference
+      this.set('parties', mpConfig.politicalParties);
+    },
+    template: tApplication
+  });
+
+  views.FootnoteView = Ractive.extend({
+    init: function() {
+    },
+    template: tFootnote
+  });
+
+  // Base view to extend others from
+  views.ContestBaseView = Ractive.extend({
+    defaultMapStyle: {
+      stroke: true,
+      color: '#2DA51D',
+      weight: 1.5,
+      opacity: 0.9,
+      fill: true,
+      fillColor: '#2DA51D',
+      fillOpacity: 0.2,
+      clickable: false
     },
 
-    initialize: function() {
+    adapt: ['Backbone'],
+
+    // Put together map for boundary(s)
+    makeMap: function(id, boundaries) {
+      var thisView = this;
+      var featureGroup;
+      var shapes;
+      var found = {};
+      var map;
+      boundaries = _.isArray(boundaries) ? boundaries : [boundaries];
+
+      // Ensure that we only add the same boundary once
+      boundaries = _.filter(boundaries, function(b) {
+        if (_.isUndefined(found[b.slug])) {
+          found[b.slug] = true;
+          return true;
+        }
+        else {
+          return false;
+        }
+      });
+
+      // Just get the shapes
+      shapes = _.map(boundaries, function(b, bi) {
+        return b.simple_shape;
+      });
+
+      // Make map
+      map = new L.Map(id, {
+        zoom: 10,
+        center: [44.9800, -93.2636],
+        scrollWheelZoom: false,
+        trackResize: true,
+        zoomControl: false,
+        dragging: false
+      });
+      map.addControl(new L.Control.Zoom({ position: 'topright' }));
+      map.attributionControl.setPrefix(false);
+      map.addLayer(new L.tileLayer('//{s}.tiles.mapbox.com/v3/minnpost.map-wi88b700/{z}/{x}/{y}.png'));
+
+      // Make GeoJSON layer from shapes
+      featureGroup = new L.featureGroup();
+      _.each(shapes, function(s) {
+        var layer = new L.geoJson(s);
+        layer.setStyle(thisView.defaultMapStyle);
+        featureGroup.addLayer(layer);
+      });
+      map.addLayer(featureGroup);
+
+      // Fit bounds breaks stuff because the geojson is not necessarily
+      // fully loaded in the map, so we wrap this timer around it, as
+      // Leaflet does not provide an sort of mechanism to allow us to know
+      // when the layer is fully loaded
+      window.setTimeout(function() {
+        map.fitBounds(featureGroup.getBounds());
+      }, 500);
     },
 
-    update: function(content) {
-      this._contentWrapper.innerHTML = content;
-      this.show();
+    // Form handling for some older browsers.  This does end up
+    // firing the handler twice :(
+    handleForms: function() {
+      var thisView = this;
+      $(this.el).find('form').on('submit', function(e) {
+        var trigger = $(this).attr('legacy-on-submit');
+        if (trigger) {
+          e.preventDefault();
+          thisView.fire(trigger, { original: e });
+        }
+        return false;
+      });
     },
 
-    show: function() {
-      this._container.style.display = 'block';
-    },
-
-    hide: function() {
-      this._container.style.display = 'none';
-    },
-
-    onAdd: function(map) {
-      this._container = L.DomUtil.create('div', 'map-tooltip');
-      this._contentWrapper = L.DomUtil.create('div', 'map-tooltip-content');
-      this._container.appendChild(this._contentWrapper);
-      this.hide();
-      return this._container;
-    },
-
-    onRemove: function(map) {
+    // Handle title change for document title
+    observeTitle: function(originalTitle) {
+      this.observe('title', function(newValue, oldValue) {
+        if (newValue) {
+          document.title = (originalTitle) ? newValue + ' | ' + originalTitle :
+            newValue;
+        }
+      });
     }
   });
 
-  return maps;
+  views.DashboardView = views.ContestBaseView.extend({
+    template: tDashboard,
 
+    partials: {
+      contest: tContest,
+      loading: tLoading
+    },
+
+    init: function(options) {
+      var thisView = this;
+      var $contestSearch = $(this.el).find('#contest-search');
+      var query, querySearchEngine;
+      this.app = options.app;
+
+      // Attach formatters
+      this.set('formatters', mpFormatters);
+      // Add parties
+      this.set('parties', mpConfig.politicalParties);
+
+      // Typeahead.  This (used to?) break in IE. Query can be
+      // either a contest or candidate
+      if (this.app.options.capabilities.typeahead) {
+        query = this.app.options.electionsAPI +
+          "SELECT c.id AS id, title AS title " +
+          "FROM contests AS c WHERE " +
+          "c.title LIKE '%%QUERY%' " +
+          "UNION " +
+          "SELECT c.id AS id, " +
+          "r.candidate || ' (' || c.title || ')' AS title " +
+          "FROM results AS r " +
+          "JOIN contests AS c ON r.contest_id = c.id " +
+          "WHERE r.candidate LIKE '%%QUERY%' ORDER BY title LIMIT 20 ";
+
+        // Create bloodhound engine
+        querySearchEngine = new Bloodhound({
+          name: 'Contests and Candidates',
+          datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title'),
+          queryTokenizer: Bloodhound.tokenizers.whitespace,
+          remote: {
+            url: query,
+            replace: function(url, uriEncodedQuery) {
+              var query = decodeURIComponent(uriEncodedQuery);
+              query = query.replace(new RegExp(' ', 'g'), '%');
+              return encodeURI(url.replace(new RegExp(this.wildcard, 'g'), query));
+            },
+            ajax: {
+              dataType: 'jsonp',
+              jsonpCallback: 'mpServerSideCachingHelper'
+            }
+          }
+        });
+        querySearchEngine.initialize();
+
+        // Make typeahead functionality for search
+        $contestSearch.typeahead(null, {
+          displayKey: 'title',
+          source: querySearchEngine.ttAdapter(),
+          minLength: 3,
+          hint: true,
+          highlight: true
+        });
+
+        // Handle search selected
+        $contestSearch.on('typeahead:selected', function(e, data, name) {
+          thisView.app.router.navigate('/contest/' + data.id, { trigger: true });
+        });
+
+        // Teardown event to remove typeahead gracefully
+        this.on('teardown', function() {
+          $contestSearch.typeahead('destroy');
+        });
+      }
+
+      // Mark if geolocation is availablle
+      this.set('geolocationEnabled', (_.isObject(navigator) && _.isObject(navigator.geolocation)));
+    }
+  });
+
+  views.ContestView = views.ContestBaseView.extend({
+    template: tContest,
+
+    partials: {
+      loading: tLoading
+    },
+
+    init: function() {
+      this.set('classes', 'contest-view');
+
+      // Attach formatters
+      this.set('formatters', mpFormatters);
+      // Add parties
+      this.set('parties', mpConfig.politicalParties);
+
+      // Make a map if boundary has been found
+      this.observe('boundarySets', function(newValue, oldValue) {
+        if (_.isArray(newValue) && _.isObject(newValue[0])) {
+          this.makeMap('contest-map-' + this.get('id'), newValue);
+        }
+      });
+    }
+  });
+
+  views.ContestsView = views.ContestBaseView.extend({
+    template: tContests,
+
+    partials: {
+      contest: tContest,
+      loading: tLoading
+    },
+
+    init: function() {
+      var thisView = this;
+      var shapes = [];
+      var rendered = {};
+      var modelBoundarySet = {};
+
+      // Attach formatters
+      this.set('formatters', mpFormatters);
+      // Add parties
+      this.set('parties', mpConfig.politicalParties);
+
+      // React to boundary update.  For some reason, this is getting changed
+      // more than once.
+      this.observe('models.*.boundarySets', function(newValue, oldValue, keypath) {
+        var parts = keypath.split('.');
+        var m = this.get(parts[0] + '.' + parts[1]);
+
+        if (_.isArray(newValue) && _.isObject(newValue[0]) && _.isObject(m) &&
+          !modelBoundarySet[m.get('id')]) {
+          modelBoundarySet[m.get('id')] = true;
+          this.makeMap('contest-map-' + m.get('id'), newValue);
+        }
+      });
+
+      // Update view when synced
+      this.data.models.on('sync', function() {
+        thisView.set('synced', true);
+      });
+
+      // Make location map if lonlat exist
+      this.observe('lonlat', function(newValue, oldValue) {
+        var ll = newValue;
+        var map;
+        var circle;
+
+        if (_.isArray(ll) && _.isNumber(ll[0])) {
+          map = new L.Map('location-map', {
+            zoom: 13,
+            center: [ll[1], ll[0]],
+            scrollWheelZoom: false,
+            trackResize: true,
+            zoomControl: false,
+            dragging: false
+          });
+          map.attributionControl.setPrefix(false);
+          map.addLayer(new L.tileLayer('//{s}.tiles.mapbox.com/v3/minnpost.map-wi88b700/{z}/{x}/{y}.png'));
+
+          circle = new L.circleMarker([ll[1], ll[0]], 10);
+          circle.setStyle(this.defaultMapStyle);
+          map.addLayer(circle);
+        }
+      });
+    }
+  });
+
+
+  return views;
+});
+
+/**
+ * Routers
+ */
+define('routers',[
+  'jquery', 'underscore', 'backbone', 'models', 'collections', 'views'
+], function($, _, Backbone, models, collections, views) {
+  var routers = {};
+
+  routers.DashboardRouter = Backbone.Router.extend({
+    initialize: function(options) {
+      this.options = options;
+      this.app = options.app;
+    },
+
+    routes: {
+      'dashboard': 'routeDashboard',
+      'search/:term': 'routeSearch',
+      'contest/:contest': 'routeContest',
+      'location(/:place)': 'routeLocation',
+      '*default': 'routeDefault'
+    },
+
+    start: function() {
+      Backbone.history.start();
+    },
+
+    routeDefault: function() {
+      this.navigate('/dashboard', { trigger: true, replace: true });
+    },
+
+    routeDashboard: function() {
+      var thisRouter = this;
+      var data = {};
+      this.teardownObjects();
+
+      // Get races objects
+      this.app.dashboardContests = {
+        contestGovernorR: 'id-MN----0331',
+        contestAuditorDFL: 'id-MN----0333',
+        contestSenateR: 'id-MN----0102',
+        contestHouse60BDFL: 'id-MN---60B-0307',
+        contestHouse48BR: 'id-MN---48B-0283'
+      };
+      _.each(this.app.dashboardContests, function(c, ci) {
+        thisRouter.app[ci] = new models.ContestModel({ id: c }, { app: thisRouter.app });
+        thisRouter.app[ci].connect(false);
+        thisRouter.app[ci].set('isDashboard', true);
+        data[ci] = thisRouter.app[ci];
+      });
+
+      // Partials don't take arguments, so we have to set some things here.
+      // Rows and show_party are exclusive
+      //data.contestGovernorDFL.set('rows', 8);
+      data.contestGovernorR.set('show_party', 'R');
+      data.contestAuditorDFL.set('show_party', 'DFL');
+      data.contestSenateR.set('show_party', 'R');
+      data.contestHouse60BDFL.set('show_party', 'DFL');
+      data.contestHouse48BR.set('show_party', 'R');
+
+      // Get and connect to election metadata
+      this.app.election = new models.ElectionModel({}, { app: this.app });
+      data.election = this.app.election;
+      this.app.election.connect();
+
+      // We need some of this data
+      data.capabilities = thisRouter.app.options.capabilities;
+
+      // Create dashboard view
+      data.title = 'Dashboard';
+      this.app.dashboardView = new views.DashboardView({
+        el: this.app.$el.find('.content-container'),
+        data: data,
+        app: this.app
+      });
+
+      // Handle searches here as we have an easy reference
+      // to the router.
+      this.app.dashboardView.on('addresssSearch', function(e) {
+        var val = $(this.el).find('#address-search').val();
+        e.original.preventDefault();
+        if (val) {
+          thisRouter.navigate('/location/' + encodeURIComponent(val),
+          { trigger: true });
+        }
+      });
+      this.app.dashboardView.on('contestSearch', function(e) {
+        e.original.preventDefault();
+        var $input = $(this.el).find('#contest-search');
+        var val = $input.val();
+        if (val) {
+          thisRouter.navigate('/search/' + encodeURIComponent(val),
+          { trigger: true });
+        }
+      });
+      this.app.dashboardView.observeTitle(this.app.options.originalTitle);
+      this.reFocus();
+    },
+
+    routeSearch: function(term) {
+      this.teardownObjects();
+
+      this.app.contestsSearch = new collections.ContestsCollection([], {
+        app: this.app,
+        search: term
+      });
+      this.app.contestsSearch.connect();
+      this.app.contestsSearchView = new views.ContestsView({
+        el: this.app.$el.find('.content-container'),
+        data: {
+          models: this.app.contestsSearch,
+          title: 'Search for "' + term.replace(/\+/g, ' ') + '"'
+        }
+      });
+      this.app.contestsSearchView.observeTitle(this.app.options.originalTitle);
+      this.reFocus();
+    },
+
+    // Single contest route.  Creates contest model, fetches it
+    // and renders view into application container.
+    routeContest: function(contest) {
+      this.teardownObjects();
+
+      this.app.contest = new models.ContestModel({ id: contest }, { app: this.app });
+      this.app.contest.connect();
+      this.app.contestView = new views.ContestView({
+        el: this.app.$el.find('.content-container'),
+        data: this.app.contest
+      });
+      this.app.contestView.observeTitle(this.app.options.originalTitle);
+      this.reFocus();
+    },
+
+    // Route based different places.  If no place, then geolocate user,
+    // if lat,lon, then handle that, otherwise assume an address.
+    routeLocation: function(place) {
+      var thisRouter = this;
+      this.teardownObjects();
+
+      // Handle location
+      function handleLocation(lonlat) {
+        thisRouter.app.locationContests = new collections.ContestsLocationCollection(
+          [], {
+            app: thisRouter.app,
+            lonlat: lonlat
+          });
+        thisRouter.app.locationContests.fetchBoundaryFromCoordinates();
+        thisRouter.app.contestsLocationView = new views.ContestsView({
+          el: thisRouter.app.$el.find('.content-container'),
+          data: {
+            models: thisRouter.app.locationContests,
+            title: (place) ? 'Contests for "' + place + '"' : 'Contests for your location',
+            lonlat: lonlat
+          }
+        });
+        thisRouter.app.contestsLocationView.observeTitle(thisRouter.app.options.originalTitle);
+        thisRouter.reFocus();
+      }
+
+      // Check for place format.  If no place, use geolocation, otherwise look
+      // for a non-address and valid lat/lon, otherwise, assume address.
+      if (!place) {
+        this.geolocate().done(function(lonlat) {
+          handleLocation(lonlat);
+        });
+      }
+      else if (!/[a-zA-Z]+/.test(place) && !_.isNaN(parseFloat(place.split(',')[0])) && !_.isNaN(parseFloat(place.split(',')[1]))) {
+        handleLocation([parseFloat(place.split(',')[0]), parseFloat(place.split(',')[1])]);
+      }
+      else {
+        this.addressLocate(place).done(function(lonlat) {
+          handleLocation(lonlat);
+        });
+      }
+    },
+
+    // Find location based on browser, returns promise.
+    geolocate: function() {
+      var thisRouter = this;
+      var defer = $.Deferred();
+
+      navigator.geolocation.getCurrentPosition(function(position) {
+        defer.resolveWith(thisRouter, [[ position.coords.longitude, position.coords.latitude ]]);
+      }, function(err) {
+        defer.rejectWith(thisRouter, [{ 'message' : 'Issue retrieving current position.' }]);
+      });
+
+      return defer.promise();
+    },
+
+    // Find location based on address, returns promise.
+    addressLocate: function(address) {
+      var thisRouter = this;
+      var defer = $.Deferred();
+      var url = this.app.options.mapQuestQuery.replace('[[[KEY]]]', this.app.options.mapQuestKey)
+        .replace('[[[ADDRESS]]]', encodeURIComponent(address));
+
+      $.ajax({
+        dataType: 'jsonp',
+        url: url
+      }).done(function(response) {
+          var latlng;
+
+          if (_.size(response.results[0].locations) > 0 &&
+            _.isObject(response.results[0].locations[0].latLng)) {
+            latlng = response.results[0].locations[0].latLng;
+            defer.resolveWith(thisRouter, [[latlng.lng, latlng.lat]]);
+          }
+          else {
+            defer.rejectWith(thisRouter,  [{ 'message' : 'Issue retrieving position from address.' }]);
+          }
+        })
+        .fail(function() {
+          defer.rejectWith(thisRouter, arguments);
+        });
+
+      return defer.promise();
+    },
+
+    // Since we can change view drastically, we need to scoll back up to the
+    // top on new.  But we don't want to do it the first time
+    reFocus: function() {
+      if (this.viewed) {
+        $('html, body').animate({ scrollTop: this.app.$el.offset().top - 5}, 750);
+      }
+      this.viewed = true;
+    },
+
+    // Tear down any existing objects
+    teardownObjects: function() {
+      var thisRouter = this;
+      var views = ['contestView', 'contestsSearchView', 'contestsLocationView'];
+      var models = ['contest', 'contestsSearch', 'locationContests', 'election'];
+
+      // Merge in dashboard contests
+      if (_.isObject(this.app.dashboardContests)) {
+        models = _.union(models, _.keys(this.app.dashboardContests));
+      }
+
+      // Handle backbone objects
+      _.each(models, function(m) {
+        if (_.isObject(thisRouter.app[m])) {
+          thisRouter.app[m].stopListening();
+          thisRouter.app[m].disconnect();
+        }
+      });
+      // Handle ractive objects
+      _.each(views, function(v) {
+        if (_.isObject(thisRouter.app[v])) {
+          if (_.isObject(thisRouter.app[v].map)) {
+            // Not sure why, but removing the map fails most of the time
+            // and really screws things up
+            //thisRouter.app[v].map.remove();
+          }
+          thisRouter.app[v].teardown();
+        }
+      });
+    }
+  });
+
+  return routers;
+});
+
+/**
+ * Main application file for: minnpost-elections-dashboard
+ *
+ * This pulls in all the parts
+ * and creates the main object for the application.
+ */
+
+// Create main application
+define('minnpost-elections-dashboard', [
+  'jquery', 'underscore', 'ractive', 'mpConfig', 'mpFormatters',
+  'helpers', 'views', 'routers'
+], function(
+  $, _, Ractive, mpConfig, mpFormatters,
+  helpers, views, routers
+  ) {
+
+  // Constructor for app
+  var App = function(options) {
+    this.options = _.extend(this.defaultOptions, options);
+    this.el = this.options.el;
+    this.$el = $(this.el);
+    this.$ = function(selector) { return this.$el.find(selector); };
+    this.$content = this.$el.find('.content-container');
+    this.loadApp();
+  };
+
+  // Extend with custom methods
+  _.extend(App.prototype, {
+    // Start function
+    start: function() {
+      var thisApp = this;
+
+      // Override Backbone's AJAX
+      helpers.overrideBackboneAJAX();
+
+      // Render the container and "static" templates.
+      this.applicationView = new views.ApplicationView({
+        el: this.$el
+      });
+      thisApp.footnoteView = new views.FootnoteView({
+        el: this.$el.find('.footnote-container')
+      });
+
+      // Create router which will handle most of the high
+      // level logic
+      this.router = new routers.DashboardRouter(_.extend(this.options, { app: this }));
+      this.router.start();
+
+      // Try to ensure that links are prevented from their default
+      // behavior.  Sometimes because of Ractive's dom insertions, the
+      // preventDefault is not handled correctly
+      if (this.options.capabilities.preventLinks) {
+        $('a[href^="#"]').on('click', this.$el, function(e) {
+          e.preventDefault();
+          thisApp.router.navigate($(this).attr('href'), { trigger: true });
+        });
+      }
+
+      //helpers.getLocalData('neighborhood-stop-data.topo.json', this.options).done(function(data) {
+    },
+
+    // Default options
+    defaultOptions: {
+      projectName: 'minnpost-elections-dashboard',
+      remoteProxy: '//mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
+      el: '.minnpost-elections-dashboard-container',
+      electionsAPIPollInterval: 50000,
+      electionsAPI: '//50.19.100.197/?box=ubuntu&method=sql&q=',
+      electionsAPILocal: '//localhost:5000/?q=',
+      electionsAPIEC2: '//50.19.100.197/?box=ubuntu&method=sql&q=',
+      electionsAPIScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
+      boundaryAPI: '//boundaries.minnpost.com/1.0/',
+      boundarySets: [
+        'counties-2010',
+        'minor-civil-divisions-2010',
+        'school-districts-2013',
+        'wards-2012',
+        'state-house-districts-2012',
+        'state-senate-districts-2012',
+        'minnesota-state-2014',
+        'district-courts-2012'
+      ],
+      // Please don't steal/abuse
+      mapQuestKey: 'Fmjtd%7Cluur20a7n0%2C8n%3Do5-9a1s9f',
+      mapQuestQuery: '//open.mapquestapi.com/geocoding/v1/address?key=[[[KEY]]]&outFormat=json&countrycodes=us&maxResults=1&location=[[[ADDRESS]]]',
+      originalTitle: document.title,
+      capabilities: {
+        typeahead: true, //(helpers.isMSIE() !== 9),
+        preventLinks: (!helpers.isMSIE() && helpers.isMSIE() <= 9)
+      },
+      availablePaths: {
+        local: {
+          css: ['.tmp/css/main.css'],
+          images: 'images/',
+          data: 'data/'
+        },
+        build: {
+          css: [
+            '//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css',
+            'dist/minnpost-elections-dashboard.libs.min.css',
+            'dist/minnpost-elections-dashboard.latest.min.css'
+          ],
+          ie: [
+            'dist/minnpost-elections-dashboard.libs.min.ie.css',
+            'dist/minnpost-elections-dashboard.latest.min.ie.css'
+          ],
+          images: 'dist/images/',
+          data: 'dist/data/'
+        },
+        deploy: {
+          css: [
+            '//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css',
+            '//s3.amazonaws.com/data.minnpost/projects/minnpost-elections-dashboard/minnpost-elections-dashboard.libs.min.css',
+            '//s3.amazonaws.com/data.minnpost/projects/minnpost-elections-dashboard/minnpost-elections-dashboard.latest.min.css'
+          ],
+          ie: [
+            '//s3.amazonaws.com/data.minnpost/projects/minnpost-elections-dashboard/minnpost-elections-dashboard.libs.min.ie.css',
+            '//s3.amazonaws.com/data.minnpost/projects/minnpost-elections-dashboard/minnpost-elections-dashboard.latest.min.ie.css'
+          ],
+          images: '//s3.amazonaws.com/data.minnpost/projects/minnpost-elections-dashboard/images/',
+          data: '//s3.amazonaws.com/data.minnpost/projects/minnpost-elections-dashboard/data/'
+        }
+      }
+    },
+
+    // Load up app
+    loadApp: function() {
+      this.determinePaths();
+      this.getLocalAssests(function(map) {
+        this.renderAssests(map);
+        this.start();
+      });
+    },
+
+    // Determine paths.  A bit hacky.
+    determinePaths: function() {
+      var query;
+      this.options.deployment = 'deploy';
+
+      if (window.location.host.indexOf('localhost') !== -1) {
+        this.options.deployment = 'local';
+
+        // Check if a query string forces something
+        query = helpers.parseQueryString();
+        if (_.isObject(query) && _.isString(query.mpDeployment)) {
+          this.options.deployment = query.mpDeployment;
+        }
+      }
+
+      this.options.paths = this.options.availablePaths[this.options.deployment];
+    },
+
+    // Get local assests, if needed
+    getLocalAssests: function(callback) {
+      var thisApp = this;
+
+      // If local read in the bower map
+      if (this.options.deployment === 'local') {
+        $.getJSON('bower.json', function(data) {
+          callback.apply(thisApp, [data.dependencyMap]);
+        });
+      }
+      else {
+        callback.apply(this, []);
+      }
+    },
+
+    // Rendering tasks
+    renderAssests: function(map) {
+      var isIE = (helpers.isMSIE() && helpers.isMSIE() <= 8);
+
+      // Add CSS from bower map
+      if (_.isObject(map)) {
+        _.each(map, function(c, ci) {
+          if (c.css) {
+            _.each(c.css, function(s, si) {
+              s = (s.match(/^(http|\/\/)/)) ? s : 'bower_components/' + s + '.css';
+              $('head').append('<link rel="stylesheet" href="' + s + '" type="text/css" />');
+            });
+          }
+          if (c.ie && isIE) {
+            _.each(c.ie, function(s, si) {
+              s = (s.match(/^(http|\/\/)/)) ? s : 'bower_components/' + s + '.css';
+              $('head').append('<link rel="stylesheet" href="' + s + '" type="text/css" />');
+            });
+          }
+        });
+      }
+
+      // Get main CSS
+      _.each(this.options.paths.css, function(c, ci) {
+        $('head').append('<link rel="stylesheet" href="' + c + '" type="text/css" />');
+      });
+      if (isIE) {
+        _.each(this.options.paths.ie, function(c, ci) {
+          $('head').append('<link rel="stylesheet" href="' + c + '" type="text/css" />');
+        });
+      }
+
+      // Add a processed class
+      this.$el.addClass('processed');
+    }
+  });
+
+  return App;
+});
+
+
+/**
+ * Run application
+ */
+require(['jquery', 'minnpost-elections-dashboard'], function($, App) {
+  $(document).ready(function() {
+    var app = new App();
+  });
 });
 
 

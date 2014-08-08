@@ -73,9 +73,9 @@
       "returns": "RactiveEventsTap"
     },
     "ractive-backbone": {
-      "rname": "ractive-bakcbone",
+      "rname": "ractive-backbone",
       "js": [
-        "ractive-bakcbone/ractive-bakcbone"
+        "ractive-backbone/ractive-backbone"
       ],
       "returns": "RactiveBackbone"
     },
@@ -93,7 +93,7 @@
       "returns": "L"
     },
     "momentjs": {
-      "rname": "momentjs",
+      "rname": "moment",
       "js": [
         "momentjs/moment"
       ],

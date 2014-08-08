@@ -1,314 +1,145 @@
 /**
- * Some core functionality for minnpost applications
+ * Some helper functions
  */
+
 
 /**
- * Global variable to hold the "application" and templates.
+ * Helpers functions such as formatters or extensions
+ * to libraries.
  */
-var mpApps = mpApps || {};
-var mpTemplates = mpTemplates || {};
-mpTemplates['minnpost-elections-dashboard'] = mpTemplates['minnpost-elections-dashboard'] || {};
+define('helpers', ['jquery', 'underscore', 'backbone', 'mpFormatters'],
+  function($, _, Backbone, formatters) {
 
-/**
- * Extend underscore
- */
-_.mixin({
-  /**
-   * Formats number
-   */
-  formatNumber: function(num, decimals) {
-    decimals = (_.isUndefined(decimals)) ? 2 : decimals;
-    var rgx = (/(\d+)(\d{3})/);
-    split = num.toFixed(decimals).toString().split('.');
-
-    while (rgx.test(split[0])) {
-      split[0] = split[0].replace(rgx, '$1' + ',' + '$2');
-    }
-    return (decimals) ? split[0] + '.' + split[1] : split[0];
-  },
+  var helpers = {};
+  var cacheURLIncrementer = {};
 
   /**
-   * Formats number into currency
+   * Override Backbone's ajax call to use JSONP by default as well
+   * as force a specific callback to ensure that server side
+   * caching is effective.
    */
-  formatCurrency: function(num) {
-    return '$' + _.formatNumber(num, 2);
-  },
+  helpers.overrideBackboneAJAX = function() {
+    Backbone.ajax = function() {
+      var options = arguments;
+      var hash;
 
-  /**
-   * Formats percentage
-   */
-  formatPercent: function(num) {
-    return _.formatNumber(num * 100, 1) + '%';
-  },
-
-  /**
-   * Formats percent change
-   */
-  formatPercentChange: function(num) {
-    return ((num > 0) ? '+' : '') + _.formatPercent(num);
-  },
-
-  /**
-   * Converts string into a hash (very basically).
-   */
-  hash: function(str) {
-    return Math.abs(_.reduce(str.split(''), function(a, b) {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0));
-  },
+      if (options[0].dataTypeForce !== true) {
+        hash = formatters.hash(options[0].url);
+        cacheURLIncrementer[hash] = (!_.isUndefined(cacheURLIncrementer[hash])) ?
+          cacheURLIncrementer[hash] + 1 : 0;
+        options[0].dataType = 'jsonp';
+        options[0].jsonpCallback = 'mpServerSideCachingHelper' + hash +
+          cacheURLIncrementer[hash];
+      }
+      return Backbone.$.ajax.apply(Backbone.$, options);
+    };
+  };
 
   /**
    * Returns version of MSIE.
    */
-  isMSIE: function() {
+  helpers.isMSIE = function() {
     var match = /(msie) ([\w.]+)/i.exec(navigator.userAgent);
     return match ? parseInt(match[2], 10) : false;
-  }
-});
-
-/**
- * Override Backbone's ajax call to use JSONP by default as well
- * as force a specific callback to ensure that server side
- * caching is effective.
- */
-Backbone.ajax = function() {
-  var options = arguments;
-
-  if (options[0].dataTypeForce !== true) {
-    options[0].dataType = 'jsonp';
-    options[0].jsonpCallback = 'mpServerSideCachingHelper' +
-      _.hash(options[0].url);
-  }
-  return Backbone.$.ajax.apply(Backbone.$, options);
-};
-
-/**
- * Create "class" for the main application.  This way it could be
- * used more than once.
- */
-(function($, undefined) {
-  // Create "class"
-  App = mpApps['minnpost-elections-dashboard'] = function(options) {
-    this.options = _.extend(this.defaultOptions, options);
-    this.$el = $(this.options.el);
-    this.templates = mpTemplates['minnpost-elections-dashboard'] || {};
-    this.data = this.data || {};
   };
 
-  _.extend(App.prototype, {
-    // Use backbone's extend function
-    extend: Backbone.Model.extend,
+  /**
+   * Wrapper for a JSONP request, the first set of options are for
+   * the AJAX request, while the other are from the application.
+   */
+  helpers.jsonpRequest = function(requestOptions, appOptions) {
+    var options = requestOptions;
 
-    /**
-     * JSONP request
-     */
-    jsonpRequest: function() {
-      var options = arguments[0];
-
+    if (options.dataTypeForce !== true) {
+      hash = formatters.hash(options.url);
+      cacheURLIncrementer[hash] = (!_.isUndefined(cacheURLIncrementer[hash])) ?
+        cacheURLIncrementer[hash] + 1 : 0;
       options.dataType = 'jsonp';
-      options.jsonpCallback = 'mpServerSideCachingHelper' +
-        _.hash(options.url);
-      return $.ajax.apply($, [options]);
-    },
-
-    /**
-     * Template handling.  For development, we want to use
-     * the template files directly, but for build, they should be
-     * compiled into JS.
-     *
-     * See JST grunt plugin to understand how templates
-     * are compiled.
-     *
-     * Expects callback like: function(compiledTemplate) {  }
-     */
-    getTemplates: function(names) {
-      var thisApp = this;
-      var defers = [];
-      names = _.isArray(names) ? names : [names];
-
-      // Go through each file and add to defers
-      _.each(names, function(n) {
-        var defer;
-        var path = 'js/templates/' + n + '.mustache';
-
-        if (_.isUndefined(thisApp.templates[n])) {
-          defer = $.ajax({
-            url: path,
-            method: 'GET',
-            async: false,
-            contentType: 'text'
-          });
-
-          $.when(defer).done(function(data) {
-            thisApp.templates[n] = data;
-          });
-          defers.push(defer);
-        }
-      });
-
-      return $.when.apply($, defers);
-    },
-    // Wrapper around getting a template
-    template: function(name) {
-      return this.templates[name];
-    },
-
-    /**
-     * Data source handling.  For development, we can call
-     * the data directly from the JSON file, but for production
-     * we want to proxy for JSONP.
-     *
-     * `name` should be relative path to dataset minus the .json
-     *
-     * Returns jQuery's defferred object.
-     */
-    getLocalData: function(name) {
-      var thisApp = this;
-      var proxyPrefix = this.options.jsonpProxy;
-      var useJSONP = false;
-      var defers = [];
-
-      name = (_.isArray(name)) ? name : [ name ];
-
-      // If the data path is not relative, then use JSONP
-      if (this.options && this.options.dataPath.indexOf('http') === 0) {
-        useJSONP = true;
-      }
-
-      // Go through each file and add to defers
-      _.each(name, function(d) {
-        var defer;
-        if (_.isUndefined(thisApp.data[d])) {
-
-          if (useJSONP) {
-            defer = this.jsonpRequest({
-              url: proxyPrefix + encodeURI(thisApp.options.dataPath + d + '.json')
-            });
-          }
-          else {
-            defer = $.getJSON(thisApp.options.dataPath + d + '.json');
-          }
-
-          $.when(defer).done(function(data) {
-            thisApp.data[d] = data;
-          });
-          defers.push(defer);
-        }
-      });
-
-      return $.when.apply($, defers);
-    },
-
-    /**
-     * Get remote data.  Provides a wrapper around
-     * getting a remote data source, to use a proxy
-     * if needed, such as using a cache.
-     */
-    getRemoteData: function(options) {
-      options.dataType = 'jsonp';
-
-      if (this.options.remoteProxy) {
-        options.url = options.url + '&callback=proxied_jqjsp';
-        options.url = app.options.remoteProxy + encodeURIComponent(options.url);
-        options.callback = 'proxied_jqjsp';
-        options.cache = true;
-      }
-
-      return $.ajax(options);
-    },
-
-    // Placeholder start
-    start: function() {
+      options.jsonpCallback = 'mpServerSideCachingHelper' + hash +
+        cacheURLIncrementer[hash];
     }
-  });
-})(jQuery);
 
+    return $.ajax.apply($, [options]);
+  };
 
+  /**
+   * Data source handling.  For development, we can call
+   * the data directly from the JSON file, but for production
+   * we want to proxy for JSONP.
+   *
+   * `name` should be relative path to dataset
+   * `options` are app options
+   *
+   * Returns jQuery's defferred object.
+   */
+  helpers.getLocalData = function(name, options) {
+    var useJSONP = false;
+    var defers = [];
+    name = (_.isArray(name)) ? name : [ name ];
 
-mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {"template-application":"<div class=\"message-container\"></div>\n\n<div class=\"content-container\"></div>\n\n<div class=\"footnote-container\"></div>","template-contest":"<div class=\"contest {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}}{{#(final === true)}}is-final{{/()}}\">\n  <a class=\"dashboard-link\" href=\"#dashboard\">&larr; Back to dashboard</a>\n\n  <div>\n    {{#((results.length == 0 || results == undefined) && !synced)}}\n      {{>loading}}\n    {{/()}}\n  </div>\n\n  {{#((results.length == 0 || results == undefined) && synced)}}\n    <h3>Did not find any contests</h3>\n  {{/()}}\n\n\n  {{#((results.length > 0) && synced)}}\n    <h3>{{ title }}</h3>\n\n    <div class=\"last-updated\">Last updated at {{ updated.format('h:mm a') }}</div>\n\n    {{#(!!question_body)}}\n      <p>{{{ question_body }}}</p>\n    {{/()}}\n  {{/()}}\n\n  <div class=\"grid-container grid-parent cf\">\n    <div class=\"grid-70 tablet-grid-70 mobile-grid-100 grid-parent inner-column-left\">\n      <table>\n        <thead>\n          <tr class=\"table-first-heading\">\n            <th class=\"winner-column\"></th>\n            <th>Candidate</th>\n            {{#partisan}}\n              <th>Party</th>\n            {{/partisan}}\n            {{#(ranked_choice == 1)}}\n              <th class=\"first-choice-column\">Results</th>\n              <th class=\"second-choice-column\"></th>\n              <th class=\"third-choice-column\"></th>\n              <th class=\"final-column\">Final</th>\n            {{/()}}\n            {{#(ranked_choice != 1)}}\n              <th>Percentage</th>\n              <th>Votes</th>\n            {{/()}}\n          </tr>\n          <tr class=\"table-second-heading\">\n            <th class=\"winner-column\"></th>\n            <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>\n            {{#partisan}}\n              <th></th>\n            {{/partisan}}\n            {{#(ranked_choice == 1)}}\n              <th class=\"first-choice-column first-choice-heading\">1st choice</th>\n              <th class=\"second-choice-column second-choice-heading\">2nd choice</th>\n              <th class=\"third-choice-column third-choice-heading\">3rd choice</th>\n              <th class=\"final-column\"></th>\n            {{/()}}\n            {{#(ranked_choice != 1)}}\n              <th></th>\n              <th></th>\n            {{/()}}\n          </tr>\n        </thead>\n\n        <tbody>\n          {{#results:r}}\n            <tr data-row-id=\"{{ id }}\" class=\"{{ (r % 2 === 0) ? 'even' : 'odd' }}\">\n              <td class=\"winner-column\">{{#winner}}<span class=\"bs-icon bs-icon-won\"></span>{{/winner}}{{#(winner === false)}}<span class=\"bs-icon-spacer\"></span>{{/()}}</td>\n\n              <td class=\"candidate-column\">{{ candidate }}</td>\n\n              {{#partisan}}\n                <td>{{ party_id }}</td>\n              {{/partisan}}\n\n              {{#(ranked_choice == 1)}}\n                <td class=\"first-choice-column first-choice-heading\">{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>\n                <td class=\"second-choice-column first-choice-heading\">{{ fNum(ranked_choices.2.percentage) }}% ({{ fNum(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>\n                <td class=\"third-choice-column first-choice-heading\">{{ fNum(ranked_choices.3.percentage) }}% ({{ fNum(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>\n                <td class=\"final-column first-choice-heading\">{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>\n              {{/()}}\n\n              {{#(ranked_choice != 1)}}\n                <td>{{ fNum(percentage) }}%</td>\n                <td>{{ fNum(votes_candidate, 0) }}</td>\n              {{/()}}\n            </tr>\n          {{/results}}\n        </tbody>\n      </table>\n\n      <a href=\"#contest/{{ id }}\" class=\"contest-link\">Permalink</a>\n    </div>\n\n    <div class=\"grid-30 tablet-grid-30 mobile-grid-100 grid-parent inner-column-right\">\n      <div class=\"contest-map\" id=\"contest-map-{{ id }}\">\n      </div>\n    </div>\n  </div>\n</div>","template-contests":"<div class=\"contests\">\n  <a class=\"dashboard-link\" href=\"#dashboard\">&larr; Back to dashboard</a>\n\n  <div class=\"grid-container grid-parent cf\">\n    <div class=\"grid-70 tablet-grid-70 mobile-grid-100 grid-parent inner-column-left\">\n      <h3 class=\"contests-title {{#(lonlat != undefined)}}with-location{{/()}}\">{{ (title) ? title : 'Contests' }}</h3>\n\n      {{#(lonlat != undefined)}}\n        <p class=\"location-note\">The map below shows the approximate location of your search. If the location is not correct, try <a href=\"#dashboard\">searching for a more specific address</a>.</p>\n\n        <div id=\"location-map\"></div>\n      {{/())}}\n    </div>\n\n    <div class=\"grid-30 tablet-grid-30 mobile-grid-100 grid-parent inner-column-right\">\n    </div>\n  </div>\n\n  <div>\n    {{#(models.length == 0 && !synced)}}\n      {{>loading}}\n    {{/())}}\n\n    {{#(models.length == 0 && synced)}}\n      <p>Unable to find any contests.</p>\n    {{/())}}\n  </div>\n\n  <div class=\"contest-list\">\n    {{#models:i}}\n      {{>contest}}\n    {{/models}}\n  </div>\n</div>","template-dashboard-contest":"<div class=\"dashboard-contest {{ .classes }} {{#(.ranked_choice == 1)}}is-ranked-choice {{/()}}{{#(final === true)}}is-final{{/()}}\">\n  <div>\n    {{#(results.length == 0 || results == undefined)}}\n      {{>loading}}\n    {{/())}}\n  </div>\n\n  <h4>{{ .title }}</h4>\n\n  <table>\n    <thead>\n      <tr class=\"table-first-heading\">\n        <th class=\"winner-column\"></th>\n        <th>Candidate</th>\n        {{#(ranked_choice == 1)}}\n          <th>Round One</th>\n          <th>Final</th>\n        {{/()}}\n        {{#(ranked_choice != 1)}}\n          <th>Results</th>\n        {{/()}}\n      </tr>\n      <tr class=\"table-second-heading\">\n        <th class=\"winner-column\"></th>\n        <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting</th>\n        {{#(ranked_choice == 1)}}\n          <th class=\"first-choice-heading\">1st choice</th>\n        {{/()}}\n        <th></th>\n      </tr>\n    </thead>\n\n    <tbody>\n      {{#results:r}}{{#(r < 2 || (rows != undefined && r < rows))}}\n        <tr class=\"{{ (r % 2 === 0) ? 'even' : 'odd' }}\">\n          <td class=\"winner-column\">{{#winner}}<span class=\"bs-icon bs-icon-won\"></span>{{/winner}}{{#(winner === false)}}<span class=\"bs-icon-spacer\"></span>{{/()}}</td>\n\n          <td class=\"candidate-column\">{{ candidate }}</td>\n\n          {{#(ranked_choice == 1)}}\n            <td>{{ fNum(ranked_choices.1.percentage) }}% ({{ fNum(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>\n            <td>{{#ranked_choices.100.percentage}}{{ fNum(ranked_choices.100.percentage) }}% ({{ fNum(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>\n          {{/()}}\n\n          {{#(ranked_choice != 1)}}\n            <td>{{ fNum(percentage) }}% ({{ fNum(votes_candidate, 0) }} votes)</td>\n          {{/()}}\n        </tr>\n      {{/()}}{{/results}}\n    </tbody>\n  </table>\n\n  <a href=\"#contest/{{ id }}\" class=\"contest-link\">Full results</a>\n</div>","template-dashboard":"<div class=\"dashboard cf grid-container grid-parent {{ classes }}\">\n\n  <div class=\"grid-parent grid-100 location-search-section\">\n    <form on-submit=\"addresssSearch\">\n      <div class=\"location-search-group\">\n        <input type=\"text\" id=\"address-search\" placeholder=\"Search by address for results\" />\n\n        {{#geolocationEnabled}}\n          <div class=\"geolocation\">\n            <a href=\"#location\">Or view contests at your current location</a>\n          </div>\n        {{/geolocationEnabled}}\n      </div>\n\n      <input type=\"submit\" value=\"Go\" class=\"address-search-submit\" />\n    </form>\n  </div>\n\n  <div class=\"grid-parent grid-100 last-updated-section\">\n    {{#contestMinneapolisMayor.updated}}\n      <div intro=\"fade\">\n        Last updated at {{ contestMinneapolisMayor.updated.format('h:mm a') }}\n      </div>\n    {{/contestMinneapolisMayor.updated}}\n  </div>\n\n  <div class=\"grid-parent grid-50 tablet-grid-50 mobile-grid-100\">\n    <div class=\"inner-column-left\">\n      <div class=\"contest-minneapolis-mayor dashboard-section\">\n        {{#contestMinneapolisMayor}}\n          {{>dashboardContest}}\n        {{/contestMinneapolisMayor}}\n      </div>\n\n      <div class=\"contest-st-paul-mayor dashboard-section\">\n        {{#contestStPaulMayor}}\n          {{>dashboardContest}}\n        {{/contestStPaulMayor}}\n      </div>\n\n      <div class=\"contest-st-paul-council dashboard-section\">\n        {{#contestStPaulCouncil}}\n          {{>dashboardContest}}\n        {{/contestStPaulCouncil}}\n      </div>\n\n      <div class=\"elections-search dashboard-section\">\n        <h4>Other elections</h4>\n\n        <form on-submit=\"contestSearch\">\n          <label for=\"contest-search\">{{#capabilities.typeahead}}Search contests by title or candidate.  Start typing to see suggestions for specific contests, or search by {{/capabilities.typeahead}}{{^capabilities.typeahead}}Search contests by title with {{/capabilities.typeahead}} keywords (e.g., \"<a href=\"#search/duluth\">Duluth</a>\" or \"<a href=\"#search/school+board\">school board</a>\").</label>\n\n          <input type=\"text\" id=\"contest-search\" placeholder=\"Search by title{{#capabilities.typeahead}} or candidate{{/capabilities.typeahead}}\" />\n          <input type=\"submit\" value=\"Go\" class=\"contest-search-submit\" />\n        </form>\n      </div>\n    </div>\n  </div>\n\n  <div class=\"grid-parent grid-50 tablet-grid-50 mobile-grid-100\">\n    <div class=\"inner-column-right\">\n      <div class=\"contest-minneapolis-council dashboard-section\">\n        <h4 class=\"title-minneapolis-council\">Minneapolis City Council</h4>\n\n        {{#contestMinneapolisCouncil3}}\n          {{>dashboardContest}}\n        {{/contestMinneapolisCouncil3}}\n\n        {{#contestMinneapolisCouncil6}}\n          {{>dashboardContest}}\n        {{/contestMinneapolisCouncil6}}\n\n        {{#contestMinneapolisCouncil10}}\n          {{>dashboardContest}}\n        {{/contestMinneapolisCouncil10}}\n\n        {{#contestMinneapolisCouncil5}}\n          {{>dashboardContest}}\n        {{/contestMinneapolisCouncil5}}\n\n        {{#contestMinneapolisCouncil9}}\n          {{>dashboardContest}}\n        {{/contestMinneapolisCouncil9}}\n\n        {{#contestMinneapolisCouncil12}}\n          {{>dashboardContest}}\n        {{/contestMinneapolisCouncil12}}\n\n        {{#contestMinneapolisCouncil13}}\n          {{>dashboardContest}}\n        {{/contestMinneapolisCouncil13}}\n\n      </div>\n    </div>\n  </div>\n</div>","template-footnote":"<div class=\"footnote\">\n  <p>Unofficial election data provided by the <a href=\"http://www.sos.state.mn.us/\" target=\"_blank\">MN Secretary of State</a> and supplemented manually with data from the <a href=\"http://vote.minneapolismn.gov/\" target=\"_blank\">City of Minneapolis</a> and the <a href=\"http://www.stpaul.gov/index.aspx?NID=188\" target=\"_blank\">City of St. Paul</a>.  Test data will be provided until 8PM on Election Night.  Some code, techniques, and data on <a href=\"https://github.com/zzolo/minnpost-elections-dashboard\" target=\"_blank\">Github</a>.</p>\n\n  <p>The geographical boundaries, though recieved from official sources and queried from our <a href=\"http://boundaries.minnpost.com\" target=\"_blank\">boundary service</a>, may not represent the exact, offical area for a contest, race, or election.  It is also possible that, for a given location, the contests may not be accurate due to data quality with multiple agencies.  Please refer to your local and state election officials to know exactly what contests happen for a given location.</p>\n\n  <p>Some map data © OpenStreetMap contributors; licensed under the <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">Open Data Commons Open Database License</a>.  Some map design © MapBox; licensed according to the <a href=\"http://mapbox.com/tos/\" target=\"_blank\">MapBox Terms of Service</a>.  Location geocoding provided by <a href=\"http://www.mapquest.com/\" target=\"_blank\">Mapquest</a> and is not guaranteed to be accurate.</p>\n</div>","template-loading":"<div class=\"loading-container\">\n  <div class=\"loading\"><span>Loading...</span></div>\n</div>"};
-
-/**
- * Main app logic for: minnpost-elections-dashboard
- */
-(function(App, $, undefined) {
-  _.extend(App.prototype, {
-
-    // Default options
-    defaultOptions: {
-      dataPath: './data/',
-      jsonpProxy: 'http://mp-jsonproxy.herokuapp.com/proxy?url=',
-      electionsAPI: 'https://premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
-      electionsAPILocal: 'http://localhost:5000/?q=',
-      electionsAPIEC2: 'http://54.204.17.59/?box=ubuntu&q=',
-      electionsAPIScraperWiki: 'https://premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
-      boundaryAPI: 'http://boundaries.minnpost.com/1.0/',
-      boundarySets: [
-        'counties-2010',
-        'county-commissioner-districts-2012',
-        'minneapolis-parks-and-recreation-districts-2014',
-        'minor-civil-divisions-2010',
-        'school-districts-2013',
-        'wards-2012'
-      ],
-      // Please don't steal/abuse
-      mapQuestKey: 'Fmjtd%7Cluub2d01ng%2C8g%3Do5-9ua20a',
-      mapQuestQuery: 'http://www.mapquestapi.com/geocoding/v1/address?key=[[[KEY]]]&outFormat=json&countrycodes=us&maxResults=1&location=[[[ADDRESS]]]',
-      originalTitle: document.title,
-      capabilities: {
-        typeahead: (_.isMSIE() !== 9),
-        preventLinks: (!_.isMSIE() && _.isMSIE() <= 9)
-      }
-    },
-
-    // Start function that starts the application.
-    start: function() {
-      var thisApp = this;
-      var templates = ['template-application', 'template-footnote', 'template-dashboard', 'template-loading', 'template-contest', 'template-contests', 'template-dashboard-contest'];
-
-      // Get templates and start rendering
-      this.getTemplates(templates).done(function() {
-        // Render the container and "static" templates.
-        thisApp.applicationView = new thisApp.ApplicationView({
-          el: thisApp.$el,
-          template: thisApp.template('template-application')
-        });
-        thisApp.footnoteView = new thisApp.FootnoteView({
-          el: thisApp.$el.find('.footnote-container'),
-          template: thisApp.template('template-footnote')
-        });
-
-        // Create router which will handle most of the high
-        // level logic
-        thisApp.router = new thisApp.DashboardRouter(_.extend(thisApp.options, { app: thisApp }));
-        thisApp.router.start();
-
-        // Try to ensure that links are prevented from their default
-        // behavior.  Sometimes because of Ractive's dom insertions, the
-        // preventDefault is not handled correctly
-        if (thisApp.options.capabilities.preventLinks) {
-          $('a[href^="#"]').on('click', thisApp.$el, function(e) {
-            e.preventDefault();
-            thisApp.router.navigate($(this).attr('href'), { trigger: true });
-          });
-        }
-      });
+    // If the data path is not relative, then use JSONP
+    if (options && options.paths && options.paths.data.indexOf('http') === 0) {
+      useJSONP = true;
     }
-  });
-})(mpApps['minnpost-elections-dashboard'], jQuery);
+
+    // Go through each file and add to defers
+    _.each(name, function(d) {
+      var defer;
+
+      if (useJSONP) {
+        defer = helpers.jsonpRequest({
+          url: proxyPrefix + encodeURI(options.paths.data + d)
+        }, options);
+      }
+      else {
+        defer = $.getJSON(options.paths.data + d);
+      }
+      defers.push(defer);
+    });
+
+    return $.when.apply($, defers);
+  };
+
+  /**
+   * Reads query string and turns into object.
+   */
+  helpers.parseQueryString = function() {
+    var assoc  = {};
+    var decode = function(s) {
+      return decodeURIComponent(s.replace(/\+/g, " "));
+    };
+    var queryString = location.search.substring(1);
+    var keyValues = queryString.split('&');
+
+    _.each(keyValues, function(v, vi) {
+      var key = v.split('=');
+      if (key.length > 1) {
+        assoc[decode(key[0])] = decode(key[1]);
+      }
+    });
+
+    return assoc;
+  };
+
+  return helpers;
+});
 
 /**
  * Models
  */
-(function(App, $, undefined) {
-  App.prototype.ContestModel = Backbone.Model.extend({
+define('models',[
+  'jquery', 'underscore', 'backbone', 'moment', 'moment-timezone', 'helpers'
+], function($, _, Backbone, moment, momentTimezone, helpers) {
+  var models = {};
+
+  models.ContestModel = Backbone.Model.extend({
     // Base query for the contest
     query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
       "ON c.id = r.contest_id WHERE c.id = '%CONTEST_ID%' " +
       "ORDER BY r.percentage ASC, r.candidate",
 
     // Fields that are for contests (not result)
-    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code', 'office_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help'],
+    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code', 'office_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help', 'primary', 'scope', 'partisan'],
 
     // Non-Partisan parties
     npParties: ['NP', 'WI'],
@@ -334,6 +165,12 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
       var parsed = {};
       var rankedChoiceFinal = false;
       parsed.results = [];
+
+      // Given how collections process fetching new data, we want to avoid
+      // parsing here and parse on the collection part
+      if (options.collection) {
+        return response;
+      }
 
       // Separate out what is contest level properties and what is
       // results
@@ -379,38 +216,49 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
         parsed.results = _.values(groupedResults);
       }
 
-      // Partison by default, unless we find a party
-      parsed.partisan = (_.findWhere(parsed.results, function(r, ri) {
-        return (_.indexOf(thisModel.npParties, r.party) >= 0);
-      })) ? true : false;
-
       // Put results in a basic order.
       parsed.results = _.sortBy(parsed.results, 'candidate');
       parsed.results = _.sortBy(parsed.results, function(r) {
         return r.percentage * -1;
       });
-
+      // If primary, sort by party
+      if (parsed.primary) {
+        parsed.results = _.sortBy(parsed.results, 'party_id');
+      }
 
       // Mark who won.  Overall having all precincts reporting is good
       // enough but with ranked choice, we need have all the final data
-      // in
+      // in.  Primaries need to choose winners per parties
+      parsed.done = (parsed.precincts_reporting === parsed.total_effected_precincts);
+
       if (parsed.ranked_choice) {
         rankedChoiceFinal = (_.size(parsed.results) == _.size(_.filter(parsed.results, function(r) {
           return (!_.isUndefined(r.ranked_choices[100]));
         })));
       }
-      if ((parsed.precincts_reporting === parsed.total_effected_precincts &&
-        !parsed.ranked_choice) ||
-        (parsed.ranked_choice && rankedChoiceFinal === true &&
-        parsed.precincts_reporting === parsed.total_effected_precincts
-        )) {
-        parsed.results = _.map(parsed.results, function(r, i) {
+      if ((parsed.done && !parsed.ranked_choice && !parsed.primary) ||
+        (parsed.done && parsed.ranked_choice && rankedChoiceFinal && !parsed.primary) ||
+        (parsed.done && parsed.primary && !parsed.partisan)) {
+        parsed.results = _.map(parsed.results, function(r, ri) {
           r.winner = false;
-          if (i < parsed.seats) {
+          if (ri < parsed.seats) {
             r.winner = true;
           }
           return r;
         });
+        parsed.final = true;
+      }
+      else if (parsed.done && parsed.primary && parsed.partisan) {
+        _.each(_.groupBy(parsed.results, 'party_id'), function(p, pi) {
+          _.each(p, function(r, ri) {
+            r.winner = false;
+            if (ri < parsed.seats) {
+              r.winner = true;
+            }
+            return r;
+          });
+        });
+
         parsed.final = true;
       }
 
@@ -435,10 +283,10 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     fetchBoundary: function() {
       var thisModel = this;
 
-      this.app.jsonpRequest({
+      helpers.jsonpRequest({
         url: this.app.options.boundaryAPI + 'boundary/?limit=10&slug__in=' +
           encodeURIComponent(this.get('boundary'))
-      })
+      }, this.app.options)
       .done(function(response) {
         if (_.isArray(response.objects)) {
           thisModel.set('boundarySets', response.objects);
@@ -452,11 +300,13 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     connect: function(fetchBoundary) {
       var thisModel = this;
 
+      // Allow to turn off boundary fetching
       this.set('fetchedBoundary', (fetchBoundary !== false) ? false : true);
+
       this.fetch();
       this.pollID = window.setInterval(function() {
         thisModel.fetch();
-      }, 30000);
+      }, this.app.options.electionsAPIPollInterval);
     },
 
     // Stop the polling
@@ -465,14 +315,101 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     }
   });
 
-})(mpApps['minnpost-elections-dashboard'], jQuery);
+
+  // Model for election wide data
+  models.ElectionModel = Backbone.Model.extend({
+    // Base query for the metadata
+    query: "SELECT * FROM swvariables",
+
+    // Initializer
+    initialize: function(model, options) {
+      this.options = options || {};
+      this.app = options.app;
+    },
+
+    // Construct API call
+    url: function() {
+      return this.app.options.electionsAPI +
+        encodeURIComponent(this.query);
+    },
+
+    // Parse results
+    parse: function(response, options) {
+      var parsed = {};
+      var now, testStop;
+
+      // Parse out values
+      _.each(response, function(r, ri) {
+        // Parsing large ints in JS :(
+        if (r.type === 'integer') {
+          parsed[r.name] = parseInt(r.value_blob, 10);
+        }
+        else if (r.type === 'float') {
+          parsed[r.name] = parseFloat(r.value_blob);
+        }
+        else if (r.type === 'boolean') {
+          parsed[r.name] = !!r.value_blob;
+        }
+        else {
+          parsed[r.name] = r.value_blob;
+        }
+      });
+
+      // Some specifics
+      if (parsed.date) {
+        parsed.date = moment(parsed.date);
+      }
+      if (parsed.updated) {
+        parsed.updated = moment.unix(parsed.updated);
+      }
+
+      // If we have a date for the election, make a good guess on whether
+      // we are looking at test results
+      parsed.isTest = false;
+      if (parsed.date) {
+        now = moment().tz('America/Chicago');
+        testStop = parsed.date.clone();
+        testStop.tz('America/Chicago').hour(17).minute(0);
+        if (now.isBefore(testStop, 'minute')) {
+          parsed.isTest = true;
+        }
+      }
+
+      return parsed;
+    },
+
+    // Our API is pretty simple, so we do a basic time based
+    // polling.  Call right away as well.
+    connect: function() {
+      var thisModel = this;
+      this.fetch();
+      this.pollID = window.setInterval(function() {
+        thisModel.fetch();
+      }, this.app.options.electionsAPIPollInterval);
+    },
+
+    // Stop the polling
+    disconnect: function() {
+      window.clearInterval(this.pollID);
+    }
+  });
+
+
+  return models;
+
+});
 
 /**
- * Models
+ * Collections
  */
-(function(App, $, undefined) {
-  App.prototype.ContestsCollection = Backbone.Collection.extend({
-    model: App.prototype.ContestModel,
+define('collections',[
+  'jquery', 'underscore', 'backbone', 'models', 'helpers'
+], function($, _, Backbone, models, helpers) {
+
+  var collections = {};
+
+  collections.ContestsCollection = Backbone.Collection.extend({
+    model: models.ContestModel,
 
     // Base query for the contest
     query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
@@ -493,9 +430,16 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
         encodeURIComponent(this.query.replace('%CONTEST_SEARCH%', searches.join(' OR ')));
     },
 
-    // Parse the results
-    parse: function(response) {
-      return _.values(_.groupBy(response, 'id'));
+    // Parse the results.
+    parse: function(response, options) {
+      // How backbone handles parsing is not helpful given our structure; it'll
+      // pass the model-level parsing but only after it has looked to see if
+      // the model should be added or updated to the collection.  So, we do
+      // parsing here and avoid it on the model.  Luckily backbone passes
+      // a 'collection' option to check for.
+      var parsed = _.map(_.values(_.groupBy(response, 'id')),
+        this.model.prototype.parse, this.model.prototype);
+      return parsed;
     },
 
     initialize: function(models, options) {
@@ -525,10 +469,10 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     fetchBoundary: function() {
       var thisCollection = this;
 
-      this.app.jsonpRequest({
+      helpers.jsonpRequest({
         url: this.app.options.boundaryAPI + 'boundary/?limit=30&slug__in=' +
           encodeURIComponent(this.pluck('boundary').join(','))
-      })
+      }, this.app.options)
       .done(function(response) {
         if (_.isArray(response.objects)) {
           // Match up slugs to models
@@ -555,10 +499,12 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     // polling.  Call right away as well.
     connect: function() {
       var thisCollection = this;
-      this.fetch();
+      var fetchOptions = { collection: true };
+
+      this.fetch(fetchOptions);
       this.pollID = window.setInterval(function() {
-        thisCollection.fetch();
-      }, 30000);
+        thisCollection.fetch(fetchOptions);
+      }, this.app.options.electionsAPIPollInterval);
     },
 
     // Stop the polling
@@ -568,12 +514,12 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
   });
 
   // A collection based a location
-  App.prototype.ContestsLocationCollection = App.prototype.ContestsCollection.extend({
+  collections.ContestsLocationCollection = collections.ContestsCollection.extend({
 
     // Base query for the contest
     query: "SELECT r.*, c.* FROM contests AS c LEFT JOIN results AS r " +
       "ON c.id = r.contest_id WHERE boundary IN (%CONTEST_SEARCH%) " +
-      "ORDER BY  c.title, r.percentage, r.candidate ASC LIMIT 400",
+      "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
 
     // Construct API call
     url: function() {
@@ -584,7 +530,7 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
 
     initialize: function(models, options) {
       // Call parent intializer
-      App.prototype.ContestsLocationCollection.__super__.initialize.apply(this, arguments);
+      collections.ContestsLocationCollection.__super__.initialize.apply(this, arguments);
 
       this.on('fetchedBoundary', function() {
         this.connect();
@@ -622,12 +568,12 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     fetchBoundaryFromCoordinates: function() {
       var thisCollection = this;
 
-      this.app.jsonpRequest({
+      helpers.jsonpRequest({
         url: this.app.options.boundaryAPI + 'boundary/?contains=' +
           encodeURIComponent(this.options.lonlat[1]) + ',' +
           encodeURIComponent(this.options.lonlat[0]) + '&sets=' +
           encodeURIComponent(this.app.options.boundarySets.join(','))
-      })
+      }, this.app.options)
       .done(function(response) {
         if (_.isArray(response.objects)) {
           thisCollection.fullBoundaries = response.objects;
@@ -638,21 +584,84 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     }
   });
 
-})(mpApps['minnpost-elections-dashboard'], jQuery);
+  return collections;
 
-(function(App, $, undefined) {
+});
 
-  App.prototype.ApplicationView = Ractive.extend({
+
+define('text!templates/application.mustache',[],function () { return '<div class="message-container"></div>\n\n<div class="content-container"></div>\n\n<div class="footnote-container"></div>';});
+
+
+define('text!templates/footnote.mustache',[],function () { return '<div class="footnote">\n  <p>Unofficial election data provided by the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a>.  For ranked-choice contests data is supplemented manually from the <a href="http://vote.minneapolismn.gov/" target="_blank">City of Minneapolis</a> and the <a href="http://www.stpaul.gov/index.aspx?NID=188" target="_blank">City of St. Paul</a>.  Test data will be provided until 8PM on Election Night.</p>\n\n  <p>The geographical boundaries, though received from official sources and queried from our <a href="http://boundaries.minnpost.com" target="_blank">boundary service</a>, may not represent the exact, offical area for a contest, race, or election.  It is also possible that for a given location the contests may not be accurate due to data quality with multiple agencies.  Please refer to your local and state election officials to know exactly what contests happen for a given location.</p>\n\n  <p>Some map data © OpenStreetMap contributors; licensed under the <a href="http://www.openstreetmap.org/copyright" target="_blank">Open Data Commons Open Database License</a>.  Some map design © MapBox; licensed according to the <a href="http://mapbox.com/tos/" target="_blank">MapBox Terms of Service</a>.  Location geocoding provided by <a href="http://www.mapquest.com/" target="_blank">Mapquest</a> and is not guaranteed to be accurate.</p>\n\n  <p>Some code, techniques, and data on <a href="https://github.com/minnpost/minnpost-elections-dashboard" target="_blank">Github</a>.</p>\n</div>\n';});
+
+
+define('text!templates/contest.mustache',[],function () { return '<div class="contest {{#isDashboard}}dashboard-contest{{/isDashboard}} {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}}{{#(final === true)}}is-final{{/()}}">\n  {{^isDashboard}}\n    <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n  {{/isDashboard}}\n\n  <div>\n    {{#((results.length == 0 || results == undefined) && !synced)}}\n      {{>loading}}\n    {{/()}}\n  </div>\n\n  {{#((results.length == 0 || results == undefined) && synced)}}\n    <h3>Did not find any contests</h3>\n  {{/()}}\n\n\n  {{#((results.length > 0) && synced)}}\n    <h3>\n      {{ title }}\n      {{#(show_party != undefined)}}<span class="show-party party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}\n    </h3>\n\n    {{^isDashboard}}\n      <div class="last-updated">Last updated at {{ updated.format(\'h:mm a\') }}</div>\n    {{/isDashboard}}\n\n    {{#(!!question_body)}}\n      <p>{{{ question_body }}}</p>\n    {{/()}}\n  {{/()}}\n\n  <div class="{{^isDashboard}}row{{/isDashboard}}">\n    <div class="{{^isDashboard}}column-medium-70 inner-column-left{{/isDashboard}}">\n      <table class="striped">\n        <thead>\n          <tr class="table-first-heading">\n            <th class="winner-column"></th>\n            <th>Candidate</th>\n            {{#(partisan && show_party === undefined)}}\n              <th>Party</th>\n            {{/()}}\n            {{#(ranked_choice == 1)}}\n              <th class="first-choice-column">Results</th>\n              <th class="second-choice-column"></th>\n              <th class="third-choice-column"></th>\n              <th class="final-column">Final</th>\n            {{/()}}\n            {{#(ranked_choice != 1)}}\n              {{^isDashboard}}\n                <th class="percentage">Percentage</th>\n                <th class="votes">Votes</th>\n              {{/isDashboard}}\n              {{#isDashboard}}\n                <th class="percentage">Results</th>\n              {{/isDashboard}}\n            {{/()}}\n          </tr>\n          <tr class="table-second-heading">\n            <th class="winner-column"></th>\n            <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>\n            {{#(partisan && show_party === undefined)}}\n              <th></th>\n            {{/()}}\n            {{#(ranked_choice == 1)}}\n              <th class="first-choice-column first-choice-heading">1st choice</th>\n              <th class="second-choice-column second-choice-heading">2nd choice</th>\n              <th class="third-choice-column third-choice-heading">3rd choice</th>\n              <th class="final-column"></th>\n            {{/()}}\n            {{#(ranked_choice != 1)}}\n              <th></th>\n              {{^isDashboard}}\n                <th></th>\n              {{/isDashboard}}\n            {{/()}}\n          </tr>\n        </thead>\n\n        <tbody>\n          {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party != undefined && party_id == show_party)))}}\n            <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? \'even\' : \'odd\' }}">\n              <td class="winner-column">{{#winner}}<span class="fa fa-check"></span>{{/winner}}</td>\n\n              <td class="candidate-column">{{ candidate }}</td>\n\n              {{#(partisan && show_party === undefined)}}\n                <td><span class="party-label bg-color-political-{{ party_id.toLowerCase() }}" title="{{ parties[party_id.toLowerCase()] }}">{{ party_id }}</span></td>\n              {{/()}}\n\n              {{#(ranked_choice == 1)}}\n                <td class="first-choice-column first-choice-heading">{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>\n                <td class="second-choice-column first-choice-heading">{{ formatters.number(ranked_choices.2.percentage) }}% ({{ formatters.number(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>\n                <td class="third-choice-column first-choice-heading">{{ formatters.number(ranked_choices.3.percentage) }}% ({{ formatters.number(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>\n                <td class="final-column first-choice-heading">{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% ({{ formatters.number(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>\n              {{/()}}\n\n              {{#(ranked_choice != 1)}}\n                <td class="percentage">{{ formatters.number(percentage) }}%</td>\n                {{^isDashboard}}\n                  <td class="votes">{{ formatters.number(votes_candidate, 0) }}</td>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n          {{/()}} {{/results}}\n        </tbody>\n      </table>\n\n      <a href="#contest/{{ id }}" class="contest-link">{{#isDashboard}}Full results{{/isDashboard}}{{^isDashboard}}Permalink{{/isDashboard}}</a>\n    </div>\n\n    {{^isDashboard}}\n      <div class="column-medium-30 inner-column-right">\n        <div class="contest-map" id="contest-map-{{ id }}"></div>\n      </div>\n    {{/isDashboard}}\n  </div>\n</div>\n';});
+
+
+define('text!templates/contests.mustache',[],function () { return '<div class="contests">\n  <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n\n  <div class="row">\n    <div class="column-medium-70 inner-column-left contests-title-section">\n      <h2 class="contests-title {{#(lonlat != undefined)}}with-location{{/()}}">{{ (title) ? title : \'Contests\' }}</h2>\n\n      <p class="caption">\n        Found\n          {{#(models.length == 0 && !synced)}}\n            <i class="loading small"></i>\n          {{/())}}\n          {{#synced}}\n            {{ models.length }}\n          {{/synced}}\n        results.\n      </p>\n\n      {{#(lonlat != undefined)}}\n        <p class="caption">The map below shows the approximate location of your search. If the location is not correct, try <a href="#dashboard">searching for a more specific address</a>.</p>\n\n        <div id="location-map"></div>\n      {{/())}}\n    </div>\n\n    <div class="column-medium-30 inner-column-right"></div>\n  </div>\n\n  <div>\n    {{#(models.length == 0 && !synced)}}\n      {{>loading}}\n    {{/())}}\n\n    {{#(models.length == 0 && synced)}}\n      <p class="large">Unable to find any contests.</p>\n    {{/())}}\n  </div>\n\n  <div class="contest-list">\n    {{#models:i}}\n      {{>contest}}\n    {{/models}}\n  </div>\n</div>\n';});
+
+
+define('text!templates/dashboard.mustache',[],function () { return '<div class="dashboard {{ classes }}">\n\n  <div class="location-search-section">\n    <form role="form" class="" on-submit="addresssSearch">\n\n      <div class="location-search-group">\n        <div class="form-input-group">\n          <label for="address" class="sr-only">Search address for results</label>\n          <input type="text" id="address-search" placeholder="Search address for results">\n\n          <div class="button-group">\n            <button type="submit" class="button primary address-search-submit">Search</button>\n          </div>\n        </div>\n      </div>\n\n      {{#geolocationEnabled}}\n        <div class="geolocation">\n          <a href="#location">Or view contests at your current location <i class="fa fa-location-arrow"></i></a>\n        </div>\n      {{/geolocationEnabled}}\n    </form>\n  </div>\n\n  <div class="last-updated-section">\n    <div>\n      {{#election.date}}\n        {{ election.date.format(\'MMM DD, YYYY\') }} {{ (election.primary) ? \'primary\' : \'general\' }} election {{#election.isTest}}<em>test</em>{{/election.isTest}} results.\n      {{/election.date}}\n      {{#election.updated}}\n        Last updated at {{ election.updated.format(\'h:mm a\') }}\n      {{/election.updated}}\n    </div>\n  </div>\n\n  <div class="row">\n    <div class="column-medium-50">\n      <div class="inner-column-left">\n\n        <div class="contest-governor-r dashboard-section">\n          {{#contestGovernorR}}\n            {{>contest}}\n          {{/contestGovernorR}}\n        </div>\n\n        <div class="contest-auditor-dfl dashboard-section">\n          {{#contestAuditorDFL}}\n            {{>contest}}\n          {{/contestAuditorDFL}}\n        </div>\n\n        <div class="elections-search dashboard-section">\n          <h4>Other elections</h4>\n\n          <form role="form" class="" on-submit="contestSearch">\n\n            <p class="caption" for="contest-search">{{#capabilities.typeahead}}Search contests by title or candidate.  Start typing to see suggestions for specific contests, or search by {{/capabilities.typeahead}}{{^capabilities.typeahead}}Search contests by title with {{/capabilities.typeahead}} keywords (e.g., "<a href="#search/state+representative">state representative</a>" or "<a href="#search/school+board">school board</a>").</p>\n\n            <div class="form-input-group">\n              <input type="text" id="contest-search" placeholder="Search by title{{#capabilities.typeahead}} or candidate{{/capabilities.typeahead}}" />\n\n              <div class="button-group">\n                <button type="submit" class="button primary contest-search-submit">Search</button>\n              </div>\n            </div>\n          </form>\n        </div>\n      </div>\n    </div>\n\n    <div class="column-medium-50">\n      <div class="inner-column-right">\n\n        <div class="contest-senate-r dashboard-section">\n          {{#contestSenateR}}\n            {{>contest}}\n          {{/contestSenateR}}\n        </div>\n\n        <div class="contest-house-60b-dfl dashboard-section">\n          {{#contestHouse60BDFL}}\n            {{>contest}}\n          {{/contestHouse60BDFL}}\n        </div>\n\n        <div class="contest-house-48b-r dashboard-section">\n          {{#contestHouse48BR}}\n            {{>contest}}\n          {{/contestHouse48BR}}\n        </div>\n\n      </div>\n    </div>\n  </div>\n</div>\n';});
+
+
+define('text!templates/loading.mustache',[],function () { return '<div class="loading-container">\n  <i class="loading"></i> Loading...\n</div> \n';});
+
+/**
+ * Views
+ */
+
+define('views',[
+  'jquery', 'underscore', 'backbone', 'ractive', 'ractive-events-tap',
+  'ractive-backbone', 'leaflet', 'models', 'collections',
+  'bloodhound', 'typeahead-js', 'placeholders-js', 'mpConfig', 'mpFormatters',
+  'text!templates/application.mustache', 'text!templates/footnote.mustache',
+  'text!templates/contest.mustache', 'text!templates/contests.mustache',
+  'text!templates/dashboard.mustache', 'text!templates/loading.mustache'
+], function(
+  $, _, Backbone, Ractive, RactiveETap, RactiveBackbone, L, models,
+  collections, Bloodhound, typeahead, placeholders, mpConfig, mpFormatters,
+  tApplication, tFootnote, tContest,
+  tContests, tDashboard, tLoading
+  ) {
+  var views = {};
+
+  // Ractive decorator to highlight changes
+  // Sample use: <span class="highlighter" decorator="highlight:{{ election.updated.format('h:mm a') }}">{{ election.updated.format('h:mm a') }}</span>
+  views.highlightDecorator = function(node, content) {
+    return {
+      update: function() {
+        var $node = $(node);
+        $node.removeClass('unhighlight');
+        $node.addClass('highlight');
+
+        setTimeout(function() {
+          $node.addClass('unhighlight');
+        }, 200);
+      },
+      teardown: function() {
+        // Nothing to tear down
+      }
+    };
+  };
+  Ractive.decorators.highlight = views.highlightDecorator;
+
+  // General viesl
+  views.ApplicationView = Ractive.extend({
     init: function() {
-    }
+      // Add parties for reference
+      this.set('parties', mpConfig.politicalParties);
+    },
+    template: tApplication
   });
 
-  App.prototype.FootnoteView = Ractive.extend({
+  views.FootnoteView = Ractive.extend({
     init: function() {
-    }
+    },
+    template: tFootnote
   });
 
-  App.prototype.ContestBaseView = Ractive.extend({
+  // Base view to extend others from
+  views.ContestBaseView = Ractive.extend({
     defaultMapStyle: {
       stroke: true,
       color: '#2DA51D',
@@ -663,6 +672,8 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
       fillOpacity: 0.2,
       clickable: false
     },
+
+    adapt: ['Backbone'],
 
     // Put together map for boundary(s)
     makeMap: function(id, boundaries) {
@@ -745,17 +756,26 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     }
   });
 
-  App.prototype.DashboardView = App.prototype.ContestBaseView.extend({
+  views.DashboardView = views.ContestBaseView.extend({
+    template: tDashboard,
+
+    partials: {
+      contest: tContest,
+      loading: tLoading
+    },
+
     init: function(options) {
       var thisView = this;
       var $contestSearch = $(this.el).find('#contest-search');
-      var query;
+      var query, querySearchEngine;
       this.app = options.app;
 
       // Attach formatters
-      this.set('fNum', _.formatNumber);
+      this.set('formatters', mpFormatters);
+      // Add parties
+      this.set('parties', mpConfig.politicalParties);
 
-      // Typeahead.  This seems to break in IE. Query can be
+      // Typeahead.  This (used to?) break in IE. Query can be
       // either a contest or candidate
       if (this.app.options.capabilities.typeahead) {
         query = this.app.options.electionsAPI +
@@ -769,20 +789,33 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
           "JOIN contests AS c ON r.contest_id = c.id " +
           "WHERE r.candidate LIKE '%%QUERY%' ORDER BY title LIMIT 20 ";
 
-        // Make typeahead functionality for search
-        $contestSearch.typeahead({
+        // Create bloodhound engine
+        querySearchEngine = new Bloodhound({
           name: 'Contests and Candidates',
+          datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title'),
+          queryTokenizer: Bloodhound.tokenizers.whitespace,
           remote: {
             url: query,
-            dataType: 'jsonp',
-            jsonpCallback: 'mpServerSideCachingHelper',
             replace: function(url, uriEncodedQuery) {
               var query = decodeURIComponent(uriEncodedQuery);
               query = query.replace(new RegExp(' ', 'g'), '%');
               return encodeURI(url.replace(new RegExp(this.wildcard, 'g'), query));
+            },
+            ajax: {
+              dataType: 'jsonp',
+              jsonpCallback: 'mpServerSideCachingHelper'
             }
-          },
-          valueKey: 'title'
+          }
+        });
+        querySearchEngine.initialize();
+
+        // Make typeahead functionality for search
+        $contestSearch.typeahead(null, {
+          displayKey: 'title',
+          source: querySearchEngine.ttAdapter(),
+          minLength: 3,
+          hint: true,
+          highlight: true
         });
 
         // Handle search selected
@@ -801,12 +834,20 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     }
   });
 
-  App.prototype.ContestView = App.prototype.ContestBaseView.extend({
+  views.ContestView = views.ContestBaseView.extend({
+    template: tContest,
+
+    partials: {
+      loading: tLoading
+    },
+
     init: function() {
       this.set('classes', 'contest-view');
 
       // Attach formatters
-      this.set('fNum', _.formatNumber);
+      this.set('formatters', mpFormatters);
+      // Add parties
+      this.set('parties', mpConfig.politicalParties);
 
       // Make a map if boundary has been found
       this.observe('boundarySets', function(newValue, oldValue) {
@@ -817,24 +858,35 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     }
   });
 
-  App.prototype.ContestsView = App.prototype.ContestBaseView.extend({
+  views.ContestsView = views.ContestBaseView.extend({
+    template: tContests,
+
+    partials: {
+      contest: tContest,
+      loading: tLoading
+    },
+
     init: function() {
       var thisView = this;
       var shapes = [];
       var rendered = {};
+      var modelBoundarySet = {};
 
       // Attach formatters
-      this.set('fNum', _.formatNumber);
+      this.set('formatters', mpFormatters);
+      // Add parties
+      this.set('parties', mpConfig.politicalParties);
 
-      // React to boundary update.  Not sure how to use wildcards in
-      // Ractive, so we hack around it.
-      this.observe('models.0.fetchedBoundary', function(newValue, oldValue) {
-        var testModel = this.get('models.0.boundarySets');
+      // React to boundary update.  For some reason, this is getting changed
+      // more than once.
+      this.observe('models.*.boundarySets', function(newValue, oldValue, keypath) {
+        var parts = keypath.split('.');
+        var m = this.get(parts[0] + '.' + parts[1]);
 
-        if (_.isArray(testModel) && _.isObject(testModel[0])) {
-          _.each(this.get('models'), function(m) {
-            thisView.makeMap('contest-map-' + m.get('id'), m.get('boundarySets'));
-          });
+        if (_.isArray(newValue) && _.isObject(newValue[0]) && _.isObject(m) &&
+          !modelBoundarySet[m.get('id')]) {
+          modelBoundarySet[m.get('id')] = true;
+          this.makeMap('contest-map-' + m.get('id'), newValue);
         }
       });
 
@@ -869,13 +921,19 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     }
   });
 
-})(mpApps['minnpost-elections-dashboard'], jQuery);
+
+  return views;
+});
 
 /**
  * Routers
  */
-(function(App, $, undefined) {
-  App.prototype.DashboardRouter = Backbone.Router.extend({
+define('routers',[
+  'jquery', 'underscore', 'backbone', 'models', 'collections', 'views'
+], function($, _, Backbone, models, collections, views) {
+  var routers = {};
+
+  routers.DashboardRouter = Backbone.Router.extend({
     initialize: function(options) {
       this.options = options;
       this.app = options.app;
@@ -904,42 +962,42 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
 
       // Get races objects
       this.app.dashboardContests = {
-        contestMinneapolisMayor: 'id-MN---43000-2001',
-        contestMinneapolisCouncil3: 'id-MN---43000-2121',
-        contestMinneapolisCouncil6: 'id-MN---43000-2151',
-        contestMinneapolisCouncil10: 'id-MN---43000-2191',
-        contestMinneapolisCouncil5: 'id-MN---43000-2141',
-        contestMinneapolisCouncil9: 'id-MN---43000-2181',
-        contestMinneapolisCouncil12: 'id-MN---43000-2211',
-        contestMinneapolisCouncil13: 'id-MN---43000-2221',
-        contestStPaulMayor: 'id-MN---58000-2001',
-        contestStPaulCouncil: 'id-MN---58000-2101'
+        contestGovernorR: 'id-MN----0331',
+        contestAuditorDFL: 'id-MN----0333',
+        contestSenateR: 'id-MN----0102',
+        contestHouse60BDFL: 'id-MN---60B-0307',
+        contestHouse48BR: 'id-MN---48B-0283'
       };
       _.each(this.app.dashboardContests, function(c, ci) {
-        thisRouter.app[ci] = new thisRouter.app.ContestModel({ id: c }, { app: thisRouter.app });
+        thisRouter.app[ci] = new models.ContestModel({ id: c }, { app: thisRouter.app });
         thisRouter.app[ci].connect(false);
+        thisRouter.app[ci].set('isDashboard', true);
         data[ci] = thisRouter.app[ci];
       });
 
-      // Partials don't take arguments, so we have to set some things here
-      data.contestMinneapolisMayor.set('rows', 8);
-      data.contestStPaulMayor.set('rows', 3);
+      // Partials don't take arguments, so we have to set some things here.
+      // Rows and show_party are exclusive
+      //data.contestGovernorDFL.set('rows', 8);
+      data.contestGovernorR.set('show_party', 'R');
+      data.contestAuditorDFL.set('show_party', 'DFL');
+      data.contestSenateR.set('show_party', 'R');
+      data.contestHouse60BDFL.set('show_party', 'DFL');
+      data.contestHouse48BR.set('show_party', 'R');
+
+      // Get and connect to election metadata
+      this.app.election = new models.ElectionModel({}, { app: this.app });
+      data.election = this.app.election;
+      this.app.election.connect();
 
       // We need some of this data
       data.capabilities = thisRouter.app.options.capabilities;
 
       // Create dashboard view
       data.title = 'Dashboard';
-      this.app.dashboardView = new this.app.DashboardView({
+      this.app.dashboardView = new views.DashboardView({
         el: this.app.$el.find('.content-container'),
-        template: this.app.template('template-dashboard'),
         data: data,
-        app: this.app,
-        partials: {
-          dashboardContest: this.app.template('template-dashboard-contest'),
-          loading: this.app.template('template-loading')
-        },
-        adaptors: [ 'Backbone' ]
+        app: this.app
       });
 
       // Handle searches here as we have an easy reference
@@ -968,23 +1026,17 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     routeSearch: function(term) {
       this.teardownObjects();
 
-      this.app.contestsSearch = new this.app.ContestsCollection([], {
+      this.app.contestsSearch = new collections.ContestsCollection([], {
         app: this.app,
         search: term
       });
       this.app.contestsSearch.connect();
-      this.app.contestsSearchView = new this.app.ContestsView({
+      this.app.contestsSearchView = new views.ContestsView({
         el: this.app.$el.find('.content-container'),
-        template: this.app.template('template-contests'),
         data: {
           models: this.app.contestsSearch,
-          title: 'Search for "' + term + '"'
-        },
-        partials: {
-          contest: this.app.template('template-contest'),
-          loading: this.app.template('template-loading')
-        },
-        adaptors: [ 'Backbone' ]
+          title: 'Search for "' + term.replace(/\+/g, ' ') + '"'
+        }
       });
       this.app.contestsSearchView.observeTitle(this.app.options.originalTitle);
       this.reFocus();
@@ -995,16 +1047,11 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     routeContest: function(contest) {
       this.teardownObjects();
 
-      this.app.contest = new this.app.ContestModel({ id: contest }, { app: this.app });
+      this.app.contest = new models.ContestModel({ id: contest }, { app: this.app });
       this.app.contest.connect();
-      this.app.contestView = new this.app.ContestView({
+      this.app.contestView = new views.ContestView({
         el: this.app.$el.find('.content-container'),
-        template: this.app.template('template-contest'),
-        data: this.app.contest,
-        partials: {
-          loading: this.app.template('template-loading')
-        },
-        adaptors: [ 'Backbone' ]
+        data: this.app.contest
       });
       this.app.contestView.observeTitle(this.app.options.originalTitle);
       this.reFocus();
@@ -1018,25 +1065,19 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
 
       // Handle location
       function handleLocation(lonlat) {
-        thisRouter.app.locationContests = new thisRouter.app.ContestsLocationCollection(
+        thisRouter.app.locationContests = new collections.ContestsLocationCollection(
           [], {
             app: thisRouter.app,
             lonlat: lonlat
           });
         thisRouter.app.locationContests.fetchBoundaryFromCoordinates();
-        thisRouter.app.contestsLocationView = new thisRouter.app.ContestsView({
+        thisRouter.app.contestsLocationView = new views.ContestsView({
           el: thisRouter.app.$el.find('.content-container'),
-          template: thisRouter.app.template('template-contests'),
           data: {
             models: thisRouter.app.locationContests,
             title: (place) ? 'Contests for "' + place + '"' : 'Contests for your location',
             lonlat: lonlat
-          },
-          partials: {
-            contest: thisRouter.app.template('template-contest'),
-            loading: thisRouter.app.template('template-loading')
-          },
-          adaptors: [ 'Backbone' ]
+          }
         });
         thisRouter.app.contestsLocationView.observeTitle(thisRouter.app.options.originalTitle);
         thisRouter.reFocus();
@@ -1115,7 +1156,7 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
     teardownObjects: function() {
       var thisRouter = this;
       var views = ['contestView', 'contestsSearchView', 'contestsLocationView'];
-      var models = ['contest', 'contestsSearch', 'locationContests'];
+      var models = ['contest', 'contestsSearch', 'locationContests', 'election'];
 
       // Merge in dashboard contests
       if (_.isObject(this.app.dashboardContests)) {
@@ -1142,4 +1183,224 @@ mpTemplates = mpTemplates || {}; mpTemplates['minnpost-elections-dashboard'] = {
       });
     }
   });
-})(mpApps['minnpost-elections-dashboard'], jQuery);
+
+  return routers;
+});
+
+/**
+ * Main application file for: minnpost-elections-dashboard
+ *
+ * This pulls in all the parts
+ * and creates the main object for the application.
+ */
+
+// Create main application
+define('minnpost-elections-dashboard', [
+  'jquery', 'underscore', 'ractive', 'mpConfig', 'mpFormatters',
+  'helpers', 'views', 'routers'
+], function(
+  $, _, Ractive, mpConfig, mpFormatters,
+  helpers, views, routers
+  ) {
+
+  // Constructor for app
+  var App = function(options) {
+    this.options = _.extend(this.defaultOptions, options);
+    this.el = this.options.el;
+    this.$el = $(this.el);
+    this.$ = function(selector) { return this.$el.find(selector); };
+    this.$content = this.$el.find('.content-container');
+    this.loadApp();
+  };
+
+  // Extend with custom methods
+  _.extend(App.prototype, {
+    // Start function
+    start: function() {
+      var thisApp = this;
+
+      // Override Backbone's AJAX
+      helpers.overrideBackboneAJAX();
+
+      // Render the container and "static" templates.
+      this.applicationView = new views.ApplicationView({
+        el: this.$el
+      });
+      thisApp.footnoteView = new views.FootnoteView({
+        el: this.$el.find('.footnote-container')
+      });
+
+      // Create router which will handle most of the high
+      // level logic
+      this.router = new routers.DashboardRouter(_.extend(this.options, { app: this }));
+      this.router.start();
+
+      // Try to ensure that links are prevented from their default
+      // behavior.  Sometimes because of Ractive's dom insertions, the
+      // preventDefault is not handled correctly
+      if (this.options.capabilities.preventLinks) {
+        $('a[href^="#"]').on('click', this.$el, function(e) {
+          e.preventDefault();
+          thisApp.router.navigate($(this).attr('href'), { trigger: true });
+        });
+      }
+
+      //helpers.getLocalData('neighborhood-stop-data.topo.json', this.options).done(function(data) {
+    },
+
+    // Default options
+    defaultOptions: {
+      projectName: 'minnpost-elections-dashboard',
+      remoteProxy: '//mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
+      el: '.minnpost-elections-dashboard-container',
+      electionsAPIPollInterval: 50000,
+      electionsAPI: '//50.19.100.197/?box=ubuntu&method=sql&q=',
+      electionsAPILocal: '//localhost:5000/?q=',
+      electionsAPIEC2: '//50.19.100.197/?box=ubuntu&method=sql&q=',
+      electionsAPIScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
+      boundaryAPI: '//boundaries.minnpost.com/1.0/',
+      boundarySets: [
+        'counties-2010',
+        'minor-civil-divisions-2010',
+        'school-districts-2013',
+        'wards-2012',
+        'state-house-districts-2012',
+        'state-senate-districts-2012',
+        'minnesota-state-2014',
+        'district-courts-2012'
+      ],
+      // Please don't steal/abuse
+      mapQuestKey: 'Fmjtd%7Cluur20a7n0%2C8n%3Do5-9a1s9f',
+      mapQuestQuery: '//open.mapquestapi.com/geocoding/v1/address?key=[[[KEY]]]&outFormat=json&countrycodes=us&maxResults=1&location=[[[ADDRESS]]]',
+      originalTitle: document.title,
+      capabilities: {
+        typeahead: true, //(helpers.isMSIE() !== 9),
+        preventLinks: (!helpers.isMSIE() && helpers.isMSIE() <= 9)
+      },
+      availablePaths: {
+        local: {
+          css: ['.tmp/css/main.css'],
+          images: 'images/',
+          data: 'data/'
+        },
+        build: {
+          css: [
+            '//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css',
+            'dist/minnpost-elections-dashboard.libs.min.css',
+            'dist/minnpost-elections-dashboard.latest.min.css'
+          ],
+          ie: [
+            'dist/minnpost-elections-dashboard.libs.min.ie.css',
+            'dist/minnpost-elections-dashboard.latest.min.ie.css'
+          ],
+          images: 'dist/images/',
+          data: 'dist/data/'
+        },
+        deploy: {
+          css: [
+            '//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css',
+            '//s3.amazonaws.com/data.minnpost/projects/minnpost-elections-dashboard/minnpost-elections-dashboard.libs.min.css',
+            '//s3.amazonaws.com/data.minnpost/projects/minnpost-elections-dashboard/minnpost-elections-dashboard.latest.min.css'
+          ],
+          ie: [
+            '//s3.amazonaws.com/data.minnpost/projects/minnpost-elections-dashboard/minnpost-elections-dashboard.libs.min.ie.css',
+            '//s3.amazonaws.com/data.minnpost/projects/minnpost-elections-dashboard/minnpost-elections-dashboard.latest.min.ie.css'
+          ],
+          images: '//s3.amazonaws.com/data.minnpost/projects/minnpost-elections-dashboard/images/',
+          data: '//s3.amazonaws.com/data.minnpost/projects/minnpost-elections-dashboard/data/'
+        }
+      }
+    },
+
+    // Load up app
+    loadApp: function() {
+      this.determinePaths();
+      this.getLocalAssests(function(map) {
+        this.renderAssests(map);
+        this.start();
+      });
+    },
+
+    // Determine paths.  A bit hacky.
+    determinePaths: function() {
+      var query;
+      this.options.deployment = 'deploy';
+
+      if (window.location.host.indexOf('localhost') !== -1) {
+        this.options.deployment = 'local';
+
+        // Check if a query string forces something
+        query = helpers.parseQueryString();
+        if (_.isObject(query) && _.isString(query.mpDeployment)) {
+          this.options.deployment = query.mpDeployment;
+        }
+      }
+
+      this.options.paths = this.options.availablePaths[this.options.deployment];
+    },
+
+    // Get local assests, if needed
+    getLocalAssests: function(callback) {
+      var thisApp = this;
+
+      // If local read in the bower map
+      if (this.options.deployment === 'local') {
+        $.getJSON('bower.json', function(data) {
+          callback.apply(thisApp, [data.dependencyMap]);
+        });
+      }
+      else {
+        callback.apply(this, []);
+      }
+    },
+
+    // Rendering tasks
+    renderAssests: function(map) {
+      var isIE = (helpers.isMSIE() && helpers.isMSIE() <= 8);
+
+      // Add CSS from bower map
+      if (_.isObject(map)) {
+        _.each(map, function(c, ci) {
+          if (c.css) {
+            _.each(c.css, function(s, si) {
+              s = (s.match(/^(http|\/\/)/)) ? s : 'bower_components/' + s + '.css';
+              $('head').append('<link rel="stylesheet" href="' + s + '" type="text/css" />');
+            });
+          }
+          if (c.ie && isIE) {
+            _.each(c.ie, function(s, si) {
+              s = (s.match(/^(http|\/\/)/)) ? s : 'bower_components/' + s + '.css';
+              $('head').append('<link rel="stylesheet" href="' + s + '" type="text/css" />');
+            });
+          }
+        });
+      }
+
+      // Get main CSS
+      _.each(this.options.paths.css, function(c, ci) {
+        $('head').append('<link rel="stylesheet" href="' + c + '" type="text/css" />');
+      });
+      if (isIE) {
+        _.each(this.options.paths.ie, function(c, ci) {
+          $('head').append('<link rel="stylesheet" href="' + c + '" type="text/css" />');
+        });
+      }
+
+      // Add a processed class
+      this.$el.addClass('processed');
+    }
+  });
+
+  return App;
+});
+
+
+/**
+ * Run application
+ */
+require(['jquery', 'minnpost-elections-dashboard'], function($, App) {
+  $(document).ready(function() {
+    var app = new App();
+  });
+});
+
