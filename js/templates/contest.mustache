@@ -17,7 +17,7 @@
   {{#((results.length > 0) && synced)}}
     <h3>
       {{ title }}
-      {{#(show_party != undefined)}} {{ show_party }}{{/()}}
+      {{#(show_party != undefined)}}<span class="party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}
     </h3>
 
     {{^isDashboard}}
@@ -84,7 +84,7 @@
               <td class="candidate-column">{{ candidate }}</td>
 
               {{#(partisan && show_party === undefined)}}
-                <td>{{ party_id }}</td>
+                <td><span class="party-label bg-color-political-{{ party_id.toLowerCase() }}" title="{{ parties[party_id.toLowerCase()] }}">{{ party_id }}</span></td>
               {{/()}}
 
               {{#(ranked_choice == 1)}}

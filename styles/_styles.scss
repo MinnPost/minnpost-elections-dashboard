@@ -120,6 +120,14 @@ $color-dark-gray: #282828;
     @include transition(background-color 3s ease);
   }
 
+  // Parties
+  .party-label {
+    padding-left: 0.35em;
+    padding-right: 0.35em;
+    color: #FFFFFF;
+    @include border-radius(2px);
+  }
+
   // General table
   table {
 
