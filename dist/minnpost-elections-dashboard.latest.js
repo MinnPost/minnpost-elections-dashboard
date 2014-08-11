@@ -595,16 +595,19 @@ define('text!templates/application.mustache',[],function () { return '<div class
 define('text!templates/footnote.mustache',[],function () { return '<div class="footnote">\n  <p>Unofficial election data provided by the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a>.  For ranked-choice contests data is supplemented manually from the <a href="http://vote.minneapolismn.gov/" target="_blank">City of Minneapolis</a> and the <a href="http://www.stpaul.gov/index.aspx?NID=188" target="_blank">City of St. Paul</a>.  Test data will be provided until 8PM on Election Night.</p>\n\n  <p>The geographical boundaries, though received from official sources and queried from our <a href="http://boundaries.minnpost.com" target="_blank">boundary service</a>, may not represent the exact, offical area for a contest, race, or election.  It is also possible that for a given location the contests may not be accurate due to data quality with multiple agencies.  Please refer to your local and state election officials to know exactly what contests happen for a given location.</p>\n\n  <p>Some map data © OpenStreetMap contributors; licensed under the <a href="http://www.openstreetmap.org/copyright" target="_blank">Open Data Commons Open Database License</a>.  Some map design © MapBox; licensed according to the <a href="http://mapbox.com/tos/" target="_blank">MapBox Terms of Service</a>.  Location geocoding provided by <a href="http://www.mapquest.com/" target="_blank">Mapquest</a> and is not guaranteed to be accurate.</p>\n\n  <p>Some code, techniques, and data on <a href="https://github.com/minnpost/minnpost-elections-dashboard" target="_blank">Github</a>.</p>\n</div>\n';});
 
 
-define('text!templates/contest.mustache',[],function () { return '<div class="contest {{#isDashboard}}dashboard-contest{{/isDashboard}} {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}}{{#(final === true)}}is-final{{/()}}">\n  {{^isDashboard}}\n    <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n  {{/isDashboard}}\n\n  <div>\n    {{#((results.length == 0 || results == undefined) && !synced)}}\n      {{>loading}}\n    {{/()}}\n  </div>\n\n  {{#((results.length == 0 || results == undefined) && synced)}}\n    <h3>Did not find any contests</h3>\n  {{/()}}\n\n\n  {{#((results.length > 0) && synced)}}\n    <h3>\n      {{ title }}\n      {{#(show_party != undefined)}}<span class="show-party party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}\n    </h3>\n\n    {{^isDashboard}}\n      <div class="last-updated">Last updated at {{ updated.format(\'h:mm a\') }}</div>\n    {{/isDashboard}}\n\n    {{#(!!question_body)}}\n      <p>{{{ question_body }}}</p>\n    {{/()}}\n  {{/()}}\n\n  <div class="{{^isDashboard}}row{{/isDashboard}}">\n    <div class="{{^isDashboard}}column-medium-70 inner-column-left{{/isDashboard}}">\n      <table class="striped">\n        <thead>\n          <tr class="table-first-heading">\n            <th class="winner-column"></th>\n            <th>Candidate</th>\n            {{#(partisan && show_party === undefined)}}\n              <th>Party</th>\n            {{/()}}\n            {{#(ranked_choice == 1)}}\n              <th class="first-choice-column">Results</th>\n              <th class="second-choice-column"></th>\n              <th class="third-choice-column"></th>\n              <th class="final-column">Final</th>\n            {{/()}}\n            {{#(ranked_choice != 1)}}\n              {{^isDashboard}}\n                <th class="percentage">Percentage</th>\n                <th class="votes">Votes</th>\n              {{/isDashboard}}\n              {{#isDashboard}}\n                <th class="percentage">Results</th>\n              {{/isDashboard}}\n            {{/()}}\n          </tr>\n          <tr class="table-second-heading">\n            <th class="winner-column"></th>\n            <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>\n            {{#(partisan && show_party === undefined)}}\n              <th></th>\n            {{/()}}\n            {{#(ranked_choice == 1)}}\n              <th class="first-choice-column first-choice-heading">1st choice</th>\n              <th class="second-choice-column second-choice-heading">2nd choice</th>\n              <th class="third-choice-column third-choice-heading">3rd choice</th>\n              <th class="final-column"></th>\n            {{/()}}\n            {{#(ranked_choice != 1)}}\n              <th></th>\n              {{^isDashboard}}\n                <th></th>\n              {{/isDashboard}}\n            {{/()}}\n          </tr>\n        </thead>\n\n        <tbody>\n          {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party != undefined && party_id == show_party)))}}\n            <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? \'even\' : \'odd\' }}">\n              <td class="winner-column">{{#winner}}<span class="fa fa-check"></span>{{/winner}}</td>\n\n              <td class="candidate-column">{{ candidate }}</td>\n\n              {{#(partisan && show_party === undefined)}}\n                <td><span class="party-label bg-color-political-{{ party_id.toLowerCase() }}" title="{{ parties[party_id.toLowerCase()] }}">{{ party_id }}</span></td>\n              {{/()}}\n\n              {{#(ranked_choice == 1)}}\n                <td class="first-choice-column first-choice-heading">{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>\n                <td class="second-choice-column first-choice-heading">{{ formatters.number(ranked_choices.2.percentage) }}% ({{ formatters.number(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>\n                <td class="third-choice-column first-choice-heading">{{ formatters.number(ranked_choices.3.percentage) }}% ({{ formatters.number(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>\n                <td class="final-column first-choice-heading">{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% ({{ formatters.number(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>\n              {{/()}}\n\n              {{#(ranked_choice != 1)}}\n                <td class="percentage">{{ formatters.number(percentage) }}%</td>\n                {{^isDashboard}}\n                  <td class="votes">{{ formatters.number(votes_candidate, 0) }}</td>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n          {{/()}} {{/results}}\n        </tbody>\n      </table>\n\n      <a href="#contest/{{ id }}" class="contest-link">{{#isDashboard}}Full results{{/isDashboard}}{{^isDashboard}}Permalink{{/isDashboard}}</a>\n    </div>\n\n    {{^isDashboard}}\n      <div class="column-medium-30 inner-column-right">\n        <div class="contest-map" id="contest-map-{{ id }}"></div>\n      </div>\n    {{/isDashboard}}\n  </div>\n</div>\n';});
+define('text!templates/contest.mustache',[],function () { return '<div class="contest {{#isDashboard}}dashboard-contest{{/isDashboard}} {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}}{{#(final === true)}}is-final{{/()}} {{#primary}}primary{{/primary}}">\n  {{^isDashboard}}\n    <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n  {{/isDashboard}}\n\n  <div>\n    {{#((results.length == 0 || results == undefined) && !synced)}}\n      {{>loading}}\n    {{/()}}\n  </div>\n\n  {{#((results.length == 0 || results == undefined) && synced)}}\n    <h3>Did not find any contests</h3>\n  {{/()}}\n\n\n  {{#((results.length > 0) && synced)}}\n    <h3>\n      {{ title }}\n      {{#(show_party != undefined)}}<span class="show-party party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}\n    </h3>\n\n    {{^isDashboard}}\n      <div class="last-updated">Last updated at {{ updated.format(\'h:mm a\') }}</div>\n    {{/isDashboard}}\n\n    {{#(!!question_body)}}\n      <p>{{{ question_body }}}</p>\n    {{/()}}\n  {{/()}}\n\n  <div class="{{^isDashboard}}row{{/isDashboard}}">\n    <div class="{{^isDashboard}}column-medium-70 inner-column-left{{/isDashboard}}">\n      <div class="">\n        <table class="striped">\n          <thead>\n            <tr class="table-first-heading">\n              <th class="winner-column"></th>\n              <th>Candidate</th>\n              {{#(partisan && show_party === undefined)}}\n                <th>\n                  <span class="large-table-label">Party</span>\n                  <span class="small-table-label"></span>\n                </th>\n              {{/()}}\n              {{#(ranked_choice == 1)}}\n                <th class="first-choice-column">Results</th>\n                <th class="second-choice-column"></th>\n                <th class="third-choice-column"></th>\n                <th class="final-column">Final</th>\n              {{/()}}\n              {{#(ranked_choice != 1)}}\n                {{^isDashboard}}\n                  <th class="percentage">\n                    <span class="large-table-label">Percentage</span>\n                    <span class="small-table-label">%</span>\n                  </th>\n                  <th class="votes">Votes</th>\n                {{/isDashboard}}\n                {{#isDashboard}}\n                  <th class="percentage">Results</th>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n            <tr class="table-second-heading">\n              <th class="winner-column"></th>\n              <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>\n              {{#(partisan && show_party === undefined)}}\n                <th></th>\n              {{/()}}\n              {{#(ranked_choice == 1)}}\n                <th class="first-choice-column first-choice-heading">1st choice</th>\n                <th class="second-choice-column second-choice-heading">2nd choice</th>\n                <th class="third-choice-column third-choice-heading">3rd choice</th>\n                <th class="final-column"></th>\n              {{/()}}\n              {{#(ranked_choice != 1)}}\n                <th></th>\n                {{^isDashboard}}\n                  <th></th>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n          </thead>\n\n          <tbody>\n            {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party != undefined && party_id == show_party)))}}\n              <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? \'even\' : \'odd\' }} {{#primary}}{{ party_id.toLowerCase() }}{{/primary}}">\n                <td class="winner-column">{{#winner}}<span class="fa fa-check"></span>{{/winner}}</td>\n\n                <td class="candidate-column">{{ candidate }}</td>\n\n                {{#(partisan && show_party === undefined)}}\n                  <td><span class="party-label bg-color-political-{{ party_id.toLowerCase() }}" title="{{ parties[party_id.toLowerCase()] }}">{{ party_id }}</span></td>\n                {{/()}}\n\n                {{#(ranked_choice == 1)}}\n                  <td class="first-choice-column first-choice-heading">{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="second-choice-column first-choice-heading">{{ formatters.number(ranked_choices.2.percentage) }}% ({{ formatters.number(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="third-choice-column first-choice-heading">{{ formatters.number(ranked_choices.3.percentage) }}% ({{ formatters.number(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="final-column first-choice-heading">{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% ({{ formatters.number(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>\n                {{/()}}\n\n                {{#(ranked_choice != 1)}}\n                  <td class="percentage">{{ formatters.number(percentage) }}%</td>\n                  {{^isDashboard}}\n                    <td class="votes">{{ formatters.number(votes_candidate, 0) }}</td>\n                  {{/isDashboard}}\n                {{/()}}\n              </tr>\n            {{/()}} {{/results}}\n          </tbody>\n        </table>\n      </div>\n\n      <a href="#contest/{{ id }}" class="contest-link">{{#isDashboard}}Full results{{/isDashboard}}{{^isDashboard}}Permalink{{/isDashboard}}</a>\n    </div>\n\n    {{^isDashboard}}\n      <div class="column-medium-30 inner-column-right">\n        <div class="contest-map" id="contest-map-{{ id }}"></div>\n      </div>\n    {{/isDashboard}}\n  </div>\n</div>\n';});
 
 
 define('text!templates/contests.mustache',[],function () { return '<div class="contests">\n  <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n\n  <div class="row">\n    <div class="column-medium-70 inner-column-left contests-title-section">\n      <h2 class="contests-title {{#(lonlat != undefined)}}with-location{{/()}}">{{ (title) ? title : \'Contests\' }}</h2>\n\n      <p class="caption">\n        Found\n          {{#(models.length == 0 && !synced)}}\n            <i class="loading small"></i>\n          {{/())}}\n          {{#synced}}\n            {{ models.length }}\n          {{/synced}}\n        results.\n      </p>\n\n      {{#(lonlat != undefined)}}\n        <p class="caption">The map below shows the approximate location of your search. If the location is not correct, try <a href="#dashboard">searching for a more specific address</a>.</p>\n\n        <div id="location-map"></div>\n      {{/())}}\n    </div>\n\n    <div class="column-medium-30 inner-column-right"></div>\n  </div>\n\n  <div>\n    {{#(models.length == 0 && !synced)}}\n      {{>loading}}\n    {{/())}}\n\n    {{#(models.length == 0 && synced)}}\n      <p class="large">Unable to find any contests.</p>\n    {{/())}}\n  </div>\n\n  <div class="contest-list">\n    {{#models:i}}\n      {{>contest}}\n    {{/models}}\n  </div>\n</div>\n';});
 
 
-define('text!templates/dashboard.mustache',[],function () { return '<div class="dashboard {{ classes }}">\n\n  <div class="location-search-section">\n    <form role="form" class="" on-submit="addresssSearch">\n\n      <div class="location-search-group">\n        <div class="form-input-group">\n          <label for="address" class="sr-only">Search address for results</label>\n          <input type="text" id="address-search" placeholder="Search address for results">\n\n          <div class="button-group">\n            <button type="submit" class="button primary address-search-submit">Search</button>\n          </div>\n        </div>\n      </div>\n\n      {{#geolocationEnabled}}\n        <div class="geolocation">\n          <a href="#location">Or view contests at your current location <i class="fa fa-location-arrow"></i></a>\n        </div>\n      {{/geolocationEnabled}}\n    </form>\n  </div>\n\n  <div class="last-updated-section">\n    <div>\n      {{#election.date}}\n        {{ election.date.format(\'MMM DD, YYYY\') }} {{ (election.primary) ? \'primary\' : \'general\' }} election {{#election.isTest}}<em>test</em>{{/election.isTest}} results.\n      {{/election.date}}\n      {{#election.updated}}\n        Last updated at {{ election.updated.format(\'h:mm a\') }}\n      {{/election.updated}}\n    </div>\n  </div>\n\n  <div class="row">\n    <div class="column-medium-50">\n      <div class="inner-column-left">\n\n        <div class="contest-governor-r dashboard-section">\n          {{#contestGovernorR}}\n            {{>contest}}\n          {{/contestGovernorR}}\n        </div>\n\n        <div class="contest-auditor-dfl dashboard-section">\n          {{#contestAuditorDFL}}\n            {{>contest}}\n          {{/contestAuditorDFL}}\n        </div>\n\n        <div class="elections-search dashboard-section">\n          <h4>Other elections</h4>\n\n          <form role="form" class="" on-submit="contestSearch">\n\n            <p class="caption" for="contest-search">{{#capabilities.typeahead}}Search contests by title or candidate.  Start typing to see suggestions for specific contests, or search by {{/capabilities.typeahead}}{{^capabilities.typeahead}}Search contests by title with {{/capabilities.typeahead}} keywords (e.g., "<a href="#search/state+representative">state representative</a>" or "<a href="#search/school+board">school board</a>").</p>\n\n            <div class="form-input-group">\n              <input type="text" id="contest-search" placeholder="Search by title{{#capabilities.typeahead}} or candidate{{/capabilities.typeahead}}" />\n\n              <div class="button-group">\n                <button type="submit" class="button primary contest-search-submit">Search</button>\n              </div>\n            </div>\n          </form>\n        </div>\n      </div>\n    </div>\n\n    <div class="column-medium-50">\n      <div class="inner-column-right">\n\n        <div class="contest-senate-r dashboard-section">\n          {{#contestSenateR}}\n            {{>contest}}\n          {{/contestSenateR}}\n        </div>\n\n        <div class="contest-house-60b-dfl dashboard-section">\n          {{#contestHouse60BDFL}}\n            {{>contest}}\n          {{/contestHouse60BDFL}}\n        </div>\n\n        <div class="contest-house-48b-r dashboard-section">\n          {{#contestHouse48BR}}\n            {{>contest}}\n          {{/contestHouse48BR}}\n        </div>\n\n      </div>\n    </div>\n  </div>\n</div>\n';});
+define('text!templates/dashboard.mustache',[],function () { return '<div class="dashboard {{ classes }}">\n\n  <div class="location-search-section">\n    <form role="form" class="" on-submit="addresssSearch">\n\n      <div class="location-search-group">\n        <div class="form-input-group">\n          <label for="address" class="sr-only">Search address for results</label>\n          <input type="text" id="address-search" placeholder="Search address for results">\n\n          <div class="button-group">\n            <button type="submit" class="button primary address-search-submit">Search</button>\n          </div>\n        </div>\n      </div>\n\n      {{#geolocationEnabled}}\n        <div class="geolocation">\n          <a href="#location">Or view contests at your current location <i class="fa fa-location-arrow"></i></a>\n        </div>\n      {{/geolocationEnabled}}\n    </form>\n  </div>\n\n  <div class="last-updated-section">\n    <div>\n      {{#election.date}}\n        {{ election.date.format(\'MMM DD, YYYY\') }} {{ (election.primary) ? \'primary\' : \'general\' }} election {{#election.isTest}}<em>test</em>{{/election.isTest}} results.\n      {{/election.date}}\n      {{#election.updated}}\n        Last updated at {{ election.updated.format(\'h:mm a\') }}\n      {{/election.updated}}\n    </div>\n  </div>\n\n  <div class="row">\n    <div class="column-medium-50">\n      <div class="inner-column-left">\n\n        <div class="contest-governor-r dashboard-section">\n          {{#contestGovernorR}}\n            {{>contest}}\n          {{/contestGovernorR}}\n        </div>\n\n        <div class="contest-auditor-dfl dashboard-section">\n          {{#contestAuditorDFL}}\n            {{>contest}}\n          {{/contestAuditorDFL}}\n        </div>\n\n        <div class="elections-search dashboard-section">\n          <h4>Other elections</h4>\n          {{>electionsSearch}}\n        </div>\n      </div>\n    </div>\n\n    <div class="column-medium-50">\n      <div class="inner-column-right">\n\n        <div class="contest-senate-r dashboard-section">\n          {{#contestSenateR}}\n            {{>contest}}\n          {{/contestSenateR}}\n        </div>\n\n        <div class="contest-house-60b-dfl dashboard-section">\n          {{#contestHouse60BDFL}}\n            {{>contest}}\n          {{/contestHouse60BDFL}}\n        </div>\n\n        <div class="contest-house-48b-r dashboard-section">\n          {{#contestHouse48BR}}\n            {{>contest}}\n          {{/contestHouse48BR}}\n        </div>\n\n        <div class="elections-search dashboard-section">\n          <h4>Other elections</h4>\n          {{>electionsSearch}}\n        </div>\n\n      </div>\n    </div>\n  </div>\n</div>\n';});
 
 
 define('text!templates/loading.mustache',[],function () { return '<div class="loading-container">\n  <i class="loading"></i> Loading...\n</div> \n';});
+
+
+define('text!templates/elections-search-form.mustache',[],function () { return '<form role="form" class="" on-submit="contestSearch">\n\n  <p class="caption" for="contest-search">{{#capabilities.typeahead}}Search contests by title or candidate.  Start typing to see suggestions for specific contests, or search by {{/capabilities.typeahead}}{{^capabilities.typeahead}}Search contests by title with {{/capabilities.typeahead}} keywords (e.g., "<a href="#search/state+representative">state representative</a>" or "<a href="#search/school+board">school board</a>").</p>\n\n  <div class="form-input-group">\n    <input type="text" class="contest-search" placeholder="Search by title{{#capabilities.typeahead}} or candidate{{/capabilities.typeahead}}" />\n\n    <div class="button-group">\n      <button type="submit" class="button primary contest-search-submit">Search</button>\n    </div>\n  </div>\n</form>\n';});
 
 /**
  * Views
@@ -616,12 +619,13 @@ define('views',[
   'bloodhound', 'typeahead-js', 'placeholders-js', 'mpConfig', 'mpFormatters',
   'text!templates/application.mustache', 'text!templates/footnote.mustache',
   'text!templates/contest.mustache', 'text!templates/contests.mustache',
-  'text!templates/dashboard.mustache', 'text!templates/loading.mustache'
+  'text!templates/dashboard.mustache', 'text!templates/loading.mustache',
+  'text!templates/elections-search-form.mustache'
 ], function(
   $, _, Backbone, Ractive, RactiveETap, RactiveBackbone, L, models,
   collections, Bloodhound, typeahead, placeholders, mpConfig, mpFormatters,
   tApplication, tFootnote, tContest,
-  tContests, tDashboard, tLoading
+  tContests, tDashboard, tLoading, tElectionsSearch
   ) {
   var views = {};
 
@@ -731,20 +735,6 @@ define('views',[
       }, 500);
     },
 
-    // Form handling for some older browsers.  This does end up
-    // firing the handler twice :(
-    handleForms: function() {
-      var thisView = this;
-      $(this.el).find('form').on('submit', function(e) {
-        var trigger = $(this).attr('legacy-on-submit');
-        if (trigger) {
-          e.preventDefault();
-          thisView.fire(trigger, { original: e });
-        }
-        return false;
-      });
-    },
-
     // Handle title change for document title
     observeTitle: function(originalTitle) {
       this.observe('title', function(newValue, oldValue) {
@@ -761,12 +751,13 @@ define('views',[
 
     partials: {
       contest: tContest,
-      loading: tLoading
+      loading: tLoading,
+      electionsSearch: tElectionsSearch
     },
 
     init: function(options) {
       var thisView = this;
-      var $contestSearch = $(this.el).find('#contest-search');
+      var $contestSearch = $(this.el).find('.contest-search');
       var query, querySearchEngine;
       this.app = options.app;
 
@@ -810,17 +801,19 @@ define('views',[
         querySearchEngine.initialize();
 
         // Make typeahead functionality for search
-        $contestSearch.typeahead(null, {
-          displayKey: 'title',
-          source: querySearchEngine.ttAdapter(),
-          minLength: 3,
-          hint: true,
-          highlight: true
-        });
+        $contestSearch.each(function() {
+          $(this).typeahead(null, {
+            displayKey: 'title',
+            source: querySearchEngine.ttAdapter(),
+            minLength: 3,
+            hint: true,
+            highlight: true
+          });
 
-        // Handle search selected
-        $contestSearch.on('typeahead:selected', function(e, data, name) {
-          thisView.app.router.navigate('/contest/' + data.id, { trigger: true });
+          // Handle search selected
+          $(this).on('typeahead:selected', function(e, data, name) {
+            thisView.app.router.navigate('/contest/' + data.id, { trigger: true });
+          });
         });
 
         // Teardown event to remove typeahead gracefully
@@ -1012,13 +1005,15 @@ define('routers',[
       });
       this.app.dashboardView.on('contestSearch', function(e) {
         e.original.preventDefault();
-        var $input = $(this.el).find('#contest-search');
+        var $input = $(e.node).find('.contest-search.tt-input');
         var val = $input.val();
+
         if (val) {
           thisRouter.navigate('/search/' + encodeURIComponent(val),
           { trigger: true });
         }
       });
+
       this.app.dashboardView.observeTitle(this.app.options.originalTitle);
       this.reFocus();
     },
@@ -1178,7 +1173,9 @@ define('routers',[
             // and really screws things up
             //thisRouter.app[v].map.remove();
           }
+
           thisRouter.app[v].teardown();
+          delete thisRouter.app[v];
         }
       });
     }

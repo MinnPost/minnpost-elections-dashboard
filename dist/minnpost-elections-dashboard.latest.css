@@ -46,6 +46,9 @@
   font-size: .85em;
   line-height: 1.5em;
 }
+.mp .minnpost-elections-dashboard-container table thead .small-table-label {
+  display: none;
+}
 .mp .minnpost-elections-dashboard-container .tt-hint {
   color: #7a7a7a;
 }
@@ -112,8 +115,7 @@
   transition: background-color 3s ease;
 }
 .mp .minnpost-elections-dashboard-container .party-label {
-  padding-left: 0.35em;
-  padding-right: 0.35em;
+  padding: 0.1em 0.35em;
   color: #FFFFFF;
   -webkit-border-radius: 2px;
   -moz-border-radius: 2px;
@@ -183,6 +185,9 @@
 .mp .minnpost-elections-dashboard-container .dashboard .show-party.party-label {
   font-size: .85em;
 }
+.mp .minnpost-elections-dashboard-container .dashboard .inner-column-right .elections-search {
+  display: none;
+}
 .mp .minnpost-elections-dashboard-container .dashboard .dashboard-contest h3 {
   font-size: 1.55em;
   margin-bottom: .25em;
@@ -216,19 +221,25 @@
   vertical-align: middle;
   width: 100%;
 }
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 640px) {
+  .mp .minnpost-elections-dashboard-container table thead .small-table-label {
+    display: inline;
+  }
+  .mp .minnpost-elections-dashboard-container table thead .large-table-label {
+    display: none;
+  }
   .mp .minnpost-elections-dashboard-container .inner-column-left,
   .mp .minnpost-elections-dashboard-container .contest .inner-column-left,
-  .mp .minnpost-elections-dashboard-container .contests .inner-column-left {
+  .mp .minnpost-elections-dashboard-container .contests .inner-column-left,
+  .mp .minnpost-elections-dashboard-container .dashboard .inner-column-left {
     padding-right: 0;
   }
   .mp .minnpost-elections-dashboard-container .inner-column-right,
   .mp .minnpost-elections-dashboard-container .contest .inner-column-right,
-  .mp .minnpost-elections-dashboard-container .contests .inner-column-right {
+  .mp .minnpost-elections-dashboard-container .contests .inner-column-right,
+  .mp .minnpost-elections-dashboard-container .dashboard .inner-column-right {
     padding-left: 0;
   }
-}
-@media screen and (max-width: 500px) {
   .mp .minnpost-elections-dashboard-container .is-ranked-choice .candidate-column {
     width: auto;
   }
@@ -237,5 +248,14 @@
   }
   .mp .minnpost-elections-dashboard-container .contest .third-choice-column {
     display: none;
+  }
+  .mp .minnpost-elections-dashboard-container .dashboard .location-search-section form .form-input-group {
+    width: auto;
+  }
+  .mp .minnpost-elections-dashboard-container .dashboard .inner-column-left .elections-search {
+    display: none;
+  }
+  .mp .minnpost-elections-dashboard-container .dashboard .inner-column-right .elections-search {
+    display: block;
   }
 }

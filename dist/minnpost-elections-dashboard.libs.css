@@ -969,6 +969,9 @@ html {
    * Progress bars.
    */
   /**
+   * Some notes for browsers.
+   */
+  /**
    * Navigation stuff
    */
   /**
@@ -2801,6 +2804,12 @@ html {
   -o-transition: width 0.6s ease;
   transition: width 0.6s ease;
 }
+.mp .noscript-note,
+.mp .browser-upgrade-note {
+  background-color: #fbd341;
+  border: 1px solid #d2a504;
+  padding: .5em 1em;
+}
 .mp .navigation {
   margin-bottom: 1em;
 }
@@ -3250,16 +3259,16 @@ html {
   background-color: #0793ab;
 }
 .mp .color-political-r {
-  color: #e62b0a;
+  color: #a1000f;
 }
 .mp .bg-color-political-r {
-  background-color: #e62b0a;
+  background-color: #a1000f;
 }
 .mp .color-political-ip {
-  color: #f75336;
+  color: #ff781f;
 }
 .mp .bg-color-political-ip {
-  background-color: #f75336;
+  background-color: #ff781f;
 }
 .mp .color-political-lib {
   color: #7a7a7a;
