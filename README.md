@@ -104,6 +104,28 @@ We use cron to get the results every few minutes.  This will copy our cron to th
 
     crontab deploy/crontab
 
+## Load testing
+
+There are many ways to do load testing, but here are some free-er options.
+
+### Bees with Machine Guns
+
+1. Install: `pip install beeswithmachineguns`
+1. Set environment variables.
+    * `export AWS_ACCESS_KEY_ID=xxxx`
+    * `export AWS_SECRET_ACCESS_KEY=xxxx`
+1. Copy your private AWS keypair file to something like: `~/.ssh/minnpost.pem`
+1. Set up an EC2 security group, specifically one that has SSH (port 22) access.  We name ours `SecuriBees`.
+1. Spin up bees (overall more bees will allow for more attacking): `bees up -s 4 -g SecuriBees -k minnpost`
+1. Send the bees to attack: `bees attack -n 10000 -c 1000 -u "http://50.19.100.197/?box=ubuntu&method=sql&q=SELECT%20*%20FROM%20results%20LIMIT%2010"`
+    * `n` is the number of requests, while `c` is the number of concurrent requests.  Play around with this to determine limits.  For some reference, on election night we could get up to 4,000 active users on the dashboard, each making around 10 calls to the API every minute.
+    * The initial time should be slower than subsequent requests because of the aggressive minute long caching.
+    * You may want to run `top` on the API server to see how the server is running against the load.
+
+### Other tools
+
+* [loadimpact.com](http://loadimpact.com/) allows for a free, public test.
+
 ## ScraperWiki
 
 The code and deployment methods have been designed so that on slower traffic times, these operations can happen on ScraperWiki and save resources.  You will have to SSH into the scraper and add the needed libraries, `pip install --user logging lxml datetime flask gdata`.
