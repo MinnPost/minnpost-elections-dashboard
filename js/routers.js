@@ -85,13 +85,15 @@ define([
       });
       this.app.dashboardView.on('contestSearch', function(e) {
         e.original.preventDefault();
-        var $input = $(this.el).find('#contest-search');
+        var $input = $(e.node).find('.contest-search.tt-input');
         var val = $input.val();
+
         if (val) {
           thisRouter.navigate('/search/' + encodeURIComponent(val),
           { trigger: true });
         }
       });
+
       this.app.dashboardView.observeTitle(this.app.options.originalTitle);
       this.reFocus();
     },
@@ -251,7 +253,9 @@ define([
             // and really screws things up
             //thisRouter.app[v].map.remove();
           }
+
           thisRouter.app[v].teardown();
+          delete thisRouter.app[v];
         }
       });
     }

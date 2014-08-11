@@ -10,7 +10,7 @@
   ],
   "dependencies": {
     "leaflet": "0.7.3",
-    "ractive": "~0.4.0",
+    "ractive": "~0.5.5",
     "ractive-events-tap": "~0.1.1",
     "requirejs": "~2.1.11",
     "almond": "~0.2.9",
@@ -61,7 +61,7 @@
     "ractive": {
       "rname": "ractive",
       "js": [
-        "ractive/ractive"
+        "ractive/ractive-legacy"
       ],
       "returns": "Ractive"
     },

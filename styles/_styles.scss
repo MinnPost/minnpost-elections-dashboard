@@ -122,8 +122,7 @@ $color-dark-gray: #282828;
 
   // Parties
   .party-label {
-    padding-left: 0.35em;
-    padding-right: 0.35em;
+    padding: 0.1em 0.35em;
     color: #FFFFFF;
     @include border-radius(2px);
   }
@@ -219,6 +218,10 @@ $color-dark-gray: #282828;
       font-size: .85em;
     }
 
+    .inner-column-right .elections-search {
+      display: none;
+    }
+
     // Dashboard contests
     .dashboard-contest {
 
@@ -268,21 +271,21 @@ $color-dark-gray: #282828;
   }
 
   // "Mobile" breakpoint
-  @media screen and (max-width: 768px) {
+  @media screen and (max-width: 640px) {
     .inner-column-left,
     .contest .inner-column-left,
-    .contests .inner-column-left {
+    .contests .inner-column-left,
+    .dashboard .inner-column-left {
       padding-right: 0;
     }
 
     .inner-column-right,
     .contest .inner-column-right,
-    .contests .inner-column-right {
+    .contests .inner-column-right,
+    .dashboard .inner-column-right {
       padding-left: 0;
     }
-  }
 
-  @media screen and (max-width: 500px) {
     .is-ranked-choice .candidate-column {
       width: auto;
     }
@@ -293,6 +296,17 @@ $color-dark-gray: #282828;
 
     .contest .third-choice-column {
       display: none;
+    }
+
+    .dashboard .location-search-section form .form-input-group {
+      width: auto;
+    }
+
+    .dashboard .inner-column-left .elections-search {
+      display: none;
+    }
+    .dashboard .inner-column-right .elections-search {
+      display: block;
     }
   }
 }

@@ -8,12 +8,13 @@ define([
   'bloodhound', 'typeahead-js', 'placeholders-js', 'mpConfig', 'mpFormatters',
   'text!templates/application.mustache', 'text!templates/footnote.mustache',
   'text!templates/contest.mustache', 'text!templates/contests.mustache',
-  'text!templates/dashboard.mustache', 'text!templates/loading.mustache'
+  'text!templates/dashboard.mustache', 'text!templates/loading.mustache',
+  'text!templates/elections-search-form.mustache'
 ], function(
   $, _, Backbone, Ractive, RactiveETap, RactiveBackbone, L, models,
   collections, Bloodhound, typeahead, placeholders, mpConfig, mpFormatters,
   tApplication, tFootnote, tContest,
-  tContests, tDashboard, tLoading
+  tContests, tDashboard, tLoading, tElectionsSearch
   ) {
   var views = {};
 
@@ -123,20 +124,6 @@ define([
       }, 500);
     },
 
-    // Form handling for some older browsers.  This does end up
-    // firing the handler twice :(
-    handleForms: function() {
-      var thisView = this;
-      $(this.el).find('form').on('submit', function(e) {
-        var trigger = $(this).attr('legacy-on-submit');
-        if (trigger) {
-          e.preventDefault();
-          thisView.fire(trigger, { original: e });
-        }
-        return false;
-      });
-    },
-
     // Handle title change for document title
     observeTitle: function(originalTitle) {
       this.observe('title', function(newValue, oldValue) {
@@ -153,12 +140,13 @@ define([
 
     partials: {
       contest: tContest,
-      loading: tLoading
+      loading: tLoading,
+      electionsSearch: tElectionsSearch
     },
 
     init: function(options) {
       var thisView = this;
-      var $contestSearch = $(this.el).find('#contest-search');
+      var $contestSearch = $(this.el).find('.contest-search');
       var query, querySearchEngine;
       this.app = options.app;
 
@@ -202,17 +190,19 @@ define([
         querySearchEngine.initialize();
 
         // Make typeahead functionality for search
-        $contestSearch.typeahead(null, {
-          displayKey: 'title',
-          source: querySearchEngine.ttAdapter(),
-          minLength: 3,
-          hint: true,
-          highlight: true
-        });
+        $contestSearch.each(function() {
+          $(this).typeahead(null, {
+            displayKey: 'title',
+            source: querySearchEngine.ttAdapter(),
+            minLength: 3,
+            hint: true,
+            highlight: true
+          });
 
-        // Handle search selected
-        $contestSearch.on('typeahead:selected', function(e, data, name) {
-          thisView.app.router.navigate('/contest/' + data.id, { trigger: true });
+          // Handle search selected
+          $(this).on('typeahead:selected', function(e, data, name) {
+            thisView.app.router.navigate('/contest/' + data.id, { trigger: true });
+          });
         });
 
         // Teardown event to remove typeahead gracefully

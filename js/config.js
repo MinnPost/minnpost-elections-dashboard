@@ -3,6 +3,7 @@
  * any non-compliant libraries.
  */
 require.config({
+  waitSeconds: 15,
   shim: {
     'simple-statistics': {
       exports: 'ss'
@@ -29,7 +30,7 @@ require.config({
     'jquery': '../bower_components/jquery/dist/jquery',
     'underscore': '../bower_components/underscore/underscore',
     'backbone': '../bower_components/backbone/backbone',
-    'ractive': '../bower_components/ractive/ractive',
+    'ractive': '../bower_components/ractive/ractive-legacy',
     'ractive-events-tap': '../bower_components/ractive-events-tap/ractive-events-tap',
     'ractive-backbone': '../bower_components/ractive-backbone/ractive-adaptors-backbone',
     'leaflet': '../bower_components/leaflet/dist/leaflet-src',
