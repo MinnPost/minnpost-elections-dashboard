@@ -45,6 +45,10 @@ $color-dark-gray: #282828;
         font-size: .85em;
         line-height: 1.5em;
       }
+
+      .small-table-label {
+        display: none;
+      }
     }
   }
 
@@ -272,6 +276,14 @@ $color-dark-gray: #282828;
 
   // "Mobile" breakpoint
   @media screen and (max-width: 640px) {
+
+    table thead .small-table-label {
+      display: inline;
+    }
+    table thead .large-table-label {
+      display: none;
+    }
+
     .inner-column-left,
     .contest .inner-column-left,
     .contests .inner-column-left,
