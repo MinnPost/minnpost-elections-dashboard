@@ -238,12 +238,13 @@ define([
       }
 
       // If we have a date for the election, make a good guess on whether
-      // we are looking at test results
+      // we are looking at test results.  Unofficialy, the numbers should
+      // be zeroed by 3pm
       parsed.isTest = false;
       if (parsed.date) {
         now = moment().tz('America/Chicago');
         testStop = parsed.date.clone();
-        testStop.tz('America/Chicago').hour(17).minute(0);
+        testStop.tz('America/Chicago').hour(15).minute(0);
         if (now.isBefore(testStop, 'minute')) {
           parsed.isTest = true;
         }
