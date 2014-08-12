@@ -108,7 +108,7 @@ We use cron to get the results every few minutes.  This will copy our cron to th
 
 There are many ways to do load testing, but here are some free-er options.
 
-### Bees with Machine Guns
+### [Bees with Machine Guns](https://github.com/newsapps/beeswithmachineguns)
 
 1. Install: `pip install beeswithmachineguns`
 1. Set environment variables.
@@ -121,6 +121,14 @@ There are many ways to do load testing, but here are some free-er options.
     * `n` is the number of requests, while `c` is the number of concurrent requests.  Play around with this to determine limits.  For some reference, on election night we could get up to 4,000 active users on the dashboard, each making around 10 calls to the API every minute.
     * The initial time should be slower than subsequent requests because of the aggressive minute long caching.
     * You may want to run `top` on the API server to see how the server is running against the load.
+
+### [Locust.io](http://locust.io/)
+
+1. Install: `pip install locustio`
+1. `locustfile.py` is included.
+1. Run, but change host depending on where the API server is located at: `locust --host=http://50.19.100.197`
+1. Open up web interface to run tests: [http://localhost:8089/](http://localhost:8089/)
+1. Some more work should be done to use the distributed power of Locust, as a single machine is not a great load testing environment.
 
 ### Other tools
 
