@@ -65,7 +65,7 @@ define('minnpost-elections-dashboard', [
       remoteProxy: '//mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
       el: '.minnpost-elections-dashboard-container',
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//50.19.100.197/?box=ubuntu&method=sql&q=',
+      electionsAPI: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
       electionsAPILocal: '//localhost:5000/?q=',
       electionsAPIEC2: '//50.19.100.197/?box=ubuntu&method=sql&q=',
       electionsAPIScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
