@@ -90,8 +90,118 @@ scraper_sources_inline = """
       "spreadsheet_id": "0AjYft7IGrHzNdGltZUg1clM3cnNXT3pwVjg0a3Jqa3c",
       "worksheet_id": 1
     }
+  },
+  "20140812": {
+    "meta": {
+      "base_url": "ftp://media:results@ftp.sos.state.mn.us/20140812/",
+      "date": "2014-08-12",
+      "primary": true
+    },
+    "us_house_results": {
+      "url": "ushouse.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "us_house"
+    },
+    "us_senate_results": {
+      "url": "ussenate.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "attorney_general_results": {
+      "url": "attorneygen.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "auditor_results": {
+      "url": "auditor.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "governor_results": {
+      "url": "Governor.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "secretary_results": {
+      "url": "secofstate.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "state_house_results": {
+      "url": "LegislativeByDistrict.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state_house"
+    },
+    "judicial_results": {
+      "url": "judicialdst.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "district_court"
+    },
+    "county_results": {
+      "url": "cntyRaceQuestions.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "county"
+    },
+    "municipal_results": {
+      "url": "local.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "municipal"
+    },
+    "school_district_results": {
+      "url": "sdraceQuesions.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "school",
+      "notes": "Questions and candidate races."
+    },
+    "parties": {
+      "url": "PartyTbl.txt",
+      "table": "parties",
+      "type": "parties"
+    },
+    "candidates": {
+      "url": "cand.txt",
+      "table": "candidates",
+      "type": "candidates"
+    },
+    "local_candidates": {
+      "url": "LocalCandTbl.txt",
+      "table": "candidates",
+      "type": "local_candidates"
+    },
+    "counties": {
+      "url": "Cntytbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "municipalities": {
+      "url": "MunTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "precincts": {
+      "url": "PrctTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "school_districts": {
+      "url": "SchoolDistTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    }
   }
 }
+
 """
 
 
@@ -133,6 +243,7 @@ class ElectionScraper:
   Election scraper class.
   """
   sources_file = os.path.join(os.path.dirname(__file__), '../scraper_sources.json')
+  nonpartisan_parties = ['NP', 'WI']
   index_created = {}
 
 
@@ -182,6 +293,7 @@ class ElectionScraper:
     """
     Wrapper around saving a row.
     """
+
     try:
       scraperwiki.sqlite.save(unique_keys = ids, data = data, table_name = table)
 
@@ -206,6 +318,9 @@ class ElectionScraper:
     if election not in self.sources:
       return
 
+    # Get metadata about election
+    self.election_meta = self.sources[election]['meta'] if 'meta' in self.sources[election] else {}
+
     for i in self.sources[election]:
       s = self.sources[election][i]
 
@@ -214,12 +329,15 @@ class ElectionScraper:
         parser = 'parser_' + s['type']
         parser_method = getattr(self, parser, None)
         if callable(parser_method):
+          # Check if election has base_url
+          s['url'] = self.election_meta['base_url'] + s['url'] if 'base_url' in self.election_meta else s['url']
+
           # Get data from URL
           try:
             scraped = scraperwiki.scrape(s['url'])
             rows = csv.reader(scraped.splitlines(), delimiter=';', quotechar='|')
           except Exception, err:
-            self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (u, s['url']))
+            self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (s['type'], s['url']))
             raise
 
           # Index is created after first insert
@@ -232,7 +350,7 @@ class ElectionScraper:
           count = 0
           for row in rows:
             # Parse row
-            parsed = parser_method(row, i, s['table'])
+            parsed = parser_method(row, i, s['table'], s)
             self.save(['id'], parsed, s['table'], index_method)
             count = count + 1
 
@@ -251,10 +369,10 @@ class ElectionScraper:
     Connect to supplemental source (Google spreadsheets) given set.
     """
     if self.election not in self.sources:
-      return
+      return []
 
     if source not in self.sources[self.election]:
-      return
+      return []
 
     try:
       s = self.sources[self.election][source]
@@ -269,7 +387,7 @@ class ElectionScraper:
     return rows
 
 
-  def parser_areas(self, row, group, table):
+  def parser_areas(self, row, group, table, source):
     """
     Parser for areas type supporting tables.
     """
@@ -332,7 +450,7 @@ class ElectionScraper:
     return parsed
 
 
-  def parser_results(self, row, group, table):
+  def parser_results(self, row, group, table, source):
     """
     Parser for results type scraping.  We actually split the data into a results
     table as well as a contests table.
@@ -419,6 +537,14 @@ class ElectionScraper:
       re_seats = re.compile('.*\(elect ([0-9]+)\).*', re.IGNORECASE)
       matched_seats = re_seats.match(row[4])
 
+      # Primary is not designated in anyway, but we can make some initial
+      # guesses.  All contests in an election are considered primary, but
+      # non-partisan ones only mean there is more than one seat available.
+      is_primary = self.election_meta['primary'] if 'primary' in self.election_meta else False
+      re_question = re.compile('.*\question ([0-9]+).*', re.IGNORECASE)
+      matched_question = re_question.match(row[4])
+      is_primary = False if matched_question is not None else is_primary
+
       contests_record = {
         'id': contest_id,
         'office_id': office_id,
@@ -431,8 +557,10 @@ class ElectionScraper:
         'precincts_reporting': int(row[11]),
         'total_effected_precincts': int(row[12]),
         'total_votes_for_office': int(row[15]),
-        'seats': matched_seats.group(1) if matched_seats is not None else 1,
+        'seats': int(matched_seats.group(1)) if matched_seats is not None else 1,
         'ranked_choice': ranked_choice is not None,
+        'primary': is_primary,
+        'scope': source['contest_scope'] if 'contest_scope' in source else None,
         'updated': int(timestamp)
       }
 
@@ -534,23 +662,52 @@ class ElectionScraper:
     """
     boundary = ''
 
+    # State level race
+    if parsed_row['scope'] == 'state':
+      boundary = '27-minnesota-state-2014'
 
-    # School district is in the office name
-    if parsed_row['results_group'] == 'school_district_results':
-      isd_match = re.compile('.*\(ISD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
-      if isd_match is not None:
-        boundary = isd_match.group(1) + '-school-district-2013'
+    # US House districts
+    if parsed_row['scope'] == 'us_house':
+      us_house_match = re.compile('.*\U.S. Representative District ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
+      if us_house_match is not None:
+        boundary = us_house_match.group(1) + '-congressional-district-2012'
       else:
-        self.log.info('[%s] Could not find ISD boundary for: %s' % ('results', parsed_row['office_name']))
+        self.log.info('[%s] Could not find US House boundary for: %s' % ('results', parsed_row['office_name']))
+
+    # State House districts
+    if parsed_row['scope'] == 'state_house':
+      state_house_match = re.compile('.*\State Representative District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
+      if state_house_match is not None:
+        boundary = state_house_match.group(1).lower() + '-state-house-district-2012'
+      else:
+        self.log.info('[%s] Could not find State House boundary for: %s' % ('results', parsed_row['office_name']))
+
+    # State court districts.  Judge - 7th District Court 27
+    if parsed_row['scope'] == 'district_court':
+      court_match = re.compile('.*\Judge - ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
+      if court_match is not None:
+        boundary = court_match.group(1).lower() + '-district-court-2012'
+      else:
+        self.log.info('[%s] Could not find State District Court boundary for: %s' % ('results', parsed_row['office_name']))
+
+    # School district is in the office name.  Special school district for
+    # Minneapolis is "1-1"
+    if parsed_row['scope'] == 'school':
+      isd_match = re.compile('.*\([IS]SD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
+      if isd_match is not None:
+        isd_match_value = '1-1' if isd_match.group(1) == '1' else isd_match.group(1)
+        boundary = isd_match_value + '-school-district-2013'
+      else:
+        self.log.info('[%s] Could not find (I|S)SD boundary for: %s' % ('results', parsed_row['office_name']))
 
     # County should be provide, but the results also have results for county
     # comissioner which are sub-county boundaries
-    if parsed_row['results_group'] == 'county_results':
+    if parsed_row['scope'] == 'county':
       comissioner_match = re.compile('.*Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
       if comissioner_match is not None:
-        boundary = parsed_row['county_id'] + '-' + parsed_row['district_code'] + '-county-commissioner-district-2012'
+        boundary =  '%s-%s-county-commissioner-district-2012' % (int(parsed_row['county_id']),  parsed_row['district_code'])
       else:
-        boundary = parsed_row['county_id'] + '-county-2010'
+        boundary = '%s-county-2010' % int(parsed_row['county_id'])
 
     # This includes both municpal (city) level results, plus sub-municpal, such
     # as city council results.
@@ -574,7 +731,7 @@ class ElectionScraper:
     # thing.
     #
     # And there is also just wrong data occassionaly.
-    if parsed_row['results_group'] == 'municipal_results':
+    if parsed_row['scope'] == 'municipal':
       # Checks
       wards_matched = re.compile('.*(Council Member Ward|Council Member District) ([0-9]+).*\((((?!elect).)*)\).*', re.IGNORECASE).match(parsed_row['office_name'])
       mpls_parks_matched = re.compile('.*Park and Recreation Commissioner District ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
@@ -597,6 +754,10 @@ class ElectionScraper:
           else:
             self.log.info('[%s] Could not find corresponding county for municpality: %s' % ('results', parsed_row['office_name']))
 
+    # General notice if not found
+    if boundary == '':
+      self.log.info('[%s] Could not find boundary for: %s' % ('results', parsed_row['office_name']))
+
     return boundary
 
 
@@ -614,7 +775,7 @@ class ElectionScraper:
     return mcd_id + '-minor-civil-division-2010'
 
 
-  def match_contests(self, *args):
+  def match_contests(self, election, *args):
     """
     Update contests table matching things like boundaries.  This is for the meta data
     for each contest, not for the voting numbers, so it doesn't need to be run
@@ -624,6 +785,15 @@ class ElectionScraper:
     supplemented = 0
     index_created = False
     contests = scraperwiki.sqlite.select("* FROM contests")
+
+    # Usually we just want the newest election but allow for other situations
+    election = election if election is not None and election != '' else self.newest_election
+    self.election = election
+
+    # Attach election meta data for front-end querying
+    if 'meta' in self.sources[self.election]:
+      for m in self.sources[self.election]['meta']:
+        scraperwiki.sqlite.save_var(m, self.sources[self.election]['meta'][m])
 
     # Get data from Google spreadsheet
     s_rows = self.supplement_connect('supplemental_contests')
@@ -639,6 +809,7 @@ class ElectionScraper:
       r['title'] = r['office_name']
       r['title'] = re.compile('(\(elect [0-9]+\))', re.IGNORECASE).sub('', r['title'])
       r['title'] = re.compile('((first|second|third|\w*th) choice)', re.IGNORECASE).sub('', r['title'])
+
       # Look for non-ISD parenthesis which should be place names
       re_place = re.compile('.*\(([^#]*)\).*', re.IGNORECASE).match(r['title'])
       r['title'] = re.compile('(\([^#]*\))', re.IGNORECASE).sub('', r['title'])
@@ -648,6 +819,21 @@ class ElectionScraper:
 
       # Match to a boundary or boundaries keys
       r['boundary'] = self.boundary_match_contests(r)
+
+      # Determine partisanship for contests for other processing.  We need to look
+      # at all the candidates to know if the contest is nonpartisan or not.
+      results = scraperwiki.sqlite.select("* FROM results WHERE contest_id = '%s' AND party_id NOT IN ('%s')" % (r['id'], "', '".join(self.nonpartisan_parties)))
+      r['partisan'] = True if results != [] else False
+
+      # For non-partisan primaries, the general rule is that there are twice
+      # as many winners as there are seats available for the general election.
+      # Unfortunately we can't determine this from the existing value
+      # otherwise, it will just grow.
+      if r['primary'] and not r['partisan']:
+        re_seats = re.compile('.*\(elect ([0-9]+)\).*', re.IGNORECASE)
+        matched_seats = re_seats.match(r['office_name'])
+        seats = matched_seats.group(1) if matched_seats is not None else 1
+        r['seats'] = int(seats) * 2
 
       # Check for any supplemental data
       for si in s_rows:
@@ -664,7 +850,6 @@ class ElectionScraper:
 
     self.log.info('[%s] Processed contest rows: %s' % ('contests', processed))
     self.log.info('[%s] Supplemented contest rows: %s' % ('contests', supplemented))
-
 
 
   def check_boundaries(self, *args):
@@ -697,6 +882,7 @@ class ElectionScraper:
     slug = re.sub(r'[-]+', '-', slug)
     return slug
 
+
 # If calling directly
 if __name__ == "__main__":
   scraper = ElectionScraper()
@@ -707,3 +893,4 @@ if __name__ == "__main__":
   scraper.scrape('areas', None)
   scraper.scrape('results', None)
   scraper.match_contests()
+

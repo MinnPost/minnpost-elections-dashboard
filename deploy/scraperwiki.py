@@ -22,7 +22,7 @@ commands = """
   # Scraperwiki commands
   scraper.scrape('areas', None)
   scraper.scrape('results', None)
-  scraper.match_contests()
+  scraper.match_contests(None)
 """
 
 # Gather the placeholder
