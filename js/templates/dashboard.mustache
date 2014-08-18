@@ -28,7 +28,7 @@
         {{ election.date.format('MMM DD, YYYY') }} {{ (election.primary) ? 'primary' : 'general' }} election {{#election.isTest}}<em>test</em>{{/election.isTest}} results.
       {{/election.date}}
       {{#election.updated}}
-        Last updated at {{ election.updated.format('h:mm a') }}
+        Last updated {{ election.updated.formatToday() }}
       {{/election.updated}}
     </div>
   </div>

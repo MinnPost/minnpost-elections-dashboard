@@ -21,7 +21,7 @@
     </h3>
 
     {{^isDashboard}}
-      <div class="last-updated">Last updated at {{ updated.format('h:mm a') }}</div>
+      <div class="last-updated">Last updated {{ updated.formatToday() }}</div>
     {{/isDashboard}}
 
     {{#(!!question_body)}}

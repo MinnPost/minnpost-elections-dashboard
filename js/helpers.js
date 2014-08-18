@@ -7,8 +7,8 @@
  * Helpers functions such as formatters or extensions
  * to libraries.
  */
-define('helpers', ['jquery', 'underscore', 'backbone', 'mpFormatters'],
-  function($, _, Backbone, formatters) {
+define('helpers', ['jquery', 'underscore', 'backbone', 'moment', 'mpFormatters'],
+  function($, _, Backbone, moment, formatters) {
 
   var helpers = {};
   var cacheURLIncrementer = {};
@@ -34,6 +34,26 @@ define('helpers', ['jquery', 'underscore', 'backbone', 'mpFormatters'],
       return Backbone.$.ajax.apply(Backbone.$, options);
     };
   };
+
+  /**
+   * Add today formatting option function to moment.
+   * See: http://stackoverflow.com/questions/10291495/moment-js-display-either-date-or-time
+   */
+  if (_.isObject(moment)) {
+    moment.fn.formatToday = function(todayFormat, otherFormat) {
+      var now = moment();
+      todayFormat = todayFormat || '[at] h:mm a';
+      otherFormat = otherFormat || '[on] MMM DD';
+
+      if (this.date() === now.date() && Math.abs(this.diff(now)) < 86400000) {
+        // same day of month and less than 24 hours difference
+        return this.format(todayFormat);
+      }
+      else {
+        return this.format(otherFormat);
+      }
+    };
+  }
 
   /**
    * Returns version of MSIE.
