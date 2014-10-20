@@ -40,7 +40,7 @@ Both manual results and contest question text can be managed in Google Spreadshe
 
 ## Scraping
 
-`<ELECTION_DATE>` is optional and the newest eleciton will be used if not provided.  It should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
+`<ELECTION_DATE>` is optional and the newest election will be used if not provided.  It should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
 
 1. (optional) Remove old data as the scraper is not built to manage more than one election: `rm scraperwiki.sqlite`
 1. Scrape areas: `python code/scraper.py scrape areas <ELECTION_DATE>`

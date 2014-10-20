@@ -7,7 +7,7 @@ import sys
 import os
 import re
 import scraperwiki
-import csv
+import unicodecsv
 import datetime
 import calendar
 import logging
@@ -150,7 +150,8 @@ class ElectionScraper:
           # Get data from URL
           try:
             scraped = scraperwiki.scrape(s['url'])
-            rows = csv.reader(scraped.splitlines(), delimiter=';', quotechar='|')
+            # latin-1 is to support the occasional accent character
+            rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='latin-1')
           except Exception, err:
             self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (s['type'], s['url']))
             raise
@@ -520,7 +521,7 @@ class ElectionScraper:
     if parsed_row['scope'] == 'county':
       comissioner_match = re.compile('.*Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
       if comissioner_match is not None:
-        boundary =  '%s-%s-county-commissioner-district-2012' % (int(parsed_row['county_id']),  parsed_row['district_code'])
+        boundary =  '%s-%02d-county-commissioner-district-2012' % (int(parsed_row['county_id']),  int(parsed_row['district_code']))
       else:
         boundary = '%s-county-2010' % int(parsed_row['county_id'])
 
@@ -581,7 +582,10 @@ class ElectionScraper:
     Makes MCD code from values.
     """
     bad_data = {
-      '2713702872': '2713702890' # Aurora City
+      '2713702872': '2713702890', # Aurora City
+      '2703909154': '2710909154', # Bryon
+      '2706109316': '2706103916', # Calumet
+      '2716345952': '2716358900' # Scandia
     }
     fips = '{0:03d}'.format((int(county_id) * 2) - 1)
     mcd_id = '27' + fips + district
