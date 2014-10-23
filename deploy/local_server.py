@@ -29,6 +29,11 @@ def index():
   dt = get_db()
   sql = request.args.get('q')
   cb = request.args.get('callback')
+  example_query = 'SELECT * FROM contests WHERE title LIKE \'%governor%\'';
+
+  if sql in ['', None]:
+    return 'Hi, welcome to the election scraper local server.  Use a URL like: <a href="/?q=%s">/?q=%s</a>' % (example_query, example_query);
+
   data = dt.execute(sql)
   output = json.dumps(data)
   mime = 'application/json'
