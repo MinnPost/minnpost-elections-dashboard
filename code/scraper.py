@@ -570,6 +570,41 @@ class ElectionScraper:
           else:
             self.log.info('[%s] Could not find corresponding county for municpality: %s' % ('results', parsed_row['office_name']))
 
+    # Hospital districts.
+    #
+    # Mostly, the district ID provided is for the best municipal
+    # entity.  The only way to really figure out the hospital district ID
+    # (which is kind of arbitrary) is to use the boundary service
+    #
+    # Otherwise, the actual hospital id is given
+    if parsed_row['scope'] == 'hospital':
+      # MCD districts are 5 digits with leading zeros, while hospital districts
+      # are 3 or 4
+      if len(parsed_row['district_code']) < 5:
+        boundary = '%s-hospital-district-2012' % (int(parsed_row['district_code']))
+      else:
+        # We need the county ID and it is not in results, so we have to look
+        # it up, and there could more than one
+        mcd = scraperwiki.sqlite.select("* FROM areas WHERE areas_group = 'municipalities' AND mcd_id = '%s'" % (parsed_row['district_code']))
+        if mcd != []:
+          for r in mcd:
+            # Find intersection
+            mcd_boundary_id = self.boundary_make_mcd(r['county_id'], parsed_row['district_code'])
+            boundary_url = 'http://boundaries.minnpost.com/1.0/boundary/?intersects=%s&sets=%s';
+            request = requests.get(boundary_url % (mcd_boundary_id, 'hospital-districts-2012'))
+
+            if request.status_code == 200:
+              r = request.json()
+              boundary = r['objects'][0]['slug']
+              break
+
+          if boundary == '':
+            self.log.info('[%s] Hosptial boundary intersection not found: %s' % ('results', parsed_row['title']))
+
+        else:
+          self.log.info('[%s] Could not find corresponding county for municpality: %s' % ('results', parsed_row['office_name']))
+
+
     # General notice if not found
     if boundary == '':
       self.log.info('[%s] Could not find boundary for: %s' % ('results', parsed_row['office_name']))
