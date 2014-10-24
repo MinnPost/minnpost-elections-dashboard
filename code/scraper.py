@@ -13,6 +13,7 @@ import calendar
 import logging
 import json
 import requests
+import lxml.html
 from gdata.spreadsheet.service import SpreadsheetsService
 
 
@@ -357,7 +358,7 @@ class ElectionScraper:
       # guesses.  All contests in an election are considered primary, but
       # non-partisan ones only mean there is more than one seat available.
       is_primary = self.election_meta['primary'] if 'primary' in self.election_meta else False
-      re_question = re.compile('.*\question ([0-9]+).*', re.IGNORECASE)
+      re_question = re.compile('.*\question.*', re.IGNORECASE)
       matched_question = re_question.match(row[4])
       is_primary = False if matched_question is not None else is_primary
 
@@ -507,11 +508,19 @@ class ElectionScraper:
         self.log.info('[%s] Could not find State District Court boundary for: %s' % ('results', parsed_row['office_name']))
 
     # School district is in the office name.  Special school district for
-    # Minneapolis is "1-1"
+    # Minneapolis is "1-1".  There are some bad data and not sure if it
+    # is boundary data (from the Leg) or on the SoS side.
+    isd_bad_data = {
+      '2769': '769',
+      '2906': '627',
+      '2907': '513',
+      '2908': '207',
+    }
     if parsed_row['scope'] == 'school':
       isd_match = re.compile('.*\([IS]SD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
       if isd_match is not None:
         isd_match_value = '1-1' if isd_match.group(1) == '1' else isd_match.group(1)
+        isd_match_value = isd_bad_data[isd_match_value] if isd_match_value in isd_bad_data else isd_match_value
         boundary = isd_match_value + '-school-district-2013'
       else:
         self.log.info('[%s] Could not find (I|S)SD boundary for: %s' % ('results', parsed_row['office_name']))
@@ -657,6 +666,10 @@ class ElectionScraper:
       'questionbody': 'question_body'
     }
 
+    # Get question data
+    questions = self.scrape_questions(election, *args)
+    question_query = '* FROM questions WHERE office = \'%s\''
+
     # Go through each contests
     for r in contests:
       # Title and search term
@@ -673,6 +686,20 @@ class ElectionScraper:
 
       # Match to a boundary or boundaries keys
       r['boundary'] = self.boundary_match_contests(r)
+
+      # Match question text.  Since we can only match on office title, we have
+      # to make sure there is only 1 match.  Which means we can't match them
+      # all.  Also, even within the range of IDs, there are duplicate
+      # questions.
+      re_question = re.compile('.*\question.*', re.IGNORECASE)
+      matched_question = re_question.match(r['office_name'])
+      if matched_question is not None:
+        found_questions = scraperwiki.sqlite.select(question_query % (r['office_name']))
+        if len(found_questions) == 1:
+          r['title'] = '%s - %s' % (found_questions[0]['title'], r['title'])
+        else:
+          self.log.info('[%s] Found none or more than 1 question for: %s' % ('contests', r['office_name']))
+
 
       # Determine partisanship for contests for other processing.  We need to look
       # at all the candidates to know if the contest is nonpartisan or not.
@@ -704,6 +731,65 @@ class ElectionScraper:
 
     self.log.info('[%s] Processed contest rows: %s' % ('contests', processed))
     self.log.info('[%s] Supplemented contest rows: %s' % ('contests', supplemented))
+
+
+  def scrape_questions(self, election, *args):
+    """
+    Scrape the ballot page for question text.  We simply use a best guess
+    for the ID range, but there are duplicate questions in the range,
+    assumingly because a question gets updated.
+
+    Not from the FTP site, so not meant to be run through the general scraper.
+    """
+
+    # Usually we just want the newest election but allow for other situations
+    election = election if election is not None and election != '' else self.newest_election
+    self.election = election
+
+    # Check if this has already been done
+    table_query = "name FROM sqlite_master WHERE type='table' AND name='questions'"
+    all_rows_query = "* FROM questions"
+    found_table = scraperwiki.sqlite.select(table_query)
+    if found_table != []:
+      found_rows = scraperwiki.sqlite.select(all_rows_query)
+      if found_rows != [] and len(found_rows) > 2:
+        self.log.info('[%s] Questions already scraped: %s' % ('questions', len(found_rows)))
+        return found_rows
+
+
+    # Set up the parts
+    start = self.sources[self.election]['meta']['ballot_question_id_start']
+    end = self.sources[self.election]['meta']['ballot_question_id_end']
+    url = self.sources[self.election]['meta']['ballot_question_base']
+    questions = 0
+
+    # Go through each URL.  Unfortunately if there is an error, it goes to an
+    # error page but not bad status code
+    for i in range(start, end + 1):
+      try:
+        scraped = scraperwiki.scrape(url % (i))
+        html = lxml.html.fromstring(scraped)
+
+        error_text = html.get_element_by_id('ctl00_MainContent_pnlShowHideDetails').text_content()
+        if 'application error' in error_text.lower():
+          self.log.info('[%s] No question at ID: %s' % ('questions', i))
+        else:
+          data = {
+            'id': i,
+            'office': html.get_element_by_id('ctl00_MainContent_spQuestionTitle').text_content()
+              .replace('\r\n', ' ').replace('\n', ' ').strip(),
+            'title': html.get_element_by_id('ctl00_MainContent_spQuestionBrief').text_content()
+              .replace('\r\n', ' ').replace('\n', ' ').strip(),
+            'body': html.get_element_by_id('ctl00_MainContent_spQuestionFull').text_content()
+              .replace('\r\n', ' ').replace('\n', ' ').strip()
+          }
+          self.save(['id'], data, 'questions')
+          questions = questions + 1
+      except Exception, err:
+        self.log.exception('[%s] Error when trying to read URL and parse parse: %s' % ('questions', url % (i)))
+        raise
+
+    self.log.info('[%s] Scraped %s questions' % ('questions', questions))
 
 
   def check_boundaries(self, *args):
