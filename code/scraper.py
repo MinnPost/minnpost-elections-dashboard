@@ -696,7 +696,8 @@ class ElectionScraper:
       if matched_question is not None:
         found_questions = scraperwiki.sqlite.select(question_query % (r['office_name']))
         if len(found_questions) == 1:
-          r['title'] = '%s - %s' % (found_questions[0]['title'], r['title'])
+          r['question_body'] = found_questions[0]['body']
+          r['sub_title'] = found_questions[0]['title']
         else:
           self.log.info('[%s] Found none or more than 1 question for: %s' % ('contests', r['office_name']))
 
