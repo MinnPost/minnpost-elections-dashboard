@@ -20,6 +20,10 @@
       {{#(show_party != undefined)}}<span class="show-party party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}
     </h3>
 
+    {{#sub_title}}
+      <h4>{{ sub_title }}</h4>
+    {{/sub_title}}
+
     {{^isDashboard}}
       <div class="last-updated">Last updated {{ updated.formatToday() }}</div>
     {{/isDashboard}}

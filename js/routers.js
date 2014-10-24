@@ -35,11 +35,9 @@ define([
 
       // Get races objects
       this.app.dashboardContests = {
-        contestGovernorR: 'id-MN----0331',
-        contestAuditorDFL: 'id-MN----0333',
-        contestSenateR: 'id-MN----0102',
-        contestHouse60BDFL: 'id-MN---60B-0307',
-        contestHouse48BR: 'id-MN---48B-0283'
+        contestGovernor: 'id-MN----0331',
+        contestAuditor: 'id-MN----0333',
+        contestSenate: 'id-MN----0102'
       };
       _.each(this.app.dashboardContests, function(c, ci) {
         thisRouter.app[ci] = new models.ContestModel({ id: c }, { app: thisRouter.app });
@@ -47,15 +45,6 @@ define([
         thisRouter.app[ci].set('isDashboard', true);
         data[ci] = thisRouter.app[ci];
       });
-
-      // Partials don't take arguments, so we have to set some things here.
-      // Rows and show_party are exclusive
-      //data.contestGovernorDFL.set('rows', 8);
-      data.contestGovernorR.set('show_party', 'R');
-      data.contestAuditorDFL.set('show_party', 'DFL');
-      data.contestSenateR.set('show_party', 'R');
-      data.contestHouse60BDFL.set('show_party', 'DFL');
-      data.contestHouse48BR.set('show_party', 'R');
 
       // Get and connect to election metadata
       this.app.election = new models.ElectionModel({}, { app: this.app });
