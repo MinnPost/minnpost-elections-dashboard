@@ -399,15 +399,15 @@ class ElectionScraper:
 
   def index_results(self):
     index_query = "CREATE INDEX IF NOT EXISTS %s ON results (%s)"
-    scraperwiki.sqlite.dt.execute(index_query % ('office_name', 'office_name'))
-    scraperwiki.sqlite.dt.execute(index_query % ('candidate', 'candidate'))
-    scraperwiki.sqlite.dt.execute(index_query % ('contest_id', 'contest_id'))
+    scraperwiki.sqlite.execute(index_query % ('office_name', 'office_name'))
+    scraperwiki.sqlite.execute(index_query % ('candidate', 'candidate'))
+    scraperwiki.sqlite.execute(index_query % ('contest_id', 'contest_id'))
     self.log.info('[%s] Creating indices for results table.' % ('results'))
 
 
   def index_contests(self):
     index_query = "CREATE INDEX IF NOT EXISTS %s ON contests (%s)"
-    scraperwiki.sqlite.dt.execute(index_query % ('title', 'title'))
+    scraperwiki.sqlite.execute(index_query % ('title', 'title'))
     self.log.info('[%s] Creating indices for contests table.' % ('contests'))
 
 
