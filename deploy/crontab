@@ -14,9 +14,10 @@ MAILTO=scraper@zzolo.org
 # meta scripts.  Offset hours for server time
 # and MN time (-5): 3AM MN = 8AM UK
 
-# Results.  Run every minute (or when its not running)
+# Results.  Run script that only runs results scraper when not already
+# running.
 
-    * * * * * [ `ps -ef|grep -v grep|grep scraper.py` -eq 0 ] && python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py scrape results
+    * * * * * bash /home/ubuntu/minnpost-scraper-mn-election-results/deploy/scraper_runner.sh
 
 # Longer manual intervals if needed.
     # 0,7,14,21,28,35,32,49          * * * * python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py scrape results

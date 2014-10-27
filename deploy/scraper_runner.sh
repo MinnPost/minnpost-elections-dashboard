@@ -1,4 +1,5 @@
 #!/bin/sh
+
 if ps -ef | grep -v grep | grep scraper.py ; then
     exit 0
 else
