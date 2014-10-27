@@ -26,17 +26,8 @@
   };
 
   // Add script to page
-  var addScript = function(url) {
-    /*
-    var head = document.getElementsByTagName('head').item(0);
-    var script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = url;
-    head.appendChild(script);
-    */
-
-    // Not the best way, but this seems to be synchronous
-    document.write('<script src="' + url + '"><\/script>');
+  var addScript = function(script) {
+    document.write('<script src="' + script + '"><\/script>');
   };
 
   // Should be true or false, defaults to false
@@ -52,10 +43,11 @@
     }
     // Embed with deploy
     else if (mpEmbed && mpDeployment === 'deploy') {
-      addScript('https://s3.amazonaws.com/data.minnpost/projects/' + projectName + '/' + projectName + '.latest.embed.min.js');
+      addScript('//s3.amazonaws.com/data.minnpost/projects/' + projectName + '/' + projectName + '.latest.embed.min.js');
     }
     // No embed local
     else if (!mpEmbed && mpDeployment === 'local') {
+      addScript('js/build/wrapper.start.js');
       addScript('bower_components/requirejs/require.js');
       addScript('js/config.js');
       addScript('js/app.js');
@@ -68,8 +60,8 @@
     }
     // No embed deploy (default)
     else if (!mpEmbed && (!mpDeployment || mpDeployment === 'deploy')) {
-      addScript('https://s3.amazonaws.com/data.minnpost/projects/' + projectName + '/' + projectName + '.libs.min.js');
-      addScript('https://s3.amazonaws.com/data.minnpost/projects/' + projectName + '/' + projectName + '.latest.min.js');
+      addScript('//s3.amazonaws.com/data.minnpost/projects/' + projectName + '/' + projectName + '.libs.min.js');
+      addScript('//s3.amazonaws.com/data.minnpost/projects/' + projectName + '/' + projectName + '.latest.min.js');
     }
   };
 })();

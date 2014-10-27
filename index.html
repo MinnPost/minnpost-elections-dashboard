@@ -92,9 +92,23 @@ addthis_config = Drupal.settings.addthis.config_default; addthis_share = Drupal.
           </div>
         <![endif]-->
 
-        <div class="minnpost-elections-dashboard-container minnpost-full-container"></div>
+        <div class="minnpost-elections-dashboard-container minnpost-full-container">
+          <div style="text-align: center; padding: 1em">Loading...</div>
+        </div>
       </div>
     </div>
+
+    <!-- TrackJS -->
+    <script type="text/javascript">
+      //<![CDATA[
+      window._trackJs = {
+        token: '39ecc28b4f344805a47e8e4f56ae353c',
+        application: 'minnpost-2014-follow-the-money',
+        enabled: (window.mpMakeDeployment) ? false : true
+      }
+      //]]>
+    </script>
+    <script type="text/javascript" src="//d2zah9y47r7bi2.cloudfront.net/releases/current/tracker.js"></script>
 
     <script type="text/javascript">
       //<![CDATA[

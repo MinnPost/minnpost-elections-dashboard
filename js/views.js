@@ -157,59 +157,58 @@ define([
 
       // Typeahead.  This (used to?) break in IE. Query can be
       // either a contest or candidate
-      if (this.app.options.capabilities.typeahead) {
-        query = this.app.options.electionsAPI +
-          "SELECT c.id AS id, title AS title " +
-          "FROM contests AS c WHERE " +
-          "c.title LIKE '%%QUERY%' " +
-          "UNION " +
-          "SELECT c.id AS id, " +
-          "r.candidate || ' (' || c.title || ')' AS title " +
-          "FROM results AS r " +
-          "JOIN contests AS c ON r.contest_id = c.id " +
-          "WHERE r.candidate LIKE '%%QUERY%' ORDER BY title LIMIT 20 ";
+      query = this.app.options.electionsAPI +
+        "SELECT c.id AS id, title AS title " +
+        "FROM contests AS c WHERE " +
+        "c.title LIKE '%%QUERY%' " +
+        "OR c.sub_title LIKE '%%QUERY%' " +
+        "UNION " +
+        "SELECT c.id AS id, " +
+        "r.candidate || ' (' || c.title || ')' AS title " +
+        "FROM results AS r " +
+        "JOIN contests AS c ON r.contest_id = c.id " +
+        "WHERE r.candidate LIKE '%%QUERY%' ORDER BY title LIMIT 20 ";
 
-        // Create bloodhound engine
-        querySearchEngine = new Bloodhound({
-          name: 'Contests and Candidates',
-          datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title'),
-          queryTokenizer: Bloodhound.tokenizers.whitespace,
-          remote: {
-            url: query,
-            replace: function(url, uriEncodedQuery) {
-              var query = decodeURIComponent(uriEncodedQuery);
-              query = query.replace(new RegExp(' ', 'g'), '%');
-              return encodeURI(url.replace(new RegExp(this.wildcard, 'g'), query));
-            },
-            ajax: {
-              dataType: 'jsonp',
-              jsonpCallback: 'mpServerSideCachingHelper'
-            }
+      // Create bloodhound engine
+      querySearchEngine = new Bloodhound({
+        name: 'Contests and Candidates',
+        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title'),
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        remote: {
+          url: query,
+          replace: function(url, uriEncodedQuery) {
+            var query = decodeURIComponent(uriEncodedQuery);
+            query = query.replace(new RegExp(' ', 'g'), '%');
+            return encodeURI(url.replace(new RegExp(this.wildcard, 'g'), query));
+          },
+          ajax: {
+            dataType: 'jsonp',
+            jsonpCallback: 'mpServerSideCachingHelper'
           }
-        });
-        querySearchEngine.initialize();
+        }
+      });
+      querySearchEngine.initialize();
 
-        // Make typeahead functionality for search
-        $contestSearch.each(function() {
-          $(this).typeahead(null, {
-            displayKey: 'title',
-            source: querySearchEngine.ttAdapter(),
-            minLength: 3,
-            hint: true,
-            highlight: true
-          });
-
-          // Handle search selected
-          $(this).on('typeahead:selected', function(e, data, name) {
-            thisView.app.router.navigate('/contest/' + data.id, { trigger: true });
-          });
+      // Make typeahead functionality for search
+      $contestSearch.each(function() {
+        $(this).typeahead(null, {
+          displayKey: 'title',
+          source: querySearchEngine.ttAdapter(),
+          minLength: 3,
+          hint: true,
+          highlight: true
         });
 
-        // Teardown event to remove typeahead gracefully
-        this.on('teardown', function() {
-          $contestSearch.typeahead('destroy');
+        // Handle search selected
+        $(this).on('typeahead:selected', function(e, data, name) {
+          thisView.app.router.navigate('/contest/' + data.id, { trigger: true });
         });
-      }
+      });
+
+      // Teardown event to remove typeahead gracefully
+      this.on('teardown', function() {
+        $contestSearch.typeahead('destroy');
+      });
 
       // Mark if geolocation is availablle
       this.set('geolocationEnabled', (_.isObject(navigator) && _.isObject(navigator.geolocation)));

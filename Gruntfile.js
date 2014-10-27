@@ -8,20 +8,17 @@
 module.exports = function(grunt) {
   var _ = grunt.util._;
 
-  // Bower has an extra, custom section to manage where files are.  Order of
-  // list matters.
+  // Bower has an custom section, 'dependencyMap' to manage which files
+  // we actually want to include.  Order of list matters.
   var bower = grunt.file.readJSON('bower.json');
   var components = bower.dependencyMap;
   var componentParts = {
     js: _.map(_.compact(_.flatten(_.pluck(components, 'js'))), function(c) {
-      return 'bower_components/' + c + '.js';
-    }),
+      return 'bower_components/' + c + '.js'; }),
     css: _.map(_.compact(_.flatten(_.pluck(components, 'css'))), function(c) {
-      return 'bower_components/' + c + '.css';
-    }),
+      return 'bower_components/' + c + '.css'; }),
     ie: _.map(_.compact(_.flatten(_.pluck(components, 'ie'))), function(c) {
-      return 'bower_components/' + c + '.css';
-    })
+      return 'bower_components/' + c + '.css'; })
   };
 
   // Project configuration.  Many values are directly read from
@@ -54,13 +51,13 @@ module.exports = function(grunt) {
     jshint: {
       options: {
         curly: true,
-        //es3: true,
         forin: true,
         latedef: true,
-        //maxlen: 80,
-        indent: 2
+        indent: 2,
+        // For document.write in deployment.js
+        evil: true
       },
-      files: ['Gruntfile.js', 'js/*.js', 'data/processing/*.js']
+      files: ['Gruntfile.js', 'js/**/*.js', 'tests/**/*.js', 'data-processing/**/*.js']
     },
 
 
@@ -128,7 +125,7 @@ module.exports = function(grunt) {
     requirejs: {
       app: {
         options: {
-          name: '<%= pkg.name %>',
+          name: 'app',
           // Exclude libraries
           exclude: _.compact(_.flatten(_.pluck(_.filter(components, function(c) { return (c.js !== undefined); }), 'rname'))),
           baseUrl: 'js',
@@ -154,7 +151,7 @@ module.exports = function(grunt) {
       },
       embed: {
         options: {
-          name: '<%= pkg.name %>',
+          name: 'app',
           include: ['almond'],
           exclude: ['requirejs'],
           baseUrl: 'js',
@@ -313,18 +310,44 @@ module.exports = function(grunt) {
         ]
       }
     },
-    // HTTP Server
-    connect: {
-      server: {
-        options: {
-          port: 8899
-        }
+
+    // Browser sync and server
+    browserSync: {
+      bsFiles: {
+        src: ['<%= jshint.files %>', 'js/templates/**/*', 'styles/**/*.css', '.tmp/**/*.css']
+      },
+      options: {
+        server: {
+          baseDir: './'
+        },
+        watchTask: true,
+        port: 8899
       }
     },
+
     // Watches files for changes and performs task
     watch: {
       files: ['<%= jshint.files %>', 'styles/*.scss'],
       tasks: 'watcher'
+    },
+
+    // Testing with Qunit, connect is used for standalone testing
+    qunit: {
+      main: {
+        options: {
+          timeout: 10000,
+          urls: [
+            'http://localhost:<%= connect.server.options.port %>/tests/index.html'
+          ]
+        }
+      }
+    },
+    connect: {
+      server: {
+        options: {
+          port: 8999
+        }
+      }
     }
   });
 
@@ -336,9 +359,11 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
+  grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-contrib-qunit');
+  grunt.loadNpmTasks('grunt-browser-sync');
   grunt.loadNpmTasks('grunt-s3');
 
   // Custom task to output embed code when deploy is run, if the project is Inline
@@ -353,11 +378,12 @@ module.exports = function(grunt) {
   // Default build task
   grunt.registerTask('default', ['jshint', 'compass:dist', 'clean', 'copy', 'requirejs', 'concat', 'cssmin', 'uglify']);
 
+  // Testing
+  grunt.registerTask('test', ['connect', 'qunit']);
+
   // Watch tasks
-
   grunt.registerTask('watcher', ['jshint', 'compass:dev']);
-  grunt.registerTask('server', ['jshint', 'compass:dev', 'connect', 'watch']);
-
+  grunt.registerTask('server', ['jshint', 'compass:dev', 'browserSync', 'watch']);
 
   // Deploy tasks
   grunt.registerTask('deploy', ['s3', 'inline_embed:minnpost-elections-dashboard']);

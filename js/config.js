@@ -20,6 +20,9 @@ require.config({
     'bloodhound': {
       dep: ['jquery'],
       exports: 'Bloodhound'
+    },
+    'lazyload': {
+      exports: 'LazyLoad'
     }
   },
   baseUrl: 'js',
@@ -30,6 +33,7 @@ require.config({
     'jquery': '../bower_components/jquery/dist/jquery',
     'underscore': '../bower_components/underscore/underscore',
     'backbone': '../bower_components/backbone/backbone',
+    'lazyload': '../bower_components/rgrove-lazyload/lazyload',
     'ractive': '../bower_components/ractive/ractive-legacy',
     'ractive-events-tap': '../bower_components/ractive-events-tap/ractive-events-tap',
     'ractive-backbone': '../bower_components/ractive-backbone/ractive-adaptors-backbone',

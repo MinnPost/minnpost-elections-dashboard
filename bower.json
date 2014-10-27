@@ -9,20 +9,21 @@
     "bower_components"
   ],
   "dependencies": {
-    "leaflet": "0.7.3",
-    "ractive": "~0.5.5",
+    "ractive": "~0.5.6",
     "ractive-events-tap": "~0.1.1",
-    "requirejs": "~2.1.11",
-    "almond": "~0.2.9",
+    "requirejs": "~2.1.15",
+    "almond": "~0.3.0",
     "text": "~2.0.12",
-    "underscore": "~1.6.0",
-    "jquery": "~1.11.0",
+    "underscore": "~1.7.0",
+    "jquery": "~1.11.1",
     "minnpost-styles": "master",
+    "rgrove-lazyload": "*",
+    "backbone": "~1.1.2",
+    "leaflet": "0.7.3",
     "momentjs": "~2.8.1",
     "typeahead.js": "~0.10.4",
     "Placeholders.js": "~3.0.0",
     "ractive-backbone": "~0.1.1",
-    "backbone": "~1.1.2",
     "moment-timezone": "~0.2.1"
   },
   "dependencyMap": {
