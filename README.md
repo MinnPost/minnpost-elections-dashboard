@@ -100,7 +100,7 @@ Note that we use root freely
 
 #### Cron
 
-We use cron to get the results every few minutes.  This will copy our cron to the crontab.
+We use cron to get the results as often as possible through `deploy/scraper_runner.sh`.  Areas and contest matching just happens in the early morning.
 
     crontab deploy/crontab
 
