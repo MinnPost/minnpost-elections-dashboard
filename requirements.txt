@@ -3,3 +3,4 @@ lxml
 datetime
 flask
 gdata
+unicodecsv
