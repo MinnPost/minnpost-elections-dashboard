@@ -85,7 +85,7 @@ class ElectionScraper:
     # Get the newest set
     newest = 0
     for s in self.sources:
-      newest = s if int(s) > newest else newest
+      newest = int(s) if int(s) > newest else newest
 
     self.newest_election = str(newest)
     self.election = self.newest_election
@@ -509,7 +509,10 @@ class ElectionScraper:
 
     # School district is in the office name.  Special school district for
     # Minneapolis is "1-1".  There are some bad data and not sure if it
-    # is boundary data (from the Leg) or on the SoS side.
+    # is boundary data (from the Leg) or on the SoS side.  Minneapolis
+    # sub-school districts are the same at the Minneapolis Park and Rec
+    # districts.  There are a number of sub-school districts it looks
+    # like
     isd_bad_data = {
       '2769': '769',
       '2906': '627',
@@ -518,10 +521,16 @@ class ElectionScraper:
     }
     if parsed_row['scope'] == 'school':
       isd_match = re.compile('.*\([IS]SD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
+      district_match = re.compile('.*district ([0-9]+) \(.*', re.IGNORECASE).match(parsed_row['office_name'])
+
       if isd_match is not None:
         isd_match_value = '1-1' if isd_match.group(1) == '1' else isd_match.group(1)
         isd_match_value = isd_bad_data[isd_match_value] if isd_match_value in isd_bad_data else isd_match_value
-        boundary = isd_match_value + '-school-district-2013'
+
+        if isd_match_value == '1-1' and district_match is not None:
+          boundary = district_match.group(1) + '-minneapolis-parks-and-recreation-district-2012'
+        else:
+          boundary = isd_match_value + '-school-district-2013'
       else:
         self.log.info('[%s] Could not find (I|S)SD boundary for: %s' % ('results', parsed_row['office_name']))
 
