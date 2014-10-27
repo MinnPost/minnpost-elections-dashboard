@@ -163,13 +163,19 @@ class ElectionScraper:
           index = 'index_' + s['table']
           index_method = getattr(self, index, None)
 
-          # Go through rows
+          # Go through rows.  Save every 200 or less
           count = 0
+          group = []
           for row in rows:
-            # Parse row
             parsed = parser_method(row, i, s['table'], s)
-            self.save(['id'], parsed, s['table'], index_method)
+            group.append(parsed)
+            if len(group) % 200 == 0:
+              self.save(['id'], group, s['table'], index_method)
+              group = []
             count = count + 1
+
+          if len(group) > 0:
+            self.save(['id'], group, s['table'], index_method)
 
           # Log
           self.log.info('[%s] Scraped rows for %s: %s' % (s['type'], i, count))

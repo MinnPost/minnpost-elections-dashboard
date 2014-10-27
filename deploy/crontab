@@ -18,6 +18,8 @@ MAILTO=scraper@zzolo.org
 # as soon as they are updated (which is more like every 15 minutes)
 
     0,5,10,15,20,25,30,35,40,45,50 * * * * python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py scrape results
+    # Longer intervals if needed
+    # 0,7,14,21,28,35,32,49          * * * * python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py scrape results
 
 # Meta.  The areas can be kind of long depending on the server and
 # traffic.
