@@ -68,7 +68,7 @@ As this is meant to emulate how ScraperWiki works, it uses Python, FastCGI and N
 
 These instructions have been performed on an EC2 Ubuntu instance.
 
-**Note that for MinnPost's specific purpose, there is an AMI for this that has many of these steps already completed.  This should be used instead of starting from scratch.**
+**Note that for MinnPost's specific purpose, there is an AMI for this that has many of these steps already completed.  But it seems that the scraper/server seems to run slow when started back up, so it may make sense to re-build the server.**
 
 ### Code, Libraries and prerequisites
 
@@ -84,7 +84,7 @@ Note that we use root freely
 ### Webserver
 
 1. [Dumptruck](https://github.com/scraperwiki/dumptruck-web) is a Python script to create an API on-top of an sqlite database.  It's built by ScraperWiki and also handles multiple user location.
-    1. `sudo git clone https://github.com/scraperwiki/dumptruck-web.git /var/www/dumptruck-web && sudo chown -R www-data:www-data /var/www/dumptruck-web`
+    1. `sudo git clone https://github.com/scraperwiki/dumptruck-web.git /var/www/dumptruck-web && sudo chown -R www-data:www-data /var/www/dumptruck-web && sudo pip install -r /var/www/dumptruck-web/requirements.txt`
     1. Link our database and metadata file for compliance with Dumptruck.
         * `ln -s /home/ubuntu/minnpost-scraper-mn-election-results/scraperwiki.json ~/scraperwiki.json && ln -s /home/ubuntu/minnpost-scraper-mn-election-results/scraperwiki.sqlite ~/scraperwiki.sqlite`
 1. FCGIWrap is used to create an interface between the Dumptruck and Nginx.  We use a simple script to up the number of children to use.
