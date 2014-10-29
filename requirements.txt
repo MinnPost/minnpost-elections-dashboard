@@ -1,6 +1,6 @@
-scraperwiki
-lxml
-datetime
-flask
-gdata
-unicodecsv
+scraperwiki==0.3.11
+lxml==3.4.0
+datetime==4.0.1
+flask==0.10.1
+gdata==2.0.18
+unicodecsv==0.9.4
