@@ -188,7 +188,10 @@ class ElectionScraper:
                     index = 'index_' + s['table']
                     index_method = getattr(self, index, None)
 
-                    # Go through rows.    Save every 200 or less
+                    # Go through rows.
+
+                    """
+                    Save every 200 or less
                     count = 0
                     group = []
                     for row in rows:
@@ -201,6 +204,12 @@ class ElectionScraper:
 
                     if len(group) > 0:
                         self.save(['id'], group, s['table'], index_method)
+                    """
+                    count = 0
+                    for row in rows:
+                        parsed = parser_method(row, i, s['table'], s)
+                        self.save(['id'], parsed, s['table'], index_method)
+                        count = count + 1
 
                     # Log
                     self.log.info('[%s] Scraped rows for %s: %s' % (s['type'], i, count))
@@ -231,6 +240,29 @@ class ElectionScraper:
         except Exception, err:
             rows = None
             self.log.exception('[%s] Unable to connecto supplemental source: %s' % ('supplement', s))
+
+        # Process the rows into a more usable format.  And handle typing
+        s_types = {
+            'percentage': float,
+            'votes_candidate': int,
+            'ranked_choice_place': int,
+            'percent_needed': float
+        }
+        if len(rows) > 0:
+            p_rows = []
+            for r in rows:
+                p_row = {}
+                for f in r.custom:
+                    # Try typing
+                    c = f.replace('.', '_')
+                    if r.custom[f].text is not None and c in s_types:
+                        p_row[c] = s_types[c](r.custom[f].text)
+                    else:
+                        p_row[c] = r.custom[f].text
+
+                p_rows.append(p_row)
+
+            return p_rows
 
         return rows
 
@@ -294,6 +326,53 @@ class ElectionScraper:
             parsed['school_district_name'] = row[1]
             parsed['county_id'] = row[2]
             parsed['county_name'] = row[3]
+
+        return parsed
+
+
+    def parser_questions(self, row, group, table, source):
+        """
+        Parser for ballot questions data.  Note that for whatever reason there
+        are duplicates in the MN SoS data source.
+
+        County ID
+        Office Code
+        MCD code, if applicable (using FIPS statewide unique codes, not county MCDs)
+        School District Numbe, if applicable
+        Ballot Question Number
+        Question Title
+        Question Body
+        """
+        timestamp = calendar.timegm(datetime.datetime.utcnow().utctimetuple())
+        combined_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[3]
+
+        # We have to do some hackery to get the right contest ID
+        # County
+        # 0 - - - 1
+        # id-MN-38---0421
+
+        # City question
+        # ^0 - - 2 - 1
+        #id-MN---43000-1131
+
+        # School
+        # ^0 - - 3 - 1
+        # id-MN---110-5031
+        contest_id = 'id-MN-' + row[0] + '-' + row[3] + '-' + row[2] + '-' + row[1]
+        if row[2] is not None and row[2] != '':
+            contest_id = 'id-MN---' + row[2] + '-' + row[1]
+        if row[3] is not None and row[3] != '':
+            contest_id = 'id-MN---' + row[3] + '-' + row[1]
+
+        # Make row
+        parsed = {
+            'id': combined_id,
+            'contest_id': contest_id,
+            'title': row[4],
+            'sub_title': row[5],
+            'question_body': row[6],
+            'updated': int(timestamp)
+        }
 
         return parsed
 
@@ -454,46 +533,44 @@ class ElectionScraper:
         supplement_insert = 0
         supplement_delete = 0
         s_rows = self.supplement_connect('supplemental_results')
-        for si in s_rows:
-            s = si.custom
-
+        for s in s_rows:
             # Parse some values we know we will look at
-            percentage = float(s['percentage'].text) if s['percentage'].text is not None else None
-            votes_candidate = int(s['votescandidate'].text) if s['votescandidate'].text is not None else None
-            ranked_choice_place = int(s['rankedchoiceplace'].text) if s['votescandidate'].text is not None else None
-            enabled = True if s['enabled'].text is not None else False
-            row_id = s['id'].text
+            percentage = float(s['percentage']) if s['percentage'] is not None else None
+            votes_candidate = int(s['votes_candidate']) if s['votes_candidate'] is not None else None
+            ranked_choice_place = int(s['ranked_choice_place']) if s['ranked_choice_place'] is not None else None
+            enabled = True if s['enabled'] is not None else False
+            row_id = s['id']
 
             # Check for existing rows
             results = scraperwiki.sql.select("* FROM results WHERE id = '%s'" % (row_id))
 
             # If valid data
-            if    row_id is not None and s['contestid'].text is not None and s['candidateid'].text is not None:
+            if row_id is not None and s['contest_id'] is not None and s['candidate_id'] is not None:
                 # If results exist and enabled then update, else if results and not
                 # enabled and is supplemental remove, otherwise add
-                if (votes_candidate > 0 or s['votescandidate'].text == '0') and results != [] and enabled:
+                if (votes_candidate > 0 or s['votescandidate'] == '0') and results != [] and enabled:
                     result = results[0]
                     result['percentage'] = percentage
                     result['votes_candidate'] = votes_candidate
                     result['ranked_choice_place'] = ranked_choice_place
                     self.save(['id'], result, 'results')
                     supplement_update = supplement_update + 1
-                elif results != [] and not enabled and results[0]['results_group'] == 'supplemental':
+                elif results != [] and not enabled and results[0]['results_group'] == 'supplemental_results':
                     scraperwiki.sql.execute("DELETE FROM results WHERE id = '%s'" % (row_id))
                     scraperwiki.sql.commit()
                     supplement_delete = supplement_delete + 1
-                elif (votes_candidate > 0 or s['votescandidate'].text == '0') and enabled:
+                elif (votes_candidate > 0 or s['votes_candidate'] == '0') and enabled:
                     # Add new row, make sure to mark the row as supplemental
                     result = {
                         'id': row_id,
                         'percentage': percentage,
                         'votes_candidate': votes_candidate,
                         'ranked_choice_place': ranked_choice_place,
-                        'candidate': s['candidate'].text,
-                        'office_name': s['officename'].text,
-                        'contest_id': s['contestid'].text,
-                        'candidate_id': s['candidateid'].text,
-                        'results_group': 'supplemental'
+                        'candidate': s['candidate'],
+                        'office_name': s['officename'],
+                        'contest_id': s['contestid'],
+                        'candidate_id': s['candidateid'],
+                        'results_group': 'supplemental_results'
                     }
                     self.save(['id'], result, 'results')
                     supplement_insert = supplement_insert + 1
@@ -700,15 +777,9 @@ class ElectionScraper:
 
         # Get data from Google spreadsheet
         s_rows = self.supplement_connect('supplemental_contests')
-        translations = {
-            'title': 'title',
-            'questionhelp': 'question_help',
-            'questionbody': 'question_body'
-        }
 
         # Get question data
-        questions = self.scrape_questions(election, *args)
-        question_query = '* FROM questions WHERE office = \'%s\''
+        questions = scraperwiki.sql.select('* FROM questions')
 
         # Go through each contests
         for r in contests:
@@ -727,20 +798,11 @@ class ElectionScraper:
             # Match to a boundary or boundaries keys
             r['boundary'] = self.boundary_match_contests(r)
 
-            # Match question text.    Since we can only match on office title, we have
-            # to make sure there is only 1 match.    Which means we can't match them
-            # all.    Also, even within the range of IDs, there are duplicate
-            # questions.
-            re_question = re.compile('.*\question.*', re.IGNORECASE)
-            matched_question = re_question.match(r['office_name'])
-            if matched_question is not None:
-                found_questions = scraperwiki.sql.select(question_query % (r['office_name']))
-                if len(found_questions) == 1:
-                    r['question_body'] = found_questions[0]['body']
-                    r['sub_title'] = found_questions[0]['title']
-                else:
-                    self.log.info('[%s] Found none or more than 1 question for: %s' % ('contests', r['office_name']))
-
+            # Check if there is a question match for the contest
+            for q in questions:
+                if q['contest_id'] == r['id']:
+                    r['question_body'] = q['question_body']
+                    r['sub_title'] = q['sub_title']
 
             # Determine partisanship for contests for other processing.    We need to look
             # at all the candidates to know if the contest is nonpartisan or not.
@@ -758,13 +820,12 @@ class ElectionScraper:
                 r['seats'] = int(seats) * 2
 
             # Check for any supplemental data
-            for si in s_rows:
-                s = si.custom
-                if s['id'].text == r['id']:
+            for s in s_rows:
+                if s['id'] == r['id']:
                     supplemented = supplemented + 1
-                    for field in translations:
-                        if field in s and s[field].text is not None and s[field].text != '':
-                            r[translations[field]] = s[field].text
+                    for f in s:
+                        if s[f] is not None and s[f] != '':
+                            r[f] = s[f]
 
             # Save to database
             self.save(['id'], r, 'contests')
@@ -772,65 +833,6 @@ class ElectionScraper:
 
         self.log.info('[%s] Processed contest rows: %s' % ('contests', processed))
         self.log.info('[%s] Supplemented contest rows: %s' % ('contests', supplemented))
-
-
-    def scrape_questions(self, election, *args):
-        """
-        Scrape the ballot page for question text.    We simply use a best guess
-        for the ID range, but there are duplicate questions in the range,
-        assumingly because a question gets updated.
-
-        Not from the FTP site, so not meant to be run through the general scraper.
-        """
-
-        # Usually we just want the newest election but allow for other situations
-        election = election if election is not None and election != '' else self.newest_election
-        self.election = election
-
-        # Check if this has already been done
-        table_query = "name FROM sqlite_master WHERE type='table' AND name='questions'"
-        all_rows_query = "* FROM questions"
-        found_table = scraperwiki.sql.select(table_query)
-        if found_table != []:
-            found_rows = scraperwiki.sql.select(all_rows_query)
-            if found_rows != [] and len(found_rows) > 2:
-                self.log.info('[%s] Questions already scraped: %s' % ('questions', len(found_rows)))
-                return found_rows
-
-
-        # Set up the parts
-        start = self.sources[self.election]['meta']['ballot_question_id_start']
-        end = self.sources[self.election]['meta']['ballot_question_id_end']
-        url = self.sources[self.election]['meta']['ballot_question_base']
-        questions = 0
-
-        # Go through each URL.    Unfortunately if there is an error, it goes to an
-        # error page but not bad status code
-        for i in range(start, end + 1):
-            try:
-                scraped = scraperwiki.scrape(url % (i))
-                html = lxml.html.fromstring(scraped)
-
-                error_text = html.get_element_by_id('ctl00_MainContent_pnlShowHideDetails').text_content()
-                if 'application error' in error_text.lower():
-                    self.log.info('[%s] No question at ID: %s' % ('questions', i))
-                else:
-                    data = {
-                        'id': i,
-                        'office': html.get_element_by_id('ctl00_MainContent_spQuestionTitle').text_content()
-                            .replace('\r\n', ' ').replace('\n', ' ').strip(),
-                        'title': html.get_element_by_id('ctl00_MainContent_spQuestionBrief').text_content()
-                            .replace('\r\n', ' ').replace('\n', ' ').strip(),
-                        'body': html.get_element_by_id('ctl00_MainContent_spQuestionFull').text_content()
-                            .replace('\r\n', ' ').replace('\n', ' ').strip()
-                    }
-                    self.save(['id'], data, 'questions')
-                    questions = questions + 1
-            except Exception, err:
-                self.log.exception('[%s] Error when trying to read URL and parse parse: %s' % ('questions', url % (i)))
-                raise
-
-        self.log.info('[%s] Scraped %s questions' % ('questions', questions))
 
 
     def check_boundaries(self, *args):

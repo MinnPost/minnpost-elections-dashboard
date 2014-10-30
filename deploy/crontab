@@ -9,10 +9,9 @@ MAILTO=scraper@zzolo.org
 #   |     |     |     |     |
 #   *     *     *     *     *    command to be executed
 
-# Run the general results every 5 minutes
-# except when we want to run some of the other
-# meta scripts.  Offset hours for server time
+# Offset hours for server time
 # and MN time (-5): 3AM MN = 8AM UK
+
 
 # Results.  Run script that only runs results scraper when not already
 # running.
@@ -22,9 +21,9 @@ MAILTO=scraper@zzolo.org
 # Longer manual intervals if needed.
     # 0,7,14,21,28,35,32,49          * * * * python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py scrape results
 
-# Meta.  The areas can be kind of long depending on the server and
-# traffic.
 
-    52   8      *     *     *    python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py scrape areas
+# Meta.  We only need to do these things occassionally and not on Tuesday or Wednesday
 
-    8    9      *     *     *    python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py match_contests
+    0    7      *     *     0,1,4,5,6 python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py scrape questions
+    0    8      *     *     0,1,4,5,6 python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py scrape areas
+    0    9      *     *     0,1,4,5,6 python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py match_contests
