@@ -67,8 +67,15 @@ class ElectionScraper:
         """
         Constructor
         """
+        # Setup logger
         self.log = ScraperLogger('scraper_results').logger
         self.log.info('[scraper] Started.')
+
+        # Make sure the DB is efficient.  Synchronous off means that power outage
+        # or possible interruption can corrupt database
+        scraperwiki.sql.execute('PRAGMA SYNCHRONOUS = OFF')
+        scraperwiki.sql.execute('VACUUM')
+
         self.read_sources()
 
 
@@ -189,9 +196,7 @@ class ElectionScraper:
                     index_method = getattr(self, index, None)
 
                     # Go through rows.
-
-                    """
-                    Save every 200 or less
+                    # Save every 200
                     count = 0
                     group = []
                     for row in rows:
@@ -204,12 +209,16 @@ class ElectionScraper:
 
                     if len(group) > 0:
                         self.save(['id'], group, s['table'], index_method)
+
                     """
+                    Non-grouped.
                     count = 0
                     for row in rows:
                         parsed = parser_method(row, i, s['table'], s)
                         self.save(['id'], parsed, s['table'], index_method)
                         count = count + 1
+                    """
+
 
                     # Log
                     self.log.info('[%s] Scraped rows for %s: %s' % (s['type'], i, count))
