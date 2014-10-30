@@ -61,6 +61,7 @@ class ElectionScraper:
     sources_file = os.path.join(os.path.dirname(__file__), '../scraper_sources.json')
     nonpartisan_parties = ['NP', 'WI']
     index_created = {}
+    grouped_inserts = 1000
 
 
     def __init__(self):
@@ -196,13 +197,13 @@ class ElectionScraper:
                     index_method = getattr(self, index, None)
 
                     # Go through rows.
-                    # Save every 200
+                    # Save every x
                     count = 0
                     group = []
                     for row in rows:
                         parsed = parser_method(row, i, s['table'], s)
                         group.append(parsed)
-                        if len(group) % 200 == 0:
+                        if len(group) % self.grouped_inserts == 0:
                             self.save(['id'], group, s['table'], index_method)
                             group = []
                         count = count + 1
