@@ -35,6 +35,7 @@ require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers'],
         'county-commissioner-districts-2012',
         'counties-2010'
       ],
+      npParties: ['WI', 'NP'],
       // Please don't steal/abuse
       mapQuestKey: 'Fmjtd%7Cluur20a7n0%2C8n%3Do5-9a1s9f',
       mapQuestQuery: '//open.mapquestapi.com/geocoding/v1/address?key=[[[KEY]]]&outFormat=json&countrycodes=us&maxResults=1&location=[[[ADDRESS]]]',

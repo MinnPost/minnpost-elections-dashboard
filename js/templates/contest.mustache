@@ -95,7 +95,11 @@
                 <td class="candidate-column">{{ candidate }}</td>
 
                 {{#(partisan && show_party === undefined)}}
-                  <td><span class="party-label bg-color-political-{{ party_id.toLowerCase() }}" title="{{ parties[party_id.toLowerCase()] }}">{{ party_id }}</span></td>
+                  <td>
+                    {{#(app.options.npParties.indexOf(party_id) === -1)}}
+                      <span class="party-label bg-color-political-{{ party_id.toLowerCase() }}" title="{{ parties[party_id.toLowerCase()] }}">{{ party_id }}</span>
+                    {{/()}}
+                  </td>
                 {{/()}}
 
                 {{#(ranked_choice == 1)}}
