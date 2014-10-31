@@ -274,6 +274,30 @@ $color-dark-gray: #282828;
     }
   }
 
+  // CUSTOM DASHBOARD STUFF
+  .dashboard-state-leg {
+
+    .state-leg-boxes {
+      text-align: center;
+      line-height: 1em;
+      margin-bottom: 1em;
+
+      .state-leg-box {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin: 0 4px 4px 0;
+        padding: 0;
+      }
+    }
+
+    .state-leg-totals {
+      text-align: center;
+      font-size: 1.5em;
+    }
+  }
+
+
   // "Mobile" breakpoint
   @media screen and (max-width: 640px) {
 

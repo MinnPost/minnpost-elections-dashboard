@@ -6,8 +6,9 @@
  */
 
 // Create main application
-require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers'],
-  function($, _, Base, helpers, views, routers) {
+require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
+  'text!templates/dashboard-state-leg.mustache'],
+  function($, _, Base, helpers, views, routers, tDStateLeg) {
 
   // Create new class for app
   var App = Base.BaseApp.extend({
@@ -61,6 +62,68 @@ require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers'],
           class: 'congress-district',
           id: 'id-MN---07-0110',
           numRows: 2
+        },
+        {
+          // spacer
+        },
+        {
+          type: 'custom',
+          id: 'state-leg',
+          template: tDStateLeg,
+          query: "SELECT r.id AS results_id, r.candidate, r.party_id, r.percentage, " +
+            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party " +
+            "FROM contests AS c LEFT JOIN results AS r " +
+            "ON c.id = r.contest_id WHERE title LIKE '%state representative%' " +
+            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
+          parse: function(response, options) {
+            var parsed = {};
+            // Put contest info into friendly format
+            parsed.contests = {};
+            _.each(response, function(r, ri) {
+              parsed.contests[r.id] = parsed.contests[r.id] || {
+                id: r.id,
+                title: r.title,
+                precincts_reporting: r.precincts_reporting,
+                total_effected_precincts: r.total_effected_precincts,
+                incumbent_party: r.incumbent_party,
+                results: []
+              };
+              parsed.contests[r.id].results.push({
+                id: r.results_id,
+                candidate: r.candidate,
+                party_id: r.party_id,
+                percentage: r.percentage
+              });
+            });
+
+            // Process contests
+            parsed.contests = _.map(parsed.contests, function(c, ci) {
+              c.done = true; //(c.precincts_reporting === c.total_effected_precincts);
+              c.partyWon = _.max(c.results, function(r, ri) {
+                return r.percentage;
+              }).party_id;
+              c.partyShift = (c.partyWon !== c.incumbent_party);
+              c.results = _.sortBy(c.results, 'candidate').reverse();
+              c.results = _.sortBy(c.results, 'percentage').reverse();
+              return c;
+            });
+
+            // Sort contests
+            parsed.contests = _.sortBy(parsed.contests, 'title');
+            parsed.contests = _.sortBy(parsed.contests, 'done');
+
+            // Top level data
+            parsed.DFLCount = _.filter(parsed.contests, function(c, ci) {
+              return (c.done && c.partyWon === 'DFL');
+            }).length;
+            parsed.RCount = _.filter(parsed.contests, function(c, ci) {
+              return (c.done && c.partyWon === 'R');
+            }).length;
+            parsed.unknownCount = parsed.contests.length - parsed.DFLCount -
+              parsed.RCount;
+
+            return parsed;
+          }
         },
         {
           type: 'race',

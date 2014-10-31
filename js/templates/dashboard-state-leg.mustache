@@ -1,0 +1,18 @@
+<div class="dashboard-state-leg">
+  <h3>State legislature</h3>
+
+  <div class="state-leg-boxes cf">
+    {{#contests}}
+      <div class="
+        {{#done}}bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}
+        {{#partyShift}}party-shift{{/partyShift}}
+        state-leg-box"></div>
+    {{/contests}}
+  </div>
+
+  <div class="state-leg-totals">
+    <span class="color-political-dfl">{{ DFLCount }}</span> -
+    <span class="color-political-wi">{{ unknownCount }}</span> -
+    <span class="color-political-r">{{ RCount }}</span>
+  </div>
+</div>

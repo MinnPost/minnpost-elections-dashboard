@@ -59,6 +59,10 @@
               {{>contest}}
             {{/()}}
 
+            {{#(type === 'custom')}}
+              {{>stateLeg}}
+            {{/()}}
+
             {{#(type === 'links')}}
               <h4>Other elections</h4>
               <ul>

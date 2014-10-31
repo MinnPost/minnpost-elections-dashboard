@@ -269,6 +269,47 @@ define([
   });
 
 
+  // General model for connecting for custom queries
+  models.CustomQuery = Backbone.Model.extend({
+    // Example quqery
+    query: "SELECT * FROM results LIMIT 10",
+
+    // Initializer
+    initialize: function(model, options) {
+      this.options = options || {};
+      this.app = options.app;
+      this.query = options.query || this.query;
+      this.parse = (options.parse) ? _.bind(options.parse, this) : this.parse;
+    },
+
+    // Construct API call
+    url: function() {
+      return this.app.options.electionsAPI +
+        encodeURIComponent(this.query);
+    },
+
+    // Default parse
+    parse: function(response, options) {
+      return response;
+    },
+
+    // Our API is pretty simple, so we do a basic time based
+    // polling.  Call right away as well.
+    connect: function() {
+      var thisModel = this;
+      this.fetch();
+      this.pollID = window.setInterval(function() {
+        thisModel.fetch();
+      }, this.app.options.electionsAPIPollInterval);
+    },
+
+    // Stop the polling
+    disconnect: function() {
+      window.clearInterval(this.pollID);
+    }
+  });
+
+
   return models;
 
 });

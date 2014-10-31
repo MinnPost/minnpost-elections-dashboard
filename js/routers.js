@@ -31,20 +31,32 @@ define([
     routeDashboard: function() {
       var thisRouter = this;
       var data = {};
+      var partials = {};
       this.teardownObjects();
 
       // Go through dashboard config and make objects
       // as needed.  this.app.dashboardContests is used to
       // teardown objects later
-      data.races = [];
       this.app.dashboardContests = {};
       this.options.dashboard = _.map(this.options.dashboard, function(d, di) {
         var n;
 
         if (d.type === 'race') {
-          n = new models.ContestModel(d, _.extend(d, { app: thisRouter.app }));
+          n = new models.ContestModel(d, { app: thisRouter.app });
           n.connect(false);
           n.set('isDashboard', true);
+          thisRouter.app.dashboardContests[d.id] = n;
+          return n;
+        }
+
+        if (d.type === 'custom') {
+          n = new models.CustomQuery({ type: d.type }, _.extend(d, { app: thisRouter.app }));
+          n.connect();
+          n.set('isDashboard', true);
+          // Can't find a way to use partial or components with
+          // variable names
+          partials.stateLeg = d.template;
+
           thisRouter.app.dashboardContests[d.id] = n;
           return n;
         }
@@ -63,7 +75,8 @@ define([
       this.app.dashboardView = new views.DashboardView({
         el: this.app.$el.find('.content-container'),
         data: data,
-        app: this.app
+        app: this.app,
+        partials: partials
       });
 
       // Handle searches here as we have an easy reference
