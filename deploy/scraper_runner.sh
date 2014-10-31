@@ -1,7 +1,9 @@
 #!/bin/sh
 
+CODE_PATH=/home/ubuntu/minnpost-scraper-mn-election-results
+
 if ps -ef | grep -v grep | grep scraper.py ; then
     exit 0
 else
-    python /home/ubuntu/minnpost-scraper-mn-election-results/code/scraper.py scrape results
+    cd $CODE_PATH && python $CODE_PATH/code/scraper.py scrape results
 fi

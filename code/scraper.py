@@ -62,6 +62,7 @@ class ElectionScraper:
     nonpartisan_parties = ['NP', 'WI']
     index_created = {}
     grouped_inserts = 1000
+    db_file = os.path.join(os.path.dirname(__file__), '../scraperwiki.sqlite')
 
 
     def __init__(self):
@@ -71,6 +72,12 @@ class ElectionScraper:
         # Setup logger
         self.log = ScraperLogger('scraper_results').logger
         self.log.info('[scraper] Started.')
+
+        # Scraperwiki's default db is relative to where the script
+        # is running but be default the db is created, so we allow
+        # for the environment variable if set
+        self.db_file = os.environ.get('SCRAPERWIKI_DATABASE_NAME', self.db_file)
+        scraperwiki.sql._connect(self.db_file)
 
         # Make sure the DB is efficient.  Synchronous off means that power outage
         # or possible interruption can corrupt database
@@ -501,7 +508,7 @@ class ElectionScraper:
                 'updated': int(timestamp)
             }
 
-        # Update the contests table.    This should really only happen once per
+        # Update the contests table. This should really only happen once per
         # contest
         if contests_record['id'] not in self.contests_updated:
             self.save(['id'], contests_record, 'contests')
