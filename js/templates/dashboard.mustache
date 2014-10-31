@@ -36,21 +36,16 @@
   <div class="row">
     <div class="column-medium-50">
       <div class="inner-column-left">
-
-        <div class="contest-governor-r dashboard-section">
-          {{#contestGovernorR}}
-            {{>contest}}
-          {{/contestGovernorR}}
-        </div>
-
-        <div class="contest-auditor-dfl dashboard-section">
-          {{#contestAuditorDFL}}
-            {{>contest}}
-          {{/contestAuditorDFL}}
-        </div>
+        {{#dashboard:di}}{{#(di < dashboard.length / 2)}}
+          <div class="{{ class }} dashboard-section">
+            {{#(type === 'race')}}
+              {{>contest}}
+            {{/()}}
+          </div>
+        {{/()}}{{/dashboard}}
 
         <div class="elections-search dashboard-section">
-          <h4>Other elections</h4>
+          <h4>Search elections</h4>
           {{>electionsSearch}}
         </div>
       </div>
@@ -58,30 +53,27 @@
 
     <div class="column-medium-50">
       <div class="inner-column-right">
+        {{#dashboard:di}}{{#(di >= dashboard.length / 2)}}
+          <div class="{{ class }} dashboard-section">
+            {{#(type === 'race')}}
+              {{>contest}}
+            {{/()}}
 
-        <div class="contest-senate-r dashboard-section">
-          {{#contestSenateR}}
-            {{>contest}}
-          {{/contestSenateR}}
-        </div>
-
-        <div class="contest-house-60b-dfl dashboard-section">
-          {{#contestHouse60BDFL}}
-            {{>contest}}
-          {{/contestHouse60BDFL}}
-        </div>
-
-        <div class="contest-house-48b-r dashboard-section">
-          {{#contestHouse48BR}}
-            {{>contest}}
-          {{/contestHouse48BR}}
-        </div>
+            {{#(type === 'links')}}
+              <h4>Other elections</h4>
+              <ul>
+                {{#links}}
+                  <li><a href="{{ href }}">{{ text }}</a></li>
+                {{/links}}
+              </ul>
+            {{/()}}
+          </div>
+        {{/()}}{{/dashboard}}
 
         <div class="elections-search dashboard-section">
-          <h4>Other elections</h4>
+          <h4>Search elections</h4>
           {{>electionsSearch}}
         </div>
-
       </div>
     </div>
   </div>

@@ -13,7 +13,7 @@ define([
       "ORDER BY r.percentage ASC, r.candidate",
 
     // Fields that are for contests (not result)
-    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code', 'office_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'sub_title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help', 'primary', 'scope', 'partisan'],
+    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code', 'office_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'sub_title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help', 'primary', 'scope', 'partisan', 'incumbent_party', 'percent_needed'],
 
     // Non-Partisan parties
     npParties: ['NP', 'WI'],
@@ -193,7 +193,7 @@ define([
   // Model for election wide data
   models.ElectionModel = Backbone.Model.extend({
     // Base query for the metadata
-    query: "SELECT * FROM swvariables",
+    query: "SELECT * FROM meta",
 
     // Initializer
     initialize: function(model, options) {
@@ -215,17 +215,17 @@ define([
       // Parse out values
       _.each(response, function(r, ri) {
         // Parsing large ints in JS :(
-        if (r.type === 'integer') {
-          parsed[r.name] = parseInt(r.value_blob, 10);
+        if (r.type === 'int') {
+          parsed[r.key] = parseInt(r.value, 10);
         }
         else if (r.type === 'float') {
-          parsed[r.name] = parseFloat(r.value_blob);
+          parsed[r.key] = parseFloat(r.value);
         }
-        else if (r.type === 'boolean') {
-          parsed[r.name] = !!r.value_blob;
+        else if (r.type === 'bool') {
+          parsed[r.key] = !!r.value;
         }
         else {
-          parsed[r.name] = r.value_blob;
+          parsed[r.key] = r.value.toString();
         }
       });
 
@@ -249,7 +249,6 @@ define([
           parsed.isTest = true;
         }
       }
-
       return parsed;
     },
 

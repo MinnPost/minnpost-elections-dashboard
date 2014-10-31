@@ -33,26 +33,30 @@ define([
       var data = {};
       this.teardownObjects();
 
-      // Get races objects
-      this.app.dashboardContests = {
-        contestGovernor: 'id-MN----0331',
-        contestAuditor: 'id-MN----0333',
-        contestSenate: 'id-MN----0102'
-      };
-      _.each(this.app.dashboardContests, function(c, ci) {
-        thisRouter.app[ci] = new models.ContestModel({ id: c }, { app: thisRouter.app });
-        thisRouter.app[ci].connect(false);
-        thisRouter.app[ci].set('isDashboard', true);
-        data[ci] = thisRouter.app[ci];
+      // Go through dashboard config and make objects
+      // as needed.  this.app.dashboardContests is used to
+      // teardown objects later
+      data.races = [];
+      this.app.dashboardContests = {};
+      this.options.dashboard = _.map(this.options.dashboard, function(d, di) {
+        var n;
+
+        if (d.type === 'race') {
+          n = new models.ContestModel(d, _.extend(d, { app: thisRouter.app }));
+          n.connect(false);
+          n.set('isDashboard', true);
+          thisRouter.app.dashboardContests[d.id] = n;
+          return n;
+        }
+
+        return d;
       });
+      data.dashboard = this.options.dashboard;
 
       // Get and connect to election metadata
       this.app.election = new models.ElectionModel({}, { app: this.app });
       data.election = this.app.election;
       this.app.election.connect();
-
-      // We need some of this data
-      data.capabilities = thisRouter.app.options.capabilities;
 
       // Create dashboard view
       data.title = 'Dashboard';
