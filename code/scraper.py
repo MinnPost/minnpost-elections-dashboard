@@ -74,9 +74,8 @@ class ElectionScraper:
         self.log.info('[scraper] Started.')
 
         # Scraperwiki's default db is relative to where the script
-        # is running but be default the db is created, so we allow
-        # for the environment variable if set
-        self.db_file = os.environ.get('SCRAPERWIKI_DATABASE_NAME', self.db_file)
+        # is running but be default the db is created at scraperwiki.sqlite
+        # where you are, but this should be empty since we don't use it
         scraperwiki.sql._connect(self.db_file)
 
         # Make sure the DB is efficient.  Synchronous off means that power outage
