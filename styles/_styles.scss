@@ -15,6 +15,7 @@ $color-light-gray: #7A7A7A;
 $color-medium-gray: #404040;
 $color-dark-gray: #282828;
 
+
 .mp .minnpost-elections-dashboard-container {
 
   padding-top: 2em;
@@ -293,20 +294,20 @@ $color-dark-gray: #282828;
       }
 
       .state-leg-box {
-        display: inline-block;
+        @include inline-block();
         width: 17px;
         height: 17px;
         margin: 0 5px 5px 0;
         padding: 0;
         background-color: #BCBCBC;
-        border: 1px solid #FFFFFF;
 
         &.done {
           background-color: #676767;
         }
 
         &.party-shift {
-          border: 2px solid #232323;
+          @include box-shadow(0 0 0px 1px #232323);
+          border: 1px solid #FFFFFF;
         }
       }
     }
@@ -323,7 +324,7 @@ $color-dark-gray: #282828;
       margin-bottom: 3em;
 
       div {
-        display: inline-block;
+        @include inline-block();
       }
 
       .legend-item {
@@ -350,7 +351,8 @@ $color-dark-gray: #282828;
       }
 
       .party-shift {
-        border: 2px solid #232323;
+        @include box-shadow(0 0 0px 1px #232323);
+        border: 1px solid #FFFFFF;
       }
     }
 
@@ -369,6 +371,17 @@ $color-dark-gray: #282828;
 
       .rnet {
         font-weight: bold;
+      }
+    }
+  }
+
+  .dashboard {
+
+    .dashboard-links {
+      margin-bottom: 3em;
+
+      &.mobile-only {
+        display: none;
       }
     }
   }
@@ -419,6 +432,14 @@ $color-dark-gray: #282828;
     }
     .dashboard .inner-column-right .elections-search {
       display: block;
+    }
+
+    .dashboard .dashboard-links {
+      display: none;
+
+      &.mobile-only {
+        display: block;
+      }
     }
   }
 }

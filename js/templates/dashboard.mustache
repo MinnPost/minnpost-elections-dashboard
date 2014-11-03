@@ -41,6 +41,19 @@
             {{#(type === 'race')}}
               {{>contest}}
             {{/()}}
+
+            {{#(type === 'custom')}}
+              {{>stateLeg}}
+            {{/()}}
+
+            {{#(type === 'links')}}
+              <h4>Other elections</h4>
+              <ul>
+                {{#links}}
+                  <li><a href="{{ href }}">{{ text }}</a></li>
+                {{/links}}
+              </ul>
+            {{/()}}
           </div>
         {{/()}}{{/dashboard}}
 
