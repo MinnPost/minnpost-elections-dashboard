@@ -1,5 +1,5 @@
 <div class="dashboard-state-leg">
-  <h3>State legislature</h3>
+  <h3>MN House of Representatives</h3>
 
   {{#(!contests.length)}}
     {{>loading}}
@@ -46,13 +46,12 @@
   </div>
 
   <div class="state-leg-rnet">
-    <p>
-      Republicans have netted
+    <div class="heading">
+      Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:
       <span class="color-political-r rnet">
-        {{ (rNet > 0) ? '+' : (rNet < 0) ? '-' : '' }}{{ rNet }}
+        {{ (rNet > 0) ? '+' : '' }}{{ rNet }}
       </span>
-      seats{{^allDone}} so far{{/allDone}},
-      needing +7 in total to have a majority in the House.
-    </p>
+    </div>
+    <div class="sub-heading">Republicans need a net gain of at least +7 to win control of the House.</div>
   </div>
 </div>

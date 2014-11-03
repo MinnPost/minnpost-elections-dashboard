@@ -18,6 +18,7 @@ require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
       projectName: 'minnpost-elections-dashboard',
       remoteProxy: '//mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
       el: '.minnpost-elections-dashboard-container',
+      interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
       electionsAPI: '//50.19.100.197/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
