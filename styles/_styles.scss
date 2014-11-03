@@ -358,7 +358,7 @@ $color-dark-gray: #282828;
 
     .state-leg-rnet {
       text-align: center;
-      margin-bottom: 3em;
+      margin-bottom: 4.75em;
 
       .heading {
         font-size: 1.5em;
@@ -440,6 +440,10 @@ $color-dark-gray: #282828;
       &.mobile-only {
         display: block;
       }
+    }
+
+    .dashboard-state-leg .state-leg-rnet {
+      margin-bottom: 2em;
     }
   }
 }
