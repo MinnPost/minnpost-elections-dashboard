@@ -49,27 +49,27 @@ require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
         {
           type: 'race',
           title: 'Governor',
-          class: 'governor',
+          itemClass: 'governor',
           id: 'id-MN----0331',
           rows: 2
         },
         {
           type: 'race',
           title: 'Congressional District 8',
-          class: 'congress-district',
+          itemClass: 'congress-district',
           id: 'id-MN---08-0111',
           rows: 2
         },
         {
           type: 'race',
           title: 'Congressional District 7',
-          class: 'congress-district',
+          itemClass: 'congress-district',
           id: 'id-MN---07-0110',
           rows: 2
         },
         {
           type: 'links',
-          class: 'dashboard-links non-mobile',
+          itemClass: 'dashboard-links non-mobile',
           links: [
             { href: '#contest/id-MN----0333', text: 'State Auditor' },
             { href: '#contest/id-MN----0335', text: 'Attorney General' },
@@ -196,20 +196,20 @@ require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
         {
           type: 'race',
           title: 'U.S. Senator',
-          class: 'us-senate',
+          itemClass: 'us-senate',
           id: 'id-MN----0102',
           rows: 2
         },
         {
           type: 'race',
           title: 'Secretary of State',
-          class: 'sec-state',
+          itemClass: 'sec-state',
           id: 'id-MN----0332',
           rows: 3
         },
         {
           type: 'links',
-          class: 'dashboard-links mobile-only',
+          itemClass: 'dashboard-links mobile-only',
           links: [
             { href: '#contest/id-MN----0333', text: 'State Auditor' },
             { href: '#contest/id-MN----0335', text: 'Attorney General' },

@@ -37,7 +37,7 @@
     <div class="column-medium-50">
       <div class="inner-column-left">
         {{#dashboard:di}}{{#(di < dashboard.length / 2)}}
-          <div class="{{ class }} dashboard-section">
+          <div class="{{ itemClass }} dashboard-section">
             {{#(type === 'race')}}
               {{>contest}}
             {{/()}}
@@ -67,7 +67,7 @@
     <div class="column-medium-50">
       <div class="inner-column-right">
         {{#dashboard:di}}{{#(di >= dashboard.length / 2)}}
-          <div class="{{ class }} dashboard-section">
+          <div class="{{ itemClass }} dashboard-section">
             {{#(type === 'race')}}
               {{>contest}}
             {{/()}}

@@ -22,7 +22,7 @@ define([
       searches = _.map(searches, function(s) {
         s = s.split(' ').join('%');
         s = s.split('+').join('%');
-        return "title LIKE '%" + s + "%'";
+        return "title LIKE '%" + s + "%' OR sub_title LIKE '%" + s + "%'";
       });
 
       return this.app.options.electionsAPI +
