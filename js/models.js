@@ -105,23 +105,42 @@ define([
       // in.  Primaries need to choose winners per parties
       parsed.done = (parsed.precincts_reporting === parsed.total_effected_precincts);
 
+      // Get ranked choice final results
       if (parsed.ranked_choice) {
         rankedChoiceFinal = (_.size(parsed.results) == _.size(_.filter(parsed.results, function(r) {
           return (!_.isUndefined(r.ranked_choices[100]));
         })));
       }
-      if ((parsed.done && !parsed.ranked_choice && !parsed.primary) ||
+
+      // If there is a percent needed option.  We assume yes no questions
+      if (parsed.percent_needed && parsed.percent_needed > 0) {
+        parsed.results = _.map(parsed.results, function(r, ri) {
+          r.winner = false;
+          if (r.candidate.toLowerCase() === 'yes' &&
+            r.percentage >= parsed.percent_needed) {
+            r.winner = true;
+          }
+          else if (r.candidate.toLowerCase() === 'no' &&
+            r.percentage > (100 - parsed.percent_needed)) {
+            r.winner = true;
+          }
+          return r;
+        });
+      }
+      // Conditions where we just want the top seats
+      else if ((parsed.done && !parsed.ranked_choice && !parsed.primary) ||
         (parsed.done && parsed.ranked_choice && rankedChoiceFinal && !parsed.primary) ||
         (parsed.done && parsed.primary && !parsed.partisan)) {
         parsed.results = _.map(parsed.results, function(r, ri) {
           r.winner = false;
-          if (ri < parsed.seats) {
+          if (ri < parsed.seats && !r.percent) {
             r.winner = true;
           }
           return r;
         });
         parsed.final = true;
       }
+      // If primary and partisan race
       else if (parsed.done && parsed.primary && parsed.partisan) {
         _.each(_.groupBy(parsed.results, 'party_id'), function(p, pi) {
           _.each(p, function(r, ri) {
