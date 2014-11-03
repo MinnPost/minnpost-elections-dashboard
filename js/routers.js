@@ -10,6 +10,13 @@ define([
     initialize: function(options) {
       this.options = options;
       this.app = options.app;
+
+      // Reload interface
+      if (this.app.options.interfaceRefresh) {
+        window.setTimeout(function() {
+          document.location.reload(true);
+        }, this.app.options.interfaceRefresh);
+      }
     },
 
     routes: {
