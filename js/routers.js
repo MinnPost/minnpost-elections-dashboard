@@ -38,7 +38,7 @@ define([
       // as needed.  this.app.dashboardContests is used to
       // teardown objects later
       this.app.dashboardContests = {};
-      this.options.dashboard = _.map(this.options.dashboard, function(d, di) {
+      data.dashboard = _.map(this.options.dashboard, function(d, di) {
         var n;
 
         if (d.type === 'race') {
@@ -56,14 +56,11 @@ define([
           // Can't find a way to use partial or components with
           // variable names
           partials.stateLeg = d.template;
-
           thisRouter.app.dashboardContests[d.id] = n;
           return n;
         }
-
         return d;
       });
-      data.dashboard = this.options.dashboard;
 
       // Get and connect to election metadata
       this.app.election = new models.ElectionModel({}, { app: this.app });

@@ -7,8 +7,9 @@
 
 // Create main application
 require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
+  'mpConfig',
   'text!templates/dashboard-state-leg.mustache'],
-  function($, _, Base, helpers, views, routers, tDStateLeg) {
+  function($, _, Base, helpers, views, routers, mpConfig, tDStateLeg) {
 
   // Create new class for app
   var App = Base.BaseApp.extend({
@@ -77,6 +78,8 @@ require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
             "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
           parse: function(response, options) {
             var parsed = {};
+            var tempContests = [];
+
             // Put contest info into friendly format
             parsed.contests = {};
             _.each(response, function(r, ri) {
@@ -98,29 +101,84 @@ require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
 
             // Process contests
             parsed.contests = _.map(parsed.contests, function(c, ci) {
-              c.done = true; //(c.precincts_reporting === c.total_effected_precincts);
+              c.done = (c.precincts_reporting === c.total_effected_precincts);
               c.partyWon = _.max(c.results, function(r, ri) {
                 return r.percentage;
               }).party_id;
-              c.partyShift = (c.partyWon !== c.incumbent_party);
+
+              // Test data
+              /*
+              var t = Math.random();
+              if (t < 0.9) {
+                c.done = true;
+                c.partyWon = (Math.random() < 0.5) ? 'DFL' : 'R';
+              }
+              */
+
+              c.partyShift = (c.partyWon !== c.incumbent_party && c.done);
               c.results = _.sortBy(c.results, 'candidate').reverse();
               c.results = _.sortBy(c.results, 'percentage').reverse();
+
               return c;
             });
 
-            // Sort contests
+            // Sort contests, this could get messey
             parsed.contests = _.sortBy(parsed.contests, 'title');
-            parsed.contests = _.sortBy(parsed.contests, 'done');
+            parsed.contests = _.sortBy(parsed.contests, 'partyShift').reverse();
+            parsed.contests = _.sortBy(parsed.contests, function(c, ci) {
+              if (c.done) {
+                return (c.partyWon === 'DFL') ? 'AAAADFL' :
+                  (c.partyWon === 'R') ? 'ZZZZZR' : 'MMMMMM' + c.partyWon;
+              }
+              else {
+                return 'MMMMMM';
+              }
+            });
 
-            // Top level data
-            parsed.DFLCount = _.filter(parsed.contests, function(c, ci) {
-              return (c.done && c.partyWon === 'DFL');
-            }).length;
-            parsed.RCount = _.filter(parsed.contests, function(c, ci) {
-              return (c.done && c.partyWon === 'R');
-            }).length;
-            parsed.unknownCount = parsed.contests.length - parsed.DFLCount -
-              parsed.RCount;
+            // Counts
+            parsed.counts = {};
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done) {
+                if (parsed.counts[c.partyWon]) {
+                  parsed.counts[c.partyWon].count += 1;
+                }
+                else {
+                  parsed.counts[c.partyWon] = {
+                    id: c.partyWon,
+                    count: 1,
+                    party: mpConfig.politicalParties[c.partyWon.toLowerCase()]
+                  };
+                }
+              }
+              else {
+                if (parsed.counts.unknown) {
+                  parsed.counts.unknown.count += 1;
+                }
+                else {
+                  parsed.counts.unknown = {
+                    id: 'MMMMMMMunknown',
+                    count: 1,
+                    party: 'Not fully reported yet'
+                  };
+                }
+              }
+            });
+            parsed.counts = _.sortBy(parsed.counts, 'id');
+
+            // Republican net
+            parsed.rNet = 0;
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done && c.partyShift && c.partyWon === 'R') {
+                parsed.rNet += 1;
+              }
+              if (c.done && c.partyShift && c.incumbent_party === 'R') {
+                parsed.rNet -= 1;
+              }
+            });
+
+            // Is everything done
+            parsed.allDone = (_.where(parsed.contests, { done: true }).length ===
+              parsed.contests.length);
 
             return parsed;
           }
@@ -144,7 +202,8 @@ require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
           links: [
             { href: '#contest/id-MN----0333', text: 'State Auditor' },
             { href: '#contest/id-MN----0335', text: 'Attorney General' },
-            { href: '#search/ssd+1', text: 'Minneapolis School Board' }
+            { href: '#search/ssd+1', text: 'Minneapolis School Board' },
+            { href: '#search/minneapolis+question', text: 'Minneapolis ballot questions' }
           ]
         }
       ]

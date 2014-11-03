@@ -1,18 +1,58 @@
 <div class="dashboard-state-leg">
   <h3>State legislature</h3>
 
+  {{#(!contests.length)}}
+    {{>loading}}
+  {{/()}}
+
   <div class="state-leg-boxes cf">
-    {{#contests}}
-      <div class="
-        {{#done}}bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}
-        {{#partyShift}}party-shift{{/partyShift}}
-        state-leg-box"></div>
-    {{/contests}}
+    <div class="state-leg-boxes-left">
+      {{#contests:ci}}{{#(ci < contests.length / 2)}}
+        <a href="#/contest/{{ id }}" class="
+          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}
+          {{#partyShift}}party-shift{{/partyShift}}
+          state-leg-box" title="{{ title }}"></a>
+      {{/()}}{{/contests}}
+    </div>
+    <div class="state-leg-boxes-right">
+      {{#contests:ci}}{{#(ci >= contests.length / 2)}}
+        <a href="#/contest/{{ id }}" class="
+          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}
+          {{#partyShift}}party-shift{{/partyShift}}
+          state-leg-box" title="{{ title }}"></a>
+      {{/()}}{{/contests}}
+    </div>
   </div>
 
   <div class="state-leg-totals">
-    <span class="color-political-dfl">{{ DFLCount }}</span> -
-    <span class="color-political-wi">{{ unknownCount }}</span> -
-    <span class="color-political-r">{{ RCount }}</span>
+    {{#counts:ci}}
+      <span class="color-political-{{ id.toLowerCase() }}" title="{{ party }}">{{ count }}</span>
+      {{#(ci < counts.length - 1)}} -&nbsp; {{/()}}
+    {{/counts}}
+  </div>
+
+  <div class="state-leg-legend">
+    <div class="legend-item">
+      <div class="legend-box unknown"></div> Not fully reported yet
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-box solid"></div> Colored box is fully reported
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-box party-shift"></div> District has changed parties
+    </div>
+  </div>
+
+  <div class="state-leg-rnet">
+    <p>
+      Republicans have netted
+      <span class="color-political-r rnet">
+        {{ (rNet > 0) ? '+' : (rNet < 0) ? '-' : '' }}{{ rNet }}
+      </span>
+      seats{{^allDone}} so far{{/allDone}},
+      needing +7 in total to have a majority in the House.
+    </p>
   </div>
 </div>

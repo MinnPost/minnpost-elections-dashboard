@@ -31,6 +31,10 @@
     {{#(!!question_body)}}
       <p>{{{ question_body }}}</p>
     {{/()}}
+
+    {{#percent_needed}}
+      <p>This contest requires {{ formatters.number(percent_needed, 1) }}% or more "yes" votes for the measure to pass.</p>
+    {{/percent_needed}}
   {{/()}}
 
   <div class="{{^isDashboard}}row{{/isDashboard}}">
