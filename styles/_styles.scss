@@ -422,6 +422,12 @@ $color-dark-gray: #282828;
       font-size: 1.25em;
     }
   }
+  @media screen and (max-width: 1023px) {
+
+    .fullscreen-toggle {
+      display: none;
+    }
+  }
 
 
   // Smaller screens
