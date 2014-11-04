@@ -26,6 +26,28 @@
 .mp .minnpost-elections-dashboard-container {
   padding-top: 2em;
 }
+.mp .minnpost-elections-dashboard-container .fullscreen-toggle {
+  display: block;
+  float: right;
+}
+.mp .minnpost-elections-dashboard-container.fullscreen {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+.mp .minnpost-elections-dashboard-container.fullscreen .fullscreen-overlay {
+  z-index: 999999;
+  position: fixed;
+  background: url('images/MinnPost_logo-200x28.png?1415067281') transparent center center no-repeat;
+  width: 200px;
+  height: 28px;
+  bottom: 10px;
+  right: 10px;
+  opacity: 0.8;
+}
 .mp .minnpost-elections-dashboard-container .contest-map {
   width: 100%;
   height: 25em;
@@ -314,6 +336,12 @@
 }
 .mp .minnpost-elections-dashboard-container .dashboard .dashboard-links.mobile-only {
   display: none;
+}
+@media screen and (min-width: 960px) {
+  .mp .minnpost-elections-dashboard-container.fullscreen {
+    max-width: 95%;
+    font-size: 1.25em;
+  }
 }
 @media screen and (max-width: 640px) {
   .mp .minnpost-elections-dashboard-container table thead .small-table-label {

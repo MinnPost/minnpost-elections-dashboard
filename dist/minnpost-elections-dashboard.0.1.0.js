@@ -397,7 +397,7 @@ define("lazyload", (function (global) {
 }(this)));
 
 
-define('text!../bower.json',[],function () { return '{\n  "name": "minnpost-elections-dashboard",\n  "version": "0.1.0",\n  "main": "index.html",\n  "ignore": [\n    "**/.*",\n    "node_modules",\n    "components",\n    "bower_components"\n  ],\n  "dependencies": {\n    "ractive": "~0.5.6",\n    "ractive-events-tap": "~0.1.1",\n    "requirejs": "~2.1.15",\n    "almond": "~0.3.0",\n    "text": "~2.0.12",\n    "underscore": "~1.7.0",\n    "jquery": "~1.11.1",\n    "minnpost-styles": "master",\n    "rgrove-lazyload": "*",\n    "backbone": "~1.1.2",\n    "leaflet": "0.7.3",\n    "momentjs": "~2.8.1",\n    "typeahead.js": "~0.10.4",\n    "Placeholders.js": "~3.0.0",\n    "ractive-backbone": "~0.1.1",\n    "moment-timezone": "~0.2.1"\n  },\n  "dependencyMap": {\n    "requirejs": {\n      "rname": "requirejs",\n      "js": [\n        "requirejs/require"\n      ]\n    },\n    "almond": {\n      "rname": "almond",\n      "js": [\n        "almond/almond"\n      ]\n    },\n    "text": {\n      "rname": "text",\n      "js": [\n        "text/text"\n      ]\n    },\n    "jquery": {\n      "rname": "jquery",\n      "js": [\n        "jquery/dist/jquery"\n      ],\n      "returns": "$"\n    },\n    "underscore": {\n      "rname": "underscore",\n      "js": [\n        "underscore/underscore"\n      ],\n      "returns": "_"\n    },\n    "ractive": {\n      "rname": "ractive",\n      "js": [\n        "ractive/ractive-legacy"\n      ],\n      "returns": "Ractive"\n    },\n    "ractive-events-tap": {\n      "rname": "ractive-events-tap",\n      "js": [\n        "ractive-events-tap/ractive-events-tap"\n      ],\n      "returns": "RactiveEventsTap"\n    },\n    "ractive-backbone": {\n      "rname": "ractive-backbone",\n      "js": [\n        "ractive-backbone/ractive-backbone"\n      ],\n      "returns": "RactiveBackbone"\n    },\n    "leaflet": {\n      "rname": "leaflet",\n      "js": [\n        "leaflet/dist/leaflet-src"\n      ],\n      "css": [\n        "leaflet/dist/leaflet"\n      ],\n      "images": [\n        "leaflet/dist/images"\n      ],\n      "returns": "L"\n    },\n    "momentjs": {\n      "rname": "moment",\n      "js": [\n        "momentjs/moment"\n      ],\n      "returns": "moment"\n    },\n    "moment-timezone": {\n      "rname": "moment-timezone",\n      "js": [\n        "moment-timezone/builds/moment-timezone-with-data"\n      ],\n      "returns": "momentTimezone"\n    },\n    "Placeholders.js": {\n      "rname": "placeholders-js",\n      "js": [\n        "Placeholders.js/build/placeholders.jquery"\n      ],\n      "returns": "placeholders"\n    },\n    "typeahead.js": {\n      "rname": "typeahead-js",\n      "js": [\n        "typeahead.js/dist/typeahead.jquery"\n      ],\n      "returns": "typeahead"\n    },\n    "bloodhound": {\n      "rname": "bloodhound",\n      "js": [\n        "typeahead.js/dist/bloodhound"\n      ],\n      "returns": "Bloodhound"\n    },\n    "minnpost-styles": {\n      "rname": "mpStyles",\n      "css": [\n        "//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css",\n        "minnpost-styles/dist/minnpost-styles"\n      ],\n      "sass": [\n        "minnpost-styles/styles/main"\n      ]\n    },\n    "mpConfig": {\n      "rname": "mpConfig",\n      "js": [\n        "minnpost-styles/dist/minnpost-styles.config"\n      ],\n      "returns": "mpConfig"\n    },\n    "mpFormatters": {\n      "rname": "mpFormatters",\n      "js": [\n        "minnpost-styles/dist/minnpost-styles.formatters"\n      ],\n      "returns": "mpFormatters"\n    },\n    "mpMaps": {\n      "rname": "mpMaps",\n      "js": [\n        "minnpost-styles/dist/minnpost-styles.maps"\n      ],\n      "returns": "mpMaps"\n    }\n  }\n}\n';});
+define('text!../bower.json',[],function () { return '{\n  "name": "minnpost-elections-dashboard",\n  "version": "0.1.0",\n  "main": "index.html",\n  "ignore": [\n    "**/.*",\n    "node_modules",\n    "components",\n    "bower_components"\n  ],\n  "dependencies": {\n    "ractive": "~0.5.6",\n    "ractive-events-tap": "~0.1.1",\n    "requirejs": "~2.1.15",\n    "almond": "~0.3.0",\n    "text": "~2.0.12",\n    "underscore": "~1.7.0",\n    "jquery": "~1.11.1",\n    "minnpost-styles": "master",\n    "rgrove-lazyload": "*",\n    "backbone": "~1.1.2",\n    "leaflet": "0.7.3",\n    "momentjs": "~2.8.1",\n    "typeahead.js": "~0.10.4",\n    "Placeholders.js": "~3.0.0",\n    "ractive-backbone": "~0.1.1",\n    "moment-timezone": "~0.2.1",\n    "screenfull": "~1.2.1"\n  },\n  "dependencyMap": {\n    "requirejs": {\n      "rname": "requirejs",\n      "js": [\n        "requirejs/require"\n      ]\n    },\n    "almond": {\n      "rname": "almond",\n      "js": [\n        "almond/almond"\n      ]\n    },\n    "text": {\n      "rname": "text",\n      "js": [\n        "text/text"\n      ]\n    },\n    "jquery": {\n      "rname": "jquery",\n      "js": [\n        "jquery/dist/jquery"\n      ],\n      "returns": "$"\n    },\n    "underscore": {\n      "rname": "underscore",\n      "js": [\n        "underscore/underscore"\n      ],\n      "returns": "_"\n    },\n    "ractive": {\n      "rname": "ractive",\n      "js": [\n        "ractive/ractive-legacy"\n      ],\n      "returns": "Ractive"\n    },\n    "ractive-events-tap": {\n      "rname": "ractive-events-tap",\n      "js": [\n        "ractive-events-tap/ractive-events-tap"\n      ],\n      "returns": "RactiveEventsTap"\n    },\n    "ractive-backbone": {\n      "rname": "ractive-backbone",\n      "js": [\n        "ractive-backbone/ractive-backbone"\n      ],\n      "returns": "RactiveBackbone"\n    },\n    "leaflet": {\n      "rname": "leaflet",\n      "js": [\n        "leaflet/dist/leaflet-src"\n      ],\n      "css": [\n        "leaflet/dist/leaflet"\n      ],\n      "images": [\n        "leaflet/dist/images"\n      ],\n      "returns": "L"\n    },\n    "momentjs": {\n      "rname": "moment",\n      "js": [\n        "momentjs/moment"\n      ],\n      "returns": "moment"\n    },\n    "moment-timezone": {\n      "rname": "moment-timezone",\n      "js": [\n        "moment-timezone/builds/moment-timezone-with-data"\n      ],\n      "returns": "momentTimezone"\n    },\n    "Placeholders.js": {\n      "rname": "placeholders-js",\n      "js": [\n        "Placeholders.js/build/placeholders.jquery"\n      ],\n      "returns": "placeholders"\n    },\n    "typeahead.js": {\n      "rname": "typeahead-js",\n      "js": [\n        "typeahead.js/dist/typeahead.jquery"\n      ],\n      "returns": "typeahead"\n    },\n    "bloodhound": {\n      "rname": "bloodhound",\n      "js": [\n        "typeahead.js/dist/bloodhound"\n      ],\n      "returns": "Bloodhound"\n    },\n    "screenfull": {\n      "rname": "screenfull",\n      "js": [\n        "screenfull/dist/screenfull"\n      ],\n      "returns": "screenfull"\n    },\n    "minnpost-styles": {\n      "rname": "mpStyles",\n      "css": [\n        "//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css",\n        "minnpost-styles/dist/minnpost-styles"\n      ],\n      "sass": [\n        "minnpost-styles/styles/main"\n      ]\n    },\n    "mpConfig": {\n      "rname": "mpConfig",\n      "js": [\n        "minnpost-styles/dist/minnpost-styles.config"\n      ],\n      "returns": "mpConfig"\n    },\n    "mpFormatters": {\n      "rname": "mpFormatters",\n      "js": [\n        "minnpost-styles/dist/minnpost-styles.formatters"\n      ],\n      "returns": "mpFormatters"\n    },\n    "mpMaps": {\n      "rname": "mpMaps",\n      "js": [\n        "minnpost-styles/dist/minnpost-styles.maps"\n      ],\n      "returns": "mpMaps"\n    }\n  }\n}\n';});
 
 /**
  * Base class(es) for applications.
@@ -1310,7 +1310,7 @@ define('collections',[
 });
 
 
-define('text!templates/application.mustache',[],function () { return '<div class="message-container"></div>\n\n<div class="content-container"></div>\n\n<div class="footnote-container"></div>';});
+define('text!templates/application.mustache',[],function () { return '\n\n<a href="#"\n  on-tap="toggleFullscreen"\n  class="fullscreen-toggle"\n  title="{{^isFullscreen}}Enable{{/isFullscreen}}{{#isFullscreen}}Disable{{/isFullscreen}} fullscreen">\n  <i class="fa {{^isFullscreen}}fa-expand{{/isFullscreen}}{{#isFullscreen}}fa-compress{{/isFullscreen}}"></i>\n</a>\n\n<div class="fullscreen-overlay"></div>\n\n<div class="message-container">\n</div>\n\n<div class="content-container">\n</div>\n\n<div class="footnote-container">\n</div>\n';});
 
 
 define('text!templates/footnote.mustache',[],function () { return '<div class="footnote">\n  <p>Unofficial election data provided by the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a>.  For ranked-choice contests data is supplemented manually from the <a href="http://vote.minneapolismn.gov/" target="_blank">City of Minneapolis</a> and the <a href="http://www.stpaul.gov/index.aspx?NID=188" target="_blank">City of St. Paul</a>.  Test data will be provided until 8PM on Election Night.</p>\n\n  <p>The geographical boundaries, though received from official sources and queried from our <a href="http://boundaries.minnpost.com" target="_blank">boundary service</a>, may not represent the exact, offical area for a contest, race, or election.  It is also possible that for a given location the contests may not be accurate due to data quality with multiple agencies.  Please refer to your local and state election officials to know exactly what contests happen for a given location.</p>\n\n  <p>Some map data © OpenStreetMap contributors; licensed under the <a href="http://www.openstreetmap.org/copyright" target="_blank">Open Data Commons Open Database License</a>.  Some map design © MapBox; licensed according to the <a href="http://mapbox.com/tos/" target="_blank">MapBox Terms of Service</a>.  Location geocoding provided by <a href="http://www.mapquest.com/" target="_blank">Mapquest</a> and is not guaranteed to be accurate.</p>\n\n  <p>Some code, techniques, and data on <a href="https://github.com/minnpost/minnpost-elections-dashboard" target="_blank">Github</a>.</p>\n</div>\n';});
@@ -1925,10 +1925,10 @@ define('text!templates/dashboard-state-leg.mustache',[],function () { return '<d
  */
 
 // Create main application
-require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
+require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'routers',
   'mpConfig',
   'text!templates/dashboard-state-leg.mustache'],
-  function($, _, Base, helpers, views, routers, mpConfig, tDStateLeg) {
+  function($, _, screenfull, Base, helpers, views, routers, mpConfig, tDStateLeg) {
 
   // Create new class for app
   var App = Base.BaseApp.extend({
@@ -2150,9 +2150,35 @@ require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
       this.applicationView = new views.ApplicationView({
         el: this.$el
       });
-      thisApp.footnoteView = new views.FootnoteView({
+      this.footnoteView = new views.FootnoteView({
         el: this.$el.find('.footnote-container')
       });
+
+      // Handle fullscreen mode button
+      this.applicationView.on('toggleFullscreen', function(e) {
+        e.original.preventDefault();
+
+        this.set('isFullscreen', !this.get('isFullscreen'));
+        thisApp.$el.toggleClass('fullscreen');
+
+        if (screenfull.enabled) {
+          screenfull.toggle();
+        }
+      });
+      // Also handle fullscreen event, actually just the Esc.  Alt-shift-F does
+      // not seem to trigger an event
+      if (screenfull.enabled) {
+        $(document).on(screenfull.raw.fullscreenchange, function () {
+          if (!screenfull.isFullscreen) {
+            thisApp.applicationView.set('isFullscreen', false);
+            thisApp.$el.removeClass('fullscreen');
+          }
+          else {
+            thisApp.applicationView.set('isFullscreen', true);
+            thisApp.$el.addClass('fullscreen');
+          }
+        });
+      }
 
       // Create router which will handle most of the high
       // level logic
