@@ -232,7 +232,7 @@ define([
     // top on new.  But we don't want to do it the first time
     reFocus: function() {
       if (this.viewed) {
-        $('html, body').animate({ scrollTop: this.app.$el.offset().top - 5}, 750);
+        $('html, body').animate({ scrollTop: this.app.$el.offset().top - 5 }, 750);
       }
       this.viewed = true;
     },
