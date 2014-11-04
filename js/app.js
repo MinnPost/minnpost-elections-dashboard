@@ -15,7 +15,7 @@ require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
   var App = Base.BaseApp.extend({
 
     defaults: {
-      projectName: 'minnpost-elections-dashboard',
+      name: 'minnpost-elections-dashboard',
       remoteProxy: '//mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
       el: '.minnpost-elections-dashboard-container',
       // Hard page refresh, in case the interface needs to be
