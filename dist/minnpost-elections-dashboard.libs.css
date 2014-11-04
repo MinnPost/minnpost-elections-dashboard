@@ -990,6 +990,9 @@ html {
   /**
    * Some styles for the colors.  Colors are actually
    * stored in the _variables file.
+   *
+   * Important is used here, as it is necessary to intentionally
+   * use these classes.
    */
   /**
    * Specific to MinnPost but could be helpful to you.
@@ -1638,7 +1641,7 @@ html {
 }
 .mp .text-block {
   display: block;
-  max-width: 32em;
+  max-width: 40em;
   margin: 0 auto;
 }
 .mp .text-block.left {
@@ -1649,7 +1652,7 @@ html {
 }
 .mp .component-label {
   font-weight: bold;
-  font-style: "Montserrat", Georgia, "Times New Roman", Times, sans-serif;
+  font-family: "Montserrat", Georgia, "Times New Roman", Times, sans-serif;
   font-size: 20px;
   margin-bottom: 0.5em;
 }
@@ -2808,7 +2811,8 @@ html {
 .mp .browser-upgrade-note {
   background-color: #fbd341;
   border: 1px solid #d2a504;
-  padding: .5em 1em;
+  padding: 0.5em 1em;
+  margin-bottom: 1em;
 }
 .mp .navigation {
   margin-bottom: 1em;
@@ -3115,226 +3119,244 @@ html {
   text-decoration: underline;
 }
 .mp .color-dark-gray {
-  color: #282828;
+  color: #282828 !important;
 }
 .mp .bg-color-dark-gray {
-  background-color: #282828;
+  background-color: #282828 !important;
 }
 .mp .color-medium-gray {
-  color: #404040;
+  color: #404040 !important;
 }
 .mp .bg-color-medium-gray {
-  background-color: #404040;
+  background-color: #404040 !important;
 }
 .mp .color-gray {
-  color: #7a7a7a;
+  color: #7a7a7a !important;
 }
 .mp .bg-color-gray {
-  background-color: #7a7a7a;
+  background-color: #7a7a7a !important;
 }
 .mp .color-light-gray {
-  color: #ababab;
+  color: #ababab !important;
 }
 .mp .bg-color-light-gray {
-  background-color: #ababab;
+  background-color: #ababab !important;
 }
 .mp .color-lighter-gray {
-  color: #cccccc;
+  color: #cccccc !important;
 }
 .mp .bg-color-lighter-gray {
-  background-color: #cccccc;
+  background-color: #cccccc !important;
 }
 .mp .color-lightest-gray {
-  color: #f8f8f8;
+  color: #f8f8f8 !important;
 }
 .mp .bg-color-lightest-gray {
-  background-color: #f8f8f8;
+  background-color: #f8f8f8 !important;
 }
 .mp .color-minnpost-red {
-  color: #801019;
+  color: #801019 !important;
 }
 .mp .bg-color-minnpost-red {
-  background-color: #801019;
+  background-color: #801019 !important;
 }
 .mp .color-blue {
-  color: #0084a8;
+  color: #0084a8 !important;
 }
 .mp .bg-color-blue {
-  background-color: #0084a8;
+  background-color: #0084a8 !important;
 }
 .mp .color-red {
-  color: #c83d2d;
+  color: #c83d2d !important;
 }
 .mp .bg-color-red {
-  background-color: #c83d2d;
+  background-color: #c83d2d !important;
 }
 .mp .color-green {
-  color: #469b61;
+  color: #469b61 !important;
 }
 .mp .bg-color-green {
-  background-color: #469b61;
+  background-color: #469b61 !important;
 }
 .mp .color-orange {
-  color: #ff6633;
+  color: #ff6633 !important;
 }
 .mp .bg-color-orange {
-  background-color: #ff6633;
+  background-color: #ff6633 !important;
 }
 .mp .color-yellow {
-  color: #fbd341;
+  color: #fbd341 !important;
 }
 .mp .bg-color-yellow {
-  background-color: #fbd341;
+  background-color: #fbd341 !important;
 }
 .mp .color-data-green1 {
-  color: #1d8c47;
+  color: #1d8c47 !important;
 }
 .mp .bg-color-data-green1 {
-  background-color: #1d8c47;
+  background-color: #1d8c47 !important;
 }
 .mp .color-data-green2 {
-  color: #32955d;
+  color: #32955d !important;
 }
 .mp .bg-color-data-green2 {
-  background-color: #32955d;
+  background-color: #32955d !important;
 }
 .mp .color-data-green3 {
-  color: #36a174;
+  color: #36a174 !important;
 }
 .mp .bg-color-data-green3 {
-  background-color: #36a174;
+  background-color: #36a174 !important;
 }
 .mp .color-data-purple {
-  color: #55307e;
+  color: #55307e !important;
 }
 .mp .bg-color-data-purple {
-  background-color: #55307e;
+  background-color: #55307e !important;
 }
 .mp .color-data-blue1 {
-  color: #0d57a0;
+  color: #0d57a0 !important;
 }
 .mp .bg-color-data-blue1 {
-  background-color: #0d57a0;
+  background-color: #0d57a0 !important;
 }
 .mp .color-data-blue2 {
-  color: #0793ab;
+  color: #0793ab !important;
 }
 .mp .bg-color-data-blue2 {
-  background-color: #0793ab;
+  background-color: #0793ab !important;
 }
 .mp .color-data-blue3 {
-  color: #55cbdd;
+  color: #55cbdd !important;
 }
 .mp .bg-color-data-blue3 {
-  background-color: #55cbdd;
+  background-color: #55cbdd !important;
 }
 .mp .color-data-red {
-  color: #c83d2d;
+  color: #c83d2d !important;
 }
 .mp .bg-color-data-red {
-  background-color: #c83d2d;
+  background-color: #c83d2d !important;
 }
 .mp .color-data-orange {
-  color: #ff6633;
+  color: #ff6633 !important;
 }
 .mp .bg-color-data-orange {
-  background-color: #ff6633;
+  background-color: #ff6633 !important;
 }
 .mp .color-data-yellow {
-  color: #fbd341;
+  color: #fbd341 !important;
 }
 .mp .bg-color-data-yellow {
-  background-color: #fbd341;
+  background-color: #fbd341 !important;
 }
 .mp .color-political-dfl {
-  color: #0793ab;
+  color: #0793ab !important;
 }
 .mp .bg-color-political-dfl {
-  background-color: #0793ab;
+  background-color: #0793ab !important;
 }
 .mp .color-political-d {
-  color: #0793ab;
+  color: #0793ab !important;
 }
 .mp .bg-color-political-d {
-  background-color: #0793ab;
+  background-color: #0793ab !important;
+}
+.mp .color-political-gop {
+  color: #a1000f !important;
+}
+.mp .bg-color-political-gop {
+  background-color: #a1000f !important;
 }
 .mp .color-political-r {
-  color: #a1000f;
+  color: #a1000f !important;
 }
 .mp .bg-color-political-r {
-  background-color: #a1000f;
+  background-color: #a1000f !important;
 }
 .mp .color-political-ip {
-  color: #ff781f;
+  color: #ff781f !important;
 }
 .mp .bg-color-political-ip {
-  background-color: #ff781f;
+  background-color: #ff781f !important;
 }
 .mp .color-political-lib {
-  color: #7a7a7a;
+  color: #7a7a7a !important;
 }
 .mp .bg-color-political-lib {
-  background-color: #7a7a7a;
+  background-color: #7a7a7a !important;
 }
 .mp .color-political-swp {
-  color: #7a7a7a;
+  color: #7a7a7a !important;
 }
 .mp .bg-color-political-swp {
-  background-color: #7a7a7a;
+  background-color: #7a7a7a !important;
 }
 .mp .color-political-cp {
-  color: #7a7a7a;
+  color: #7a7a7a !important;
 }
 .mp .bg-color-political-cp {
-  background-color: #7a7a7a;
+  background-color: #7a7a7a !important;
 }
 .mp .color-political-cg {
-  color: #7a7a7a;
+  color: #7a7a7a !important;
 }
 .mp .bg-color-political-cg {
-  background-color: #7a7a7a;
+  background-color: #7a7a7a !important;
 }
 .mp .color-political-gp {
-  color: #07ab20;
+  color: #07ab20 !important;
 }
 .mp .bg-color-political-gp {
-  background-color: #07ab20;
+  background-color: #07ab20 !important;
 }
 .mp .color-political-gr {
-  color: #7a7a7a;
+  color: #41ab07 !important;
 }
 .mp .bg-color-political-gr {
-  background-color: #7a7a7a;
+  background-color: #41ab07 !important;
+}
+.mp .color-political-glc {
+  color: #41ab07 !important;
+}
+.mp .bg-color-political-glc {
+  background-color: #41ab07 !important;
+}
+.mp .color-political-lmn {
+  color: #7a7a7a !important;
+}
+.mp .bg-color-political-lmn {
+  background-color: #7a7a7a !important;
 }
 .mp .color-political-mop {
-  color: #7a7a7a;
+  color: #7a7a7a !important;
 }
 .mp .bg-color-political-mop {
-  background-color: #7a7a7a;
+  background-color: #7a7a7a !important;
 }
 .mp .color-political-edp {
-  color: #7a7a7a;
+  color: #7a7a7a !important;
 }
 .mp .bg-color-political-edp {
-  background-color: #7a7a7a;
+  background-color: #7a7a7a !important;
 }
 .mp .color-political-ind {
-  color: #7a7a7a;
+  color: #7a7a7a !important;
 }
 .mp .bg-color-political-ind {
-  background-color: #7a7a7a;
+  background-color: #7a7a7a !important;
 }
 .mp .color-political-sl {
-  color: #7a7a7a;
+  color: #7a7a7a !important;
 }
 .mp .bg-color-political-sl {
-  background-color: #7a7a7a;
+  background-color: #7a7a7a !important;
 }
 .mp .color-political-jp {
-  color: #7a7a7a;
+  color: #7a7a7a !important;
 }
 .mp .bg-color-political-jp {
-  background-color: #7a7a7a;
+  background-color: #7a7a7a !important;
 }
 .mp .minnpost-page-container {
   display: block;
