@@ -47089,7 +47089,8 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         el: this.$el.find('.footnote-container')
       });
 
-      // Handle fullscreen mode button
+      // Handle fullscreen mode button.  Safari does not allow input in
+      // fullscreen mode, but not sure how to tell if Safari
       this.applicationView.on('toggleFullscreen', function(e) {
         e.original.preventDefault();
 

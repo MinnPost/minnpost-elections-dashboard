@@ -347,6 +347,11 @@
     font-size: 1.25em;
   }
 }
+@media screen and (max-width: 1023px) {
+  .mp .minnpost-elections-dashboard-container .fullscreen-toggle {
+    display: none;
+  }
+}
 @media screen and (max-width: 640px) {
   .mp .minnpost-elections-dashboard-container table thead .small-table-label {
     display: inline;
