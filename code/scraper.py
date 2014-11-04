@@ -403,6 +403,12 @@ class ElectionScraper:
         ranked_choice_translations = { 'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5, 'sixth': 6, 'seventh': 7, 'eighth': 8, 'nineth': 9, 'tenth': 10, 'final': 100 }
         ranked_choice_place = None
 
+        # SSD1 is Minneapolis and ISD1 is Aitkin, though they have the same
+        # numbers and therefor make the same ID
+        mpls_ssd = re.compile('.*\(SSD #1\).*', re.IGNORECASE).match(row[4])
+        if mpls_ssd is not None:
+            row[5] = '1-1'
+
         # Create ids.
         # id-State-County-Precinct-District-Office
         base_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[5] + '-' + row[3]
@@ -637,7 +643,10 @@ class ElectionScraper:
                 self.log.info('[%s] Could not find State District Court boundary for: %s' % ('results', parsed_row['office_name']))
 
         # School district is in the office name.    Special school district for
-        # Minneapolis is "1-1".    There are some bad data and not sure if it
+        # Minneapolis is "1-1".  Unfotunralty SSD1 and ISD1 are essentially the
+        # same as far as the incoming data so we have to look at title.
+        #
+        # There are some bad data and not sure if it
         # is boundary data (from the Leg) or on the SoS side.    Minneapolis
         # sub-school districts are the same at the Minneapolis Park and Rec
         # districts.    There are a number of sub-school districts it looks
@@ -649,18 +658,24 @@ class ElectionScraper:
             '2908': '207',
         }
         if parsed_row['scope'] == 'school':
-            isd_match = re.compile('.*\([IS]SD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
+            isd_match = re.compile('.*\(ISD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
+            ssd_match = re.compile('.*\(SSD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
             district_match = re.compile('.*district ([0-9]+) \(.*', re.IGNORECASE).match(parsed_row['office_name'])
 
             if isd_match is not None:
-                isd_match_value = '1-1' if isd_match.group(1) == '1' else isd_match.group(1)
+                isd_match_value = isd_match.group(1)
                 isd_match_value = isd_bad_data[isd_match_value] if isd_match_value in isd_bad_data else isd_match_value
 
-                if isd_match_value == '1-1' and district_match is not None:
+                boundary = isd_match_value + '-school-district-2013'
+                boundary_type = 'school-districts-2013'
+            elif ssd_match is not None:
+                ssd_match_value = '1-1' if ssd_match.group(1) == '1' else ssd_match.group(1)
+
+                if ssd_match_value == '1-1' and district_match is not None:
                     boundary = district_match.group(1) + '-minneapolis-parks-and-recreation-district-2012'
                     boundary_type = 'minneapolis-parks-and-recreation-districts-2012'
                 else:
-                    boundary = isd_match_value + '-school-district-2013'
+                    boundary = ssd_match_value + '-school-district-2013'
                     boundary_type = 'school-districts-2013'
             else:
                 self.log.info('[%s] Could not find (I|S)SD boundary for: %s' % ('results', parsed_row['office_name']))
