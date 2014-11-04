@@ -1,5 +1,19 @@
-<div class="message-container"></div>
 
-<div class="content-container"></div>
 
-<div class="footnote-container"></div>
+<a href="#"
+  on-tap="toggleFullscreen"
+  class="fullscreen-toggle"
+  title="{{^isFullscreen}}Enable{{/isFullscreen}}{{#isFullscreen}}Disable{{/isFullscreen}} fullscreen">
+  <i class="fa {{^isFullscreen}}fa-expand{{/isFullscreen}}{{#isFullscreen}}fa-compress{{/isFullscreen}}"></i>
+</a>
+
+<div class="fullscreen-overlay"></div>
+
+<div class="message-container">
+</div>
+
+<div class="content-container">
+</div>
+
+<div class="footnote-container">
+</div>

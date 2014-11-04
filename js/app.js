@@ -6,10 +6,10 @@
  */
 
 // Create main application
-require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
+require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'routers',
   'mpConfig',
   'text!templates/dashboard-state-leg.mustache'],
-  function($, _, Base, helpers, views, routers, mpConfig, tDStateLeg) {
+  function($, _, screenfull, Base, helpers, views, routers, mpConfig, tDStateLeg) {
 
   // Create new class for app
   var App = Base.BaseApp.extend({
@@ -231,9 +231,35 @@ require(['jquery', 'underscore', 'base', 'helpers', 'views', 'routers',
       this.applicationView = new views.ApplicationView({
         el: this.$el
       });
-      thisApp.footnoteView = new views.FootnoteView({
+      this.footnoteView = new views.FootnoteView({
         el: this.$el.find('.footnote-container')
       });
+
+      // Handle fullscreen mode button
+      this.applicationView.on('toggleFullscreen', function(e) {
+        e.original.preventDefault();
+
+        this.set('isFullscreen', !this.get('isFullscreen'));
+        thisApp.$el.toggleClass('fullscreen');
+
+        if (screenfull.enabled) {
+          screenfull.toggle();
+        }
+      });
+      // Also handle fullscreen event, actually just the Esc.  Alt-shift-F does
+      // not seem to trigger an event
+      if (screenfull.enabled) {
+        $(document).on(screenfull.raw.fullscreenchange, function () {
+          if (!screenfull.isFullscreen) {
+            thisApp.applicationView.set('isFullscreen', false);
+            thisApp.$el.removeClass('fullscreen');
+          }
+          else {
+            thisApp.applicationView.set('isFullscreen', true);
+            thisApp.$el.addClass('fullscreen');
+          }
+        });
+      }
 
       // Create router which will handle most of the high
       // level logic

@@ -23,6 +23,9 @@ require.config({
     },
     'lazyload': {
       exports: 'LazyLoad'
+    },
+    'screenfull': {
+      exports: 'screenfull'
     }
   },
   baseUrl: 'js',
@@ -43,6 +46,7 @@ require.config({
     'placeholders-js': '../bower_components/Placeholders.js/build/placeholders.jquery',
     'typeahead-js': '../bower_components/typeahead.js/dist/typeahead.jquery',
     'bloodhound': '../bower_components/typeahead.js/dist/bloodhound',
+    'screenfull': '../bower_components/screenfull/dist/screenfull',
     'mpConfig': '../bower_components/minnpost-styles/dist/minnpost-styles.config',
     'mpFormatters': '../bower_components/minnpost-styles/dist/minnpost-styles.formatters',
     'mpMaps': '../bower_components/minnpost-styles/dist/minnpost-styles.maps',

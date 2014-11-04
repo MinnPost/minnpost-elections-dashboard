@@ -17,8 +17,32 @@ $color-dark-gray: #282828;
 
 
 .mp .minnpost-elections-dashboard-container {
-
   padding-top: 2em;
+
+  // Fullscreen
+  .fullscreen-toggle {
+    display: block;
+    float: right;
+  }
+  &.fullscreen {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    .fullscreen-overlay {
+      z-index: 999999;
+      position: fixed;
+      background: image-url('MinnPost_logo-200x28.png') transparent center center no-repeat;
+      width: 200px;
+      height: 28px;
+      bottom: 10px;
+      right: 10px;
+      opacity: 0.8;
+    }
+  }
 
   // Maps
   .contest-map {
@@ -386,8 +410,17 @@ $color-dark-gray: #282828;
     }
   }
 
+  // Larger screens and fullscreen
+  @media screen and (min-width: 960px) {
 
-  // "Mobile" breakpoint
+    &.fullscreen {
+      max-width: 95%;
+      font-size: 1.25em;
+    }
+  }
+
+
+  // Smaller screens
   @media screen and (max-width: 640px) {
 
     table thead .small-table-label {
