@@ -32,11 +32,16 @@
 }
 .mp .minnpost-elections-dashboard-container.fullscreen {
   width: 100%;
-  position: absolute;
+  max-width: 100%;
+  position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
+  overflow-y: scroll;
+  z-index: 999999;
+  background-color: #FFFFFF;
+  padding: 3% 1.5%;
 }
 .mp .minnpost-elections-dashboard-container.fullscreen .fullscreen-overlay {
   z-index: 999999;
@@ -337,9 +342,8 @@
 .mp .minnpost-elections-dashboard-container .dashboard .dashboard-links.mobile-only {
   display: none;
 }
-@media screen and (min-width: 960px) {
+@media screen and (min-width: 1025px) {
   .mp .minnpost-elections-dashboard-container.fullscreen {
-    max-width: 95%;
     font-size: 1.25em;
   }
 }
