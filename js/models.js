@@ -13,7 +13,11 @@ define([
       "ORDER BY r.percentage ASC, r.candidate",
 
     // Fields that are for contests (not result)
-    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code', 'office_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'sub_title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help', 'primary', 'scope', 'partisan', 'incumbent_party', 'percent_needed'],
+    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code',
+    'office_id', 'precinct_id', 'precincts_reporting', 'question_body',
+    'ranked_choice', 'results_group', 'seats', 'state', 'title', 'sub_title',
+    'total_effected_precincts', 'total_votes_for_office', 'updated',
+    'question_body', 'question_help', 'primary', 'scope', 'partisan', 'incumbent_party', 'percent_needed'],
 
     // Non-Partisan parties
     npParties: ['NP', 'WI'],
@@ -113,7 +117,7 @@ define([
       }
 
       // If there is a percent needed option.  We assume yes no questions
-      if (parsed.percent_needed && parsed.percent_needed > 0) {
+      if (parsed.percent_needed && parsed.percent_needed > 0 && parsed.done) {
         parsed.results = _.map(parsed.results, function(r, ri) {
           r.winner = false;
           if (r.candidate.toLowerCase() === 'yes' &&
