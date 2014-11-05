@@ -9,6 +9,7 @@
     <div class="state-leg-boxes-left">
       {{#contests:ci}}{{#(ci < contests.length / 2)}}
         <a href="#/contest/{{ id }}" class="
+          {{#(!done && some)}}some{{/()}}
           {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}
           {{#partyShift}}party-shift{{/partyShift}}
           state-leg-box" title="{{ title }}"></a>
@@ -17,6 +18,7 @@
     <div class="state-leg-boxes-right">
       {{#contests:ci}}{{#(ci >= contests.length / 2)}}
         <a href="#/contest/{{ id }}" class="
+          {{#(!done && some)}}some{{/()}}
           {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}
           {{#partyShift}}party-shift{{/partyShift}}
           state-leg-box" title="{{ title }}"></a>

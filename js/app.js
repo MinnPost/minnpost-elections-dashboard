@@ -112,6 +112,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
             // Process contests
             parsed.contests = _.map(parsed.contests, function(c, ci) {
               c.done = (c.precincts_reporting === c.total_effected_precincts);
+              c.some = (c.precincts_reporting > 0);
               c.partyWon = _.max(c.results, function(r, ri) {
                 return r.percentage;
               }).party_id;
@@ -141,7 +142,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
                   (c.partyWon === 'R') ? 'ZZZZZR' : 'MMMMMM' + c.partyWon;
               }
               else {
-                return 'MMMMMM';
+                return (c.some) ? 'MMMAAAAAA' : 'MMMMMM';
               }
             });
 

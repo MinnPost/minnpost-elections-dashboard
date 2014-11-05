@@ -330,7 +330,8 @@ $color-dark-gray: #282828;
         padding: 0;
         background-color: #BCBCBC;
 
-        &.done {
+        &.done,
+        &.some {
           background-color: #676767;
         }
 
@@ -367,8 +368,11 @@ $color-dark-gray: #282828;
       }
 
       .unknown {
+        width: 14px;
+        height: 14px;
         background-color: #BCBCBC;
-        border: 2px solid #FFFFFF;
+        border-left: 7px solid #BCBCBC;
+        border-right: 7px solid #676767;
       }
 
       .solid {
