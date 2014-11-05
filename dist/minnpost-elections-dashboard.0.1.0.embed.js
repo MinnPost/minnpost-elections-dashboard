@@ -43026,7 +43026,11 @@ define('models',[
       "ORDER BY r.percentage ASC, r.candidate",
 
     // Fields that are for contests (not result)
-    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code', 'office_id', 'precinct_id', 'precincts_reporting', 'question_body', 'ranked_choice', 'results_group', 'seats', 'state', 'title', 'sub_title', 'total_effected_precincts', 'total_votes_for_office', 'updated', 'question_body', 'question_help', 'primary', 'scope', 'partisan', 'incumbent_party', 'percent_needed'],
+    contestFields: ['id', 'contest_id', 'boundary', 'county_id', 'district_code',
+    'office_id', 'precinct_id', 'precincts_reporting', 'question_body',
+    'ranked_choice', 'results_group', 'seats', 'state', 'title', 'sub_title',
+    'total_effected_precincts', 'total_votes_for_office', 'updated',
+    'question_body', 'question_help', 'primary', 'scope', 'partisan', 'incumbent_party', 'percent_needed'],
 
     // Non-Partisan parties
     npParties: ['NP', 'WI'],
@@ -43126,7 +43130,7 @@ define('models',[
       }
 
       // If there is a percent needed option.  We assume yes no questions
-      if (parsed.percent_needed && parsed.percent_needed > 0) {
+      if (parsed.percent_needed && parsed.percent_needed > 0 && parsed.done) {
         parsed.results = _.map(parsed.results, function(r, ri) {
           r.winner = false;
           if (r.candidate.toLowerCase() === 'yes' &&
@@ -46850,7 +46854,7 @@ define('routers',[
 });
 
 
-define('text!templates/dashboard-state-leg.mustache',[],function () { return '<div class="dashboard-state-leg">\n  <h3>MN House of Representatives</h3>\n\n  {{#(!contests.length)}}\n    {{>loading}}\n  {{/()}}\n\n  <div class="state-leg-boxes cf">\n    <div class="state-leg-boxes-left">\n      {{#contests:ci}}{{#(ci < contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n    <div class="state-leg-boxes-right">\n      {{#contests:ci}}{{#(ci >= contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n  </div>\n\n  <div class="state-leg-totals">\n    {{#counts:ci}}\n      <span class="color-political-{{ id.toLowerCase() }}" title="{{ party }}">{{ count }}</span>\n      {{#(ci < counts.length - 1)}} -&nbsp; {{/()}}\n    {{/counts}}\n  </div>\n\n  <div class="state-leg-legend">\n    <div class="legend-item">\n      <div class="legend-box unknown"></div> Not fully reported yet\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box solid"></div> Colored box is fully reported\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box party-shift"></div> District has changed parties\n    </div>\n  </div>\n\n  <div class="state-leg-rnet">\n    <div class="heading">\n      Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n      <span class="color-political-r rnet">\n        {{ (rNet > 0) ? \'+\' : \'\' }}{{ rNet }}\n      </span>\n    </div>\n    <div class="sub-heading">Republicans need a net gain of at least +7 to win control of the House.</div>\n  </div>\n</div>\n';});
+define('text!templates/dashboard-state-leg.mustache',[],function () { return '<div class="dashboard-state-leg">\n  <h3>MN House of Representatives</h3>\n\n  {{#(!contests.length)}}\n    {{>loading}}\n  {{/()}}\n\n  <div class="state-leg-boxes cf">\n    <div class="state-leg-boxes-left">\n      {{#contests:ci}}{{#(ci < contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n    <div class="state-leg-boxes-right">\n      {{#contests:ci}}{{#(ci >= contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n  </div>\n\n  <div class="state-leg-totals">\n    {{#counts:ci}}\n      <span class="color-political-{{ id.toLowerCase() }}" title="{{ party }}">{{ count }}</span>\n      {{#(ci < counts.length - 1)}} -&nbsp; {{/()}}\n    {{/counts}}\n  </div>\n\n  <div class="state-leg-legend">\n    <div class="legend-item">\n      <div class="legend-box unknown"></div> Not fully reported yet\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box solid"></div> Colored box is fully reported\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box party-shift"></div> District has changed parties\n    </div>\n  </div>\n\n  <div class="state-leg-rnet">\n    <div class="heading">\n      Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n      <span class="color-political-r rnet">\n        {{ (rNet > 0) ? \'+\' : \'\' }}{{ rNet }}\n      </span>\n    </div>\n    <div class="sub-heading">Republicans need a net gain of at least +7 to win control of the House.</div>\n  </div>\n</div>\n';});
 
 /**
  * Main application file for: minnpost-elections-dashboard
@@ -46966,6 +46970,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
             // Process contests
             parsed.contests = _.map(parsed.contests, function(c, ci) {
               c.done = (c.precincts_reporting === c.total_effected_precincts);
+              c.some = (c.precincts_reporting > 0);
               c.partyWon = _.max(c.results, function(r, ri) {
                 return r.percentage;
               }).party_id;
@@ -46995,7 +47000,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
                   (c.partyWon === 'R') ? 'ZZZZZR' : 'MMMMMM' + c.partyWon;
               }
               else {
-                return 'MMMMMM';
+                return (c.some) ? 'MMMAAAAAA' : 'MMMMMM';
               }
             });
 
