@@ -306,11 +306,12 @@
   vertical-align: middle;
 }
 .mp .minnpost-elections-dashboard-container .dashboard-state-leg .state-leg-legend .unknown {
-  width: 14px;
-  height: 14px;
+  border: 2px solid #FFFFFF;
   background-color: #BCBCBC;
-  border-left: 7px solid #BCBCBC;
-  border-right: 7px solid #676767;
+}
+.mp .minnpost-elections-dashboard-container .dashboard-state-leg .state-leg-legend .some {
+  border: 2px solid #FFFFFF;
+  background-color: #676767;
 }
 .mp .minnpost-elections-dashboard-container .dashboard-state-leg .state-leg-legend .solid {
   width: 14px;
