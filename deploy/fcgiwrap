@@ -1,2 +1,2 @@
 # Config for scraper
-FCGI_CHILDREN="2000"
+FCGI_CHILDREN="10"
