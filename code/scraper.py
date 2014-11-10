@@ -80,7 +80,7 @@ class ElectionScraper:
 
         # Make sure the DB is efficient.  Synchronous off means that power outage
         # or possible interruption can corrupt database
-        scraperwiki.sql.execute('PRAGMA SYNCHRONOUS = OFF')
+        #scraperwiki.sql.execute('PRAGMA SYNCHRONOUS = OFF')
         scraperwiki.sql.execute('VACUUM')
 
         self.read_sources()

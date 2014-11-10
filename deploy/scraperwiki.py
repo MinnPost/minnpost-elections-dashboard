@@ -19,10 +19,11 @@ sources_data = 'scraper_sources_inline = """\n' + sources_data + '\n"""'
 
 # Next make the command we need to add
 commands = """
-  # Scraperwiki commands
-  scraper.scrape('areas', None)
-  scraper.scrape('results', None)
-  scraper.match_contests(None)
+    # Scraperwiki commands
+    scraper.scrape('areas', None)
+    scraper.scrape('questions', None)
+    scraper.scrape('results', None)
+    scraper.match_contests(None)
 """
 
 # Gather the placeholder
