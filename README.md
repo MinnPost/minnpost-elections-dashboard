@@ -45,6 +45,7 @@ Both manual results and contest question text can be managed in Google Spreadshe
 1. (optional) Remove old data as the scraper is not built to manage more than one election: `rm scraperwiki.sqlite`
 1. Scrape areas: `python code/scraper.py scrape areas <ELECTION_DATE>`
   * This is something that only really needs to be done once, at least close to the election, as there little change it will change the day of the election.
+1. Scrape questions: `python code/scraper.py scrape questions <ELECTION_DATE>`
 1. Scrape the results: `python code/scraper.py scrape results <ELECTION_DATE>`
   * This is the core processing of the scraper will be run frequently.
 1. Match contests to boundary area: `python code/scraper.py match_contests <ELECTION_DATE>`
