@@ -34,6 +34,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         'school-districts-2013',
         'minneapolis-parks-and-recreation-districts-2012',
         'congressional-districts-2012',
+        'state-senate-districts-2012',
         'state-house-districts-2012',
         'hospital-districts-2012',
         'district-courts-2012',
