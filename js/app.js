@@ -24,7 +24,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       electionsAPIPollInterval: 50000,
       electionsAPI: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
-      // Custom: '//50.19.100.197/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
+      // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
       boundaryAPI: '//boundaries.minnpost.com/1.0/',
       boundarySets: [
