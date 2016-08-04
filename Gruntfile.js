@@ -55,7 +55,8 @@ module.exports = function(grunt) {
         latedef: true,
         indent: 2,
         // For document.write in deployment.js
-        evil: true
+        evil: true,
+        reporterOutput: "",
       },
       files: ['Gruntfile.js', 'js/**/*.js', 'tests/**/*.js', 'data-processing/**/*.js']
     },
