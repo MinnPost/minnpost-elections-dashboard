@@ -22,7 +22,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
+      electionsAPI: '//elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
@@ -63,14 +63,17 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           rows: 3
         },
         {
-          type: 'links',
-          itemClass: 'dashboard-links non-mobile',
-          links: [
-            { href: '#contest/id-MN----0333', text: 'State Auditor' },
-            { href: '#contest/id-MN----0335', text: 'Attorney General' },
-            { href: '#search/ssd+1', text: 'Minneapolis School Board' },
-            { href: '#search/minneapolis+question', text: 'Minneapolis ballot questions' }
-          ]
+          type: 'race',
+          title: 'Hennepin County Commissioner, District 5',
+          itemClass: 'county-commissioner',
+          id: 'id-MN-27--05-0395',
+          rows: 6
+        },
+        {
+          type: 'spacer'
+        },
+        {
+          type: 'spacer'
         },
         {
           type: 'race',
@@ -86,16 +89,31 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           show_party: 'R',
           itemClass: 'state-house',
           id: 'id-MN---31A-0248',
-          rows: 3
+          rows: 2
+        },
+        {
+          type: 'race',
+          title: 'State Senator distrirct 62, DFL',
+          show_party: 'DFL',
+          itemClass: 'state-senate',
+          id: 'id-MN---62-0182',
+          rows: 2
+        },
+        {
+          type: 'race',
+          title: 'State House district 65A',
+          show_party: 'DFL',
+          itemClass: 'state-house',
+          id: 'id-MN---65A-0316',
+          rows: 2
         },
         {
           type: 'links',
-          itemClass: 'dashboard-links mobile-only',
+          itemClass: 'dashboard-links',
           links: [
-            { href: '#contest/id-MN----0333', text: 'State Auditor' },
-            { href: '#contest/id-MN----0335', text: 'Attorney General' },
-            { href: '#search/ssd+1', text: 'Minneapolis School Board' },
-            { href: '#search/minneapolis+question', text: 'Minneapolis ballot questions' }
+            { href: '#search/state+senator', text: 'All State Senate' },
+            { href: '#search/state+representative', text: 'All State House' },
+            { href: '#search/question', text: 'Ballot questions' }
           ]
         }
       ]
