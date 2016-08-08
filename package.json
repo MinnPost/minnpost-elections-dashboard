@@ -2,7 +2,7 @@
   "name": "minnpost-elections-dashboard",
   "title": "MinnPost Elections Dashboard",
   "description": "An elections results dashboard for MN elections.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/zzolo/minnpost-elections-dashboard",
   "repository": {
     "type": "git",

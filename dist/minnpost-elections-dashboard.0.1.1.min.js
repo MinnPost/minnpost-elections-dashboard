@@ -1,4 +1,4 @@
-/*! MinnPost Elections Dashboard - LATEST VERSION - 2016-08-08
+/*! MinnPost Elections Dashboard - v0.1.1 - 2016-08-08
 * https://github.com/zzolo/minnpost-elections-dashboard
 * Copyright (c) 2016 MinnPost; Licensed MIT */
 
