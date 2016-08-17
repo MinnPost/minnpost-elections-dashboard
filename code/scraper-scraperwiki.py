@@ -341,6 +341,102 @@ scraper_sources_inline = """
       "worksheet_id": 0,
       "notes": "Workesheet ID is the zero-based ID from the order of workssheets and is used to find the actual ID."
     }
+  },
+  "20160809": {
+    "meta": {
+      "base_url": "ftp://media:results@ftp.sos.state.mn.us/20160809/",
+      "date": "2016-08-09",
+      "primary": true
+    },
+    "us_house_results": {
+      "url": "ushouse.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "us_house"
+    },
+    "state_senate_results": {
+      "url": "stsenate.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state_senate"
+    },
+    "state_house_results": {
+      "url": "LegislativeByDistrict.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state_house"
+    },
+    "supreme_court_results": {
+      "url": "judicial.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "judicial_results": {
+      "url": "judicialdst.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "district_court"
+    },
+    "county_results": {
+      "url": "cntyRaces.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "county"
+    },
+    "municipal_results": {
+      "url": "local.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "municipal"
+    },
+    "school_district_results": {
+      "url": "SDRaceQuestions.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "school",
+      "notes": "Questions and candidate races."
+    },
+    "parties": {
+      "url": "PartyTbl.txt",
+      "table": "parties",
+      "type": "parties"
+    },
+    "candidates": {
+      "url": "cand.txt",
+      "table": "candidates",
+      "type": "candidates"
+    },
+    "local_candidates": {
+      "url": "LocalCandTbl.txt",
+      "table": "candidates",
+      "type": "local_candidates"
+    },
+    "counties": {
+      "url": "Cntytbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "municipalities": {
+      "url": "mcdtbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "precincts": {
+      "url": "PrctTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "school_districts": {
+      "url": "SchoolDistTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "ballot_questions": {
+      "url": "BallotQuestions.txt",
+      "table": "questions",
+      "type": "questions"
+    }
   }
 }
 
@@ -406,7 +502,7 @@ class ElectionScraper:
 
         # Make sure the DB is efficient.  Synchronous off means that power outage
         # or possible interruption can corrupt database
-        scraperwiki.sql.execute('PRAGMA SYNCHRONOUS = OFF')
+        #scraperwiki.sql.execute('PRAGMA SYNCHRONOUS = OFF')
         scraperwiki.sql.execute('VACUUM')
 
         self.read_sources()
@@ -950,6 +1046,15 @@ class ElectionScraper:
             else:
                 self.log.info('[%s] Could not find US House boundary for: %s' % ('results', parsed_row['office_name']))
 
+        # State Senate districts
+        if parsed_row['scope'] == 'state_senate':
+            state_senate_match = re.compile('.*\State Senator District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
+            if state_senate_match is not None:
+                boundary = state_senate_match.group(1).lower() + '-state-senate-district-2012'
+                boundary_type = 'state-senate-districts-2012'
+            else:
+                self.log.info('[%s] Could not find State Senate boundary for: %s' % ('results', parsed_row['office_name']))
+
         # State House districts
         if parsed_row['scope'] == 'state_house':
             state_house_match = re.compile('.*\State Representative District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
@@ -1159,6 +1264,9 @@ class ElectionScraper:
         # Track which boundary sets we use
         self.found_boundary_types = []
 
+        #list of county names
+        mn_counties = ["Aitkin", "Anoka", "Becker", "Beltrami", "Benton", "Big Stone", "Blue Earth", "Brown", "Carlton", "Carver", "Cass", "Chippewa", "Chisago", "Clay", "Clearwater", "Cook", "Cottonwood", "Crow Wing", "Dakota", "Dodge", "Douglas", "Faribault", "Fillmore", "Freeborn", "Goodhue", "Grant", "Hennepin", "Houston", "Hubbard", "Isanti", "Itasca", "Jackson", "Kanabec", "Kandiyohi", "Kittson", "Koochiching", "Lac qui Parle", "Lake", "Lake of the Woods", "Le Sueur", "Lincoln", "Lyon", "McLeod", "Mahnomen", "Marshall", "Martin", "Meeker", "Mille Lacs", "Morrison", "Mower", "Murray", "Nicollet", "Nobles", "Norman", "Olmsted", "Otter Tail", "Pennington", "Pine", "Pipestone", "Polk", "Pope", "Ramsey", "Red Lake", "Redwood", "Renville", "Rice", "Rock", "Roseau", "Saint Louis", "Scott", "Sherburne", "Sibley", "Stearns", "Steele", "Stevens", "Swift", "Todd", "Traverse", "Wabasha", "Wadena", "Waseca", "Washington", "Watonwan", "Wilkin", "Winona", "Wright", "Yellow Medicine"]
+
         # Go through each contests
         for r in contests:
             # Title and search term
@@ -1172,6 +1280,12 @@ class ElectionScraper:
             if re_place is not None:
                 r['title'] = re_place.group(1) + ' ' + r['title']
             r['title'] = r['title'].rstrip()
+
+            # Add county name to county commissioner contest titles
+            if 'County Commissioner' in r['title'] and r['county_id']:
+                county_index = int(r['county_id']) - 1
+                r['title'] = mn_counties[county_index] + " " + r['title']
+
 
             # Match to a boundary or boundaries keys
             r['boundary'] = self.boundary_match_contests(r)
