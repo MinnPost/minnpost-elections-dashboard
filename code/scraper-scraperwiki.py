@@ -436,8 +436,7 @@ scraper_sources_inline = """
       "url": "BallotQuestions.txt",
       "table": "questions",
       "type": "questions"
-    }
-  }
+    }}
 }
 
 """
@@ -498,7 +497,7 @@ class ElectionScraper:
         # Scraperwiki's default db is relative to where the script
         # is running but be default the db is created at scraperwiki.sqlite
         # where you are, but this should be empty since we don't use it
-        scraperwiki.sql._connect(self.db_file)
+        #scraperwiki.sql._connect(self.db_file)
 
         # Make sure the DB is efficient.  Synchronous off means that power outage
         # or possible interruption can corrupt database
@@ -1365,10 +1364,9 @@ if __name__ == "__main__":
     scraper = ElectionScraper()
     scraper.route()
 
-    
+
     # Scraperwiki commands
     scraper.scrape('areas', None)
     scraper.scrape('questions', None)
     scraper.scrape('results', None)
     scraper.match_contests(None)
-
