@@ -315,7 +315,7 @@ class ElectionScraper:
             parsed['id'] =    parsed['id'] + row[0] + '-' + row[2]
             parsed['county_id'] = row[0]
             parsed['county_name'] = row[1]
-            parsed['mcd_id'] = row[2]
+            parsed['mcd_id'] = "{0:05d}".format(int(row[2])) #enforce 5 digit 
             parsed['name'] = row[1]
 
         if group == 'counties':
