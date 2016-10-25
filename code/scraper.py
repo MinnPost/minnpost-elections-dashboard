@@ -264,21 +264,22 @@ class ElectionScraper:
             'ranked_choice_place': int,
             'percent_needed': float
         }
-        if len(rows) > 0:
-            p_rows = []
-            for r in rows:
-                p_row = {}
-                for f in r.custom:
-                    # Try typing
-                    c = f.replace('.', '_')
-                    if r.custom[f].text is not None and c in s_types:
-                        p_row[c] = s_types[c](r.custom[f].text)
-                    else:
-                        p_row[c] = r.custom[f].text
+        if rows:
+            if len(rows) > 0:
+                p_rows = []
+                for r in rows:
+                    p_row = {}
+                    for f in r.custom:
+                        # Try typing
+                        c = f.replace('.', '_')
+                        if r.custom[f].text is not None and c in s_types:
+                            p_row[c] = s_types[c](r.custom[f].text)
+                        else:
+                            p_row[c] = r.custom[f].text
 
-                p_rows.append(p_row)
+                    p_rows.append(p_row)
 
-            return p_rows
+                return p_rows
 
         return rows
 
@@ -315,7 +316,7 @@ class ElectionScraper:
             parsed['id'] =    parsed['id'] + row[0] + '-' + row[2]
             parsed['county_id'] = row[0]
             parsed['county_name'] = row[1]
-            parsed['mcd_id'] = "{0:05d}".format(int(row[2])) #enforce 5 digit 
+            parsed['mcd_id'] = "{0:05d}".format(int(row[2])) #enforce 5 digit
             parsed['name'] = row[1]
 
         if group == 'counties':
@@ -890,12 +891,13 @@ class ElectionScraper:
                 r['seats'] = int(seats) * 2
 
             # Check for any supplemental data
-            for s in s_rows:
-                if s['id'] == r['id']:
-                    supplemented = supplemented + 1
-                    for f in s:
-                        if s[f] is not None and s[f] != '':
-                            r[f] = s[f]
+            if s_rows:
+                for s in s_rows:
+                    if s['id'] == r['id']:
+                        supplemented = supplemented + 1
+                        for f in s:
+                            if s[f] is not None and s[f] != '':
+                                r[f] = s[f]
 
             # Save to database
             self.save(['id'], r, 'contests')
