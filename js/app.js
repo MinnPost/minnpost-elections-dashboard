@@ -181,14 +181,14 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
             });
             parsed.counts = _.sortBy(parsed.counts, 'id');
 
-            // Republican net
-            parsed.rNet = 0;
+            // DFL net
+            parsed.dflNet = 0;
             _.each(parsed.contests, function(c, ci) {
-              if (c.done && c.partyShift && c.partyWon === 'R') {
-                parsed.rNet += 1;
+              if (c.done && c.partyShift && c.partyWon === 'DFL') {
+                parsed.dflNet += 1;
               }
-              if (c.done && c.partyShift && c.incumbent_party === 'R') {
-                parsed.rNet -= 1;
+              if (c.done && c.partyShift && c.incumbent_party === 'DFL') {
+                parsed.dflNet -= 1;
               }
             });
 
