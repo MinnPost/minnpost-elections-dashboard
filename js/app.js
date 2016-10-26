@@ -22,7 +22,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
+      electionsAPI: '//localhost:5000/?q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
@@ -49,62 +49,161 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       dashboard: [
         {
           type: 'race',
-          title: 'Congressional District 2, Republicans',
-          show_party: 'R',
+          title: 'President (Minnesota)',
+          itemClass: 'president',
+          id: 'id-MN----0101',
+          rows: 2
+        },
+        {
+          type: 'race',
+          title: 'Congressional District 2',
           itemClass: 'congress-district',
           id: 'id-MN---2-0105',
-          rows: 4
+          rows: 2
+        },
+        {
+          type: 'race',
+          title: 'Congressional District 3',
+          itemClass: 'congress-district',
+          id: 'id-MN---3-0106',
+          rows: 3
+        },
+        {
+          type: 'race',
+          title: 'Congressional District 8',
+          itemClass: 'congress-district',
+          id: 'id-MN---8-0111',
+          rows: 2
         },
         {
           type: 'race',
           title: 'MN Supreme Court Associate Justice',
           itemClass: 'supreme-court',
           id: 'id-MN----7007',
-          rows: 3
-        },
-        {
-          type: 'race',
-          title: 'Hennepin County Commissioner, District 5',
-          itemClass: 'county-commissioner',
-          id: 'id-MN-27--05-0395',
-          rows: 6
-        },
-        {
-          type: 'spacer'
-        },
-        {
-          type: 'spacer'
-        },
-        {
-          type: 'race',
-          title: 'State House district 60B, DFL',
-          show_party: 'DFL',
-          itemClass: 'state-house',
-          id: 'id-MN---60B-0307',
-          rows: 3
-        },
-        {
-          type: 'race',
-          title: 'State House district 31A, GOP',
-          show_party: 'R',
-          itemClass: 'state-house',
-          id: 'id-MN---31A-0248',
           rows: 2
         },
         {
-          type: 'race',
-          title: 'State Senator distrirct 62, DFL',
-          show_party: 'DFL',
-          itemClass: 'state-senate',
-          id: 'id-MN---62-0182',
-          rows: 2
+          type: 'custom',
+          id: 'state-leg',
+          template: tDStateLeg,
+          query: "SELECT r.id AS results_id, r.candidate, r.party_id, r.percentage, " +
+            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party " +
+            "FROM contests AS c LEFT JOIN results AS r " +
+            "ON c.id = r.contest_id WHERE title LIKE '%state representative%' " +
+            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
+          parse: function(response, options) {
+            var parsed = {};
+            var tempContests = [];
+
+            // Put contest info into friendly format
+            parsed.contests = {};
+            _.each(response, function(r, ri) {
+              parsed.contests[r.id] = parsed.contests[r.id] || {
+                id: r.id,
+                title: r.title,
+                precincts_reporting: r.precincts_reporting,
+                total_effected_precincts: r.total_effected_precincts,
+                incumbent_party: r.incumbent_party,
+                results: []
+              };
+              parsed.contests[r.id].results.push({
+                id: r.results_id,
+                candidate: r.candidate,
+                party_id: r.party_id,
+                percentage: r.percentage
+              });
+            });
+
+            // Process contests
+            parsed.contests = _.map(parsed.contests, function(c, ci) {
+              c.done = (c.precincts_reporting === c.total_effected_precincts);
+              c.some = (c.precincts_reporting > 0);
+              c.partyWon = _.max(c.results, function(r, ri) {
+                return r.percentage;
+              }).party_id;
+
+              // Test data
+              /*
+              var t = Math.random();
+              if (t < 0.9) {
+                c.done = true;
+                c.partyWon = (Math.random() < 0.5) ? 'DFL' : 'R';
+              }
+              */
+
+              c.partyShift = (c.partyWon !== c.incumbent_party && c.done);
+              c.results = _.sortBy(c.results, 'candidate').reverse();
+              c.results = _.sortBy(c.results, 'percentage').reverse();
+
+              return c;
+            });
+
+            // Sort contests, this could get messey
+            parsed.contests = _.sortBy(parsed.contests, 'title');
+            parsed.contests = _.sortBy(parsed.contests, 'partyShift').reverse();
+            parsed.contests = _.sortBy(parsed.contests, function(c, ci) {
+              if (c.done) {
+                return (c.partyWon === 'DFL') ? 'AAAADFL' :
+                  (c.partyWon === 'R') ? 'ZZZZZR' : 'MMMMMM' + c.partyWon;
+              }
+              else {
+                return (c.some) ? 'MMMAAAAAA' : 'MMMMMM';
+              }
+            });
+
+            // Counts
+            parsed.counts = {};
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done) {
+                if (parsed.counts[c.partyWon]) {
+                  parsed.counts[c.partyWon].count += 1;
+                }
+                else {
+                  parsed.counts[c.partyWon] = {
+                    id: c.partyWon,
+                    count: 1,
+                    party: mpConfig.politicalParties[c.partyWon.toLowerCase()]
+                  };
+                }
+              }
+              else {
+                if (parsed.counts.unknown) {
+                  parsed.counts.unknown.count += 1;
+                }
+                else {
+                  parsed.counts.unknown = {
+                    id: 'MMMMMMMunknown',
+                    count: 1,
+                    party: 'Not fully reported yet'
+                  };
+                }
+              }
+            });
+            parsed.counts = _.sortBy(parsed.counts, 'id');
+
+            // Republican net
+            parsed.rNet = 0;
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done && c.partyShift && c.partyWon === 'R') {
+                parsed.rNet += 1;
+              }
+              if (c.done && c.partyShift && c.incumbent_party === 'R') {
+                parsed.rNet -= 1;
+              }
+            });
+
+            // Is everything done
+            parsed.allDone = (_.where(parsed.contests, { done: true }).length ===
+              parsed.contests.length);
+
+            return parsed;
+          }
         },
         {
           type: 'race',
-          title: 'State House district 65A',
-          show_party: 'DFL',
-          itemClass: 'state-house',
-          id: 'id-MN---65A-0316',
+          title: 'Constitutional Amendment',
+          itemClass: 'ballot-question',
+          id: 'id-MN----0351',
           rows: 2
         },
         {
