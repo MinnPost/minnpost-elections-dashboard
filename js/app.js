@@ -52,7 +52,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           title: 'President (Minnesota)',
           itemClass: 'president',
           id: 'id-MN----0101',
-          rows: 2
+          rows: 3
         },
         {
           type: 'race',
@@ -325,7 +325,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           title: 'Constitutional Amendment',
           itemClass: 'ballot-question',
           id: 'id-MN----0351',
-          rows: 2
+          rows: 3
         },
         {
           type: 'links',
