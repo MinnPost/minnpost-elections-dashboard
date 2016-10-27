@@ -84,6 +84,125 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         },
         {
           type: 'custom',
+          id: 'state-sen',
+          template: tDStateLeg,
+          query: "SELECT r.id AS results_id, r.candidate, r.party_id, r.percentage, " +
+            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party " +
+            "FROM contests AS c LEFT JOIN results AS r " +
+            "ON c.id = r.contest_id WHERE title LIKE '%state senator%' " +
+            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
+          parse: function(response, options) {
+            var parsed = {};
+            var tempContests = [];
+
+            parsed.chamber = "senate";
+
+            // Put contest info into friendly format
+            parsed.contests = {};
+            _.each(response, function(r, ri) {
+              parsed.contests[r.id] = parsed.contests[r.id] || {
+                id: r.id,
+                title: r.title,
+                precincts_reporting: r.precincts_reporting,
+                total_effected_precincts: r.total_effected_precincts,
+                incumbent_party: r.incumbent_party,
+                results: []
+              };
+              parsed.contests[r.id].results.push({
+                id: r.results_id,
+                candidate: r.candidate,
+                party_id: r.party_id,
+                percentage: r.percentage
+              });
+            });
+
+            // Process contests
+            parsed.contests = _.map(parsed.contests, function(c, ci) {
+              c.done = (c.precincts_reporting === c.total_effected_precincts);
+              c.some = (c.precincts_reporting > 0);
+              c.partyWon = _.max(c.results, function(r, ri) {
+                return r.percentage;
+              }).party_id;
+
+              // Test data
+              /*
+              var t = Math.random();
+              if (t < 0.9) {
+                c.done = true;
+                c.partyWon = (Math.random() < 0.5) ? 'DFL' : 'R';
+              }
+              */
+
+              c.partyShift = (c.partyWon !== c.incumbent_party && c.done);
+              c.results = _.sortBy(c.results, 'candidate').reverse();
+              c.results = _.sortBy(c.results, 'percentage').reverse();
+
+              return c;
+            });
+
+            // Sort contests, this could get messey
+            parsed.contests = _.sortBy(parsed.contests, 'title');
+            parsed.contests = _.sortBy(parsed.contests, 'partyShift').reverse();
+            parsed.contests = _.sortBy(parsed.contests, function(c, ci) {
+              if (c.done) {
+                return (c.partyWon === 'DFL') ? 'AAAADFL' :
+                  (c.partyWon === 'R') ? 'ZZZZZR' : 'MMMMMM' + c.partyWon;
+              }
+              else {
+                return (c.some) ? 'MMMAAAAAA' : 'MMMMMM';
+              }
+            });
+
+            // Counts
+            parsed.counts = {};
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done) {
+                if (parsed.counts[c.partyWon]) {
+                  parsed.counts[c.partyWon].count += 1;
+                }
+                else {
+                  parsed.counts[c.partyWon] = {
+                    id: c.partyWon,
+                    count: 1,
+                    party: mpConfig.politicalParties[c.partyWon.toLowerCase()]
+                  };
+                }
+              }
+              else {
+                if (parsed.counts.unknown) {
+                  parsed.counts.unknown.count += 1;
+                }
+                else {
+                  parsed.counts.unknown = {
+                    id: 'MMMMMMMunknown',
+                    count: 1,
+                    party: 'Not fully reported yet'
+                  };
+                }
+              }
+            });
+            parsed.counts = _.sortBy(parsed.counts, 'id');
+
+            // R net because senate is dfl controlled
+            parsed.rNet = 0;
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done && c.partyShift && c.partyWon === 'R') {
+                parsed.rNet += 1;
+              }
+              if (c.done && c.partyShift && c.incumbent_party === 'R') {
+                parsed.dflNet -= 1;
+              }
+            });
+
+            // Is everything done
+            parsed.allDone = (_.where(parsed.contests, { done: true }).length ===
+              parsed.contests.length);
+
+            return parsed;
+          }
+        },
+        {
+          type: 'custom',
           id: 'state-leg',
           template: tDStateLeg,
           query: "SELECT r.id AS results_id, r.candidate, r.party_id, r.percentage, " +
@@ -94,6 +213,8 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           parse: function(response, options) {
             var parsed = {};
             var tempContests = [];
+
+            parsed.chamber = "house";
 
             // Put contest info into friendly format
             parsed.contests = {};
