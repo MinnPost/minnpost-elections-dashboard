@@ -805,7 +805,8 @@ class ElectionScraper:
             '2713702872': '2713702890', # Aurora City
             '2703909154': '2710909154', # Bryon
             '2706109316': '2706103916', # Calumet
-            '2716345952': '2716358900' # Scandia
+            '2716345952': '2716358900', # Scandia
+            '2702353296': '2706753296'  # Raymond
         }
         fips = '{0:03d}'.format((int(county_id) * 2) - 1)
         mcd_id = '27' + fips + district
