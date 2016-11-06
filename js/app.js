@@ -332,9 +332,9 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           type: 'links',
           itemClass: 'dashboard-links',
           links: [
-            { href: '#search/state+senator', text: 'All State Senate' },
-            { href: '#search/state+representative', text: 'All State House' },
-            { href: '#search/question', text: 'Ballot questions' }
+            { href: '#search/school%20board%20member%20(ssd%20%231)', text: 'Minneapolis School Board' },
+            { href: '#contest/id-MN---1-1-5031', text: 'Minneapolis school referendum' },
+            { href: '#search/question', text: 'All ballot questions' }
           ]
         }
       ]
