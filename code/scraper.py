@@ -375,11 +375,19 @@ class ElectionScraper:
         # School
         # ^0 - - 3 - 1
         # id-MN---110-5031
+
+        # SSD1 is Minneapolis and ISD1 is Aitkin, though they have the same
+        # numbers and therefor make the same ID
+        mpls_ssd = re.compile('.*\(SSD #1\).*', re.IGNORECASE).match(row[4])
+        if mpls_ssd is not None:
+            row[3] = '1-1'
+
         contest_id = 'id-MN-' + row[0] + '-' + row[3] + '-' + row[2] + '-' + row[1]
         if row[2] is not None and row[2] != '':
             contest_id = 'id-MN---' + row[2] + '-' + row[1]
         if row[3] is not None and row[3] != '':
             contest_id = 'id-MN---' + row[3] + '-' + row[1]
+
 
         # Make row
         parsed = {
