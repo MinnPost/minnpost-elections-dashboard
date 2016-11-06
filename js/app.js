@@ -22,7 +22,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//localhost:5000/?q=',
+      electionsAPI: '//elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
@@ -190,7 +190,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
                 parsed.rNet += 1;
               }
               if (c.done && c.partyShift && c.incumbent_party === 'R') {
-                parsed.dflNet -= 1;
+                parsed.rNet -= 1;
               }
             });
 
@@ -251,6 +251,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
                 c.partyWon = (Math.random() < 0.5) ? 'DFL' : 'R';
               }
               */
+
 
               c.partyShift = (c.partyWon !== c.incumbent_party && c.done);
               c.results = _.sortBy(c.results, 'candidate').reverse();
