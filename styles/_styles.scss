@@ -336,7 +336,7 @@ $color-dark-gray: #282828;
         }
 
         &.party-shift {
-          @include box-shadow(0 0 0px 1px #232323);
+          @include box-shadow(0 0 0px 1.5px #232323);
           border: 1px solid #FFFFFF;
         }
       }
@@ -386,7 +386,7 @@ $color-dark-gray: #282828;
       }
 
       .party-shift {
-        @include box-shadow(0 0 0px 1px #232323);
+        @include box-shadow(0 0 0px 1.5px #232323);
         border: 1px solid #FFFFFF;
       }
     }
