@@ -772,7 +772,7 @@ class ElectionScraper:
                         # Find intersection
                         mcd_boundary_id = self.boundary_make_mcd(r['county_id'], parsed_row['district_code'])
                         boundary_url = 'https://boundaries.minnpost.com/1.0/boundary/?intersects=%s&sets=%s';
-                        request = requests.get(boundary_url % (mcd_boundary_id, 'hospital-districts-2012'))
+                        request = requests.get(boundary_url % (mcd_boundary_id, 'hospital-districts-2012'), verify = False)
 
                         if request.status_code == 200:
                             r = request.json()
@@ -923,7 +923,7 @@ class ElectionScraper:
         for c in contests:
             contests_count = contests_count + 1
             for b in c['boundary'].split(','):
-                request = requests.get(boundary_url % b)
+                request = requests.get(boundary_url % b, verify = False)
 
                 if request.status_code == 200:
                     boundaries_found = boundaries_found + 1
