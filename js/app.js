@@ -330,7 +330,16 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         },
         {
           type: 'links',
-          itemClass: 'dashboard-links',
+          itemClass: 'dashboard-links mobile-only',
+          links: [
+            { href: '#search/school%20board%20member%20(ssd%20%231)', text: 'Minneapolis School Board' },
+            { href: '#contest/id-MN---1-1-5031', text: 'Minneapolis school referendum' },
+            { href: '#search/question', text: 'All ballot questions' }
+          ]
+        },
+        {
+          type: 'links',
+          itemClass: 'dashboard-links non-mobile',
           links: [
             { href: '#search/school%20board%20member%20(ssd%20%231)', text: 'Minneapolis School Board' },
             { href: '#contest/id-MN---1-1-5031', text: 'Minneapolis school referendum' },
