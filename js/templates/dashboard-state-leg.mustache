@@ -33,7 +33,18 @@
     {{/counts}}
   </div>
 
-  {{#(chamber === "house")}}<div class="why-133 small"><a href="#">Why are there only 133 races?</a></div>{{/()}}
+  {{#(chamber === "house")}}
+    <div class="why-133 small"><a href="#" on-tap="toggleInfo133">Why are there only 133 races?</a></div>
+    <div class="hidden small cf" id="info133">
+      <p>In September, the Minnesota Supreme Court ruled that Bob Barrett, the Republican
+         incumbent in District 32B, was ineligible to run because he doesn’t reside
+         in the district. Because the ruling came so close to the election, the court
+         declared the election void, and no results will be reported. There will be
+         a special election in 32B in February.
+      </p>
+      <button on-tap="toggleInfo133">Got it!</button>
+    </div>
+  {{/()}}
 
   <div class="state-leg-legend">
     <div class="legend-item">
@@ -78,3 +89,7 @@
   {{/()}}
 
 </div>
+
+<script>
+
+</script>
