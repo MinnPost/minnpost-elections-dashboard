@@ -1727,6 +1727,12 @@ define('routers',[
         partials: partials
       });
 
+      //Handle special info popup
+      this.app.dashboardView.on('toggleInfo133', function(e) {
+        e.original.preventDefault();
+        this.app.$('#info133').toggleClass('hidden');
+      });
+
       // Handle searches here as we have an easy reference
       // to the router.
       this.app.dashboardView.on('addresssSearch', function(e) {
@@ -1919,7 +1925,7 @@ define('routers',[
 });
 
 
-define('text!templates/dashboard-state-leg.mustache',[],function () { return '<div class="dashboard-state-leg">\n  <h3>{{#(chamber === "senate")}}MN Senate{{/()}}{{#(chamber === "house")}}MN House of Representatives{{/()}}</h3>\n\n  {{#(!contests.length)}}\n    {{>loading}}\n  {{/()}}\n\n  <div class="state-leg-boxes cf">\n    <div class="state-leg-boxes-left">\n      {{#contests:ci}}{{#(ci < contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n    <div class="state-leg-boxes-right">\n      {{#contests:ci}}{{#(ci >= contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n  </div>\n\n  <div class="state-leg-totals">\n    {{#counts:ci}}\n      <span class="color-political-{{ id.toLowerCase() }}" title="{{ party }}">{{ count }}</span>\n      {{#(ci < counts.length - 1)}} -&nbsp; {{/()}}\n    {{/counts}}\n  </div>\n\n  <div class="state-leg-legend">\n    <div class="legend-item">\n      <div class="legend-box unknown"></div> Not reporting yet\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box some"></div> Some reporting\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box solid"></div> Colored box is fully reported\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box party-shift"></div> District has changed parties\n    </div>\n  </div>\n\n  {{#(chamber === "house")}}\n    <div class="state-leg-rnet">\n      <div class="heading">\n        DFL net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n        <span class="color-political-dfl dflnet">\n          {{ (dflNet > 0) ? \'+\' : \'\' }}{{ dflNet }}\n        </span>\n      </div>\n      <div class="sub-heading">DFLers need a net gain of at least +7 to win control of the House.</div>\n    </div>\n  {{/()}}\n\n  {{#(chamber === "senate")}}\n    <div class="state-leg-rnet">\n      <div class="heading">\n        Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n        <span class="color-political-r rnet">\n          {{ (rNet > 0) ? \'+\' : \'\' }}{{ rNet }}\n        </span>\n      </div>\n      <div class="sub-heading">Republicans need a net gain of at least +6 to win control of the Senate.</div>\n    </div>\n  {{/()}}\n\n</div>\n';});
+define('text!templates/dashboard-state-leg.mustache',[],function () { return '<div class="dashboard-state-leg">\n  <h3>{{#(chamber === "senate")}}MN Senate{{/()}}{{#(chamber === "house")}}MN House of Representatives{{/()}}</h3>\n\n  {{#(!contests.length)}}\n    {{>loading}}\n  {{/()}}\n\n  <div class="state-leg-boxes cf">\n    <div class="state-leg-boxes-left">\n      {{#contests:ci}}{{#(ci < contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n    <div class="state-leg-boxes-right">\n      {{#contests:ci}}{{#(ci >= contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n  </div>\n\n  <div class="state-leg-totals">\n    {{#counts:ci}}\n      <span class="color-political-{{ id.toLowerCase() }}" title="{{ party }}">{{ count }}</span>\n      {{#(ci < counts.length - 1)}} -&nbsp; {{/()}}\n    {{/counts}}\n  </div>\n\n  {{#(chamber === "house")}}\n    <div class="why-133 small"><a href="#" on-tap="toggleInfo133">Why are there only 133 races?</a></div>\n    <div class="hidden small cf" id="info133" style="margin-bottom:1em;">\n      <p>In September, the Minnesota Supreme Court ruled that Bob Barrett, the Republican\n         incumbent in District 32B, was ineligible to run because he doesn’t reside\n         in the district. Because the ruling came so close to the election, the court\n         declared the election void, and no results will be reported. There will be\n         a special election in 32B in February.\n      </p>\n      <div style="text-align: center;">\n        <button class="button"  on-tap="toggleInfo133">Got it!</button>\n      </div>\n    </div>\n  {{/()}}\n\n  <div class="state-leg-legend">\n    <div class="legend-item">\n      <div class="legend-box unknown"></div> Not reporting yet\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box some"></div> Some reporting\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box solid"></div> Colored box is fully reported\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box party-shift"></div> District has changed parties\n    </div>\n  </div>\n\n  {{#(chamber === "house")}}\n    <div class="state-leg-rnet">\n      <div class="heading">\n        DFL net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n        <span class="color-political-dfl dflnet">\n          {{ (dflNet > 0) ? \'+\' : \'\' }}{{ dflNet }}\n        </span>\n      </div>\n      <div class="sub-heading">DFLers need a net gain of at least +6 to win control of the House prior to the February special election.</div>\n    </div>\n  {{/()}}\n\n  {{#(chamber === "senate")}}\n    <div class="state-leg-rnet">\n      <div class="heading">\n        Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n        <span class="color-political-r rnet">\n          {{ (rNet > 0) ? \'+\' : \'\' }}{{ rNet }}\n        </span>\n      </div>\n      <div class="sub-heading">Republicans need a net gain of at least +6 to win control of the Senate.</div>\n    </div>\n  {{/()}}\n\n</div>\n\n<script>\n\n</script>\n';});
 
 /**
  * Main application file for: minnpost-elections-dashboard
@@ -1982,14 +1988,14 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           title: 'Congressional District 2',
           itemClass: 'congress-district',
           id: 'id-MN---2-0105',
-          rows: 2
+          rows: 3
         },
         {
           type: 'race',
           title: 'Congressional District 3',
           itemClass: 'congress-district',
           id: 'id-MN---3-0106',
-          rows: 3
+          rows: 2
         },
         {
           type: 'race',
