@@ -59,14 +59,14 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           title: 'Congressional District 2',
           itemClass: 'congress-district',
           id: 'id-MN---2-0105',
-          rows: 2
+          rows: 3
         },
         {
           type: 'race',
           title: 'Congressional District 3',
           itemClass: 'congress-district',
           id: 'id-MN---3-0106',
-          rows: 3
+          rows: 2
         },
         {
           type: 'race',
