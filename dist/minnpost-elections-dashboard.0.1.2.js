@@ -1320,7 +1320,7 @@ define('text!templates/application.mustache',[],function () { return '\n\n<a hre
 define('text!templates/footnote.mustache',[],function () { return '<div class="footnote">\n  <p>Unofficial election data provided by the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a>.  For ranked-choice contests data is supplemented manually from the <a href="http://vote.minneapolismn.gov/" target="_blank">City of Minneapolis</a> and the <a href="http://www.stpaul.gov/index.aspx?NID=188" target="_blank">City of St. Paul</a>.  Test data will be provided until 8PM on Election Night.</p>\n\n  <p>The geographical boundaries, though received from official sources and queried from our <a href="http://boundaries.minnpost.com" target="_blank">boundary service</a>, may not represent the exact, offical area for a contest, race, or election.  It is also possible that for a given location the contests may not be accurate due to data quality with multiple agencies.  Please refer to your local and state election officials to know exactly what contests happen for a given location.</p>\n\n  <p>Some map data © OpenStreetMap contributors; licensed under the <a href="http://www.openstreetmap.org/copyright" target="_blank">Open Data Commons Open Database License</a>.  Some map design © MapBox; licensed according to the <a href="http://mapbox.com/tos/" target="_blank">MapBox Terms of Service</a>.  Location geocoding provided by <a href="http://www.mapquest.com/" target="_blank">Mapquest</a> and is not guaranteed to be accurate.</p>\n\n  <p>This application was designed and built by Alan Palazzolo, Kaeti Hinck and Tom Nehil. Some code, techniques, and data on <a href="https://github.com/minnpost/minnpost-elections-dashboard" target="_blank">Github</a>.</p>\n</div>\n';});
 
 
-define('text!templates/contest.mustache',[],function () { return '<div class="contest {{#isDashboard}}dashboard-contest{{/isDashboard}} {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}}{{#(final === true)}}is-final{{/()}} {{#primary}}primary{{/primary}}">\n  {{^isDashboard}}\n    <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n  {{/isDashboard}}\n\n  <div>\n    {{#((results.length == 0 || results == undefined) && !synced)}}\n      {{>loading}}\n    {{/()}}\n  </div>\n\n  {{#((results.length == 0 || results == undefined) && synced)}}\n    <h3>Did not find any contests</h3>\n  {{/()}}\n\n\n  {{#((results.length > 0) && synced)}}\n    <h3>\n      {{ title }}\n      {{#(show_party != undefined)}}<span class="show-party party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}\n    </h3>\n\n    {{#sub_title}}\n      <h4>{{ sub_title }}</h4>\n    {{/sub_title}}\n\n    {{^isDashboard}}\n      <div class="last-updated">Last updated {{ updated.formatToday() }}</div>\n    {{/isDashboard}}\n\n    {{#(!!question_body)}}\n      <p>{{{ question_body }}}</p>\n    {{/()}}\n\n    {{#percent_needed}}\n      <p><em>This contest requires {{ formatters.number(percent_needed, 1) }}% or more "yes" votes for the measure to pass.</em></p>\n    {{/percent_needed}}\n  {{/()}}\n\n  <div class="{{^isDashboard}}row{{/isDashboard}}">\n    <div class="{{^isDashboard}}column-medium-70 inner-column-left{{/isDashboard}}">\n      <div class="">\n        <table class="striped">\n          <thead>\n            <tr class="table-first-heading">\n              <th class="winner-column"></th>\n              <th>Candidate</th>\n              {{#(partisan && show_party === undefined)}}\n                <th>\n                  <span class="large-table-label">Party</span>\n                  <span class="small-table-label"></span>\n                </th>\n              {{/()}}\n              {{#(ranked_choice == 1)}}\n                <th class="first-choice-column">Results</th>\n                <th class="second-choice-column"></th>\n                <th class="third-choice-column"></th>\n                <th class="final-column">Final</th>\n              {{/()}}\n              {{#(ranked_choice != 1)}}\n                {{^isDashboard}}\n                  <th class="percentage">\n                    <span class="large-table-label">Percentage</span>\n                    <span class="small-table-label">%</span>\n                  </th>\n                  <th class="votes">Votes</th>\n                {{/isDashboard}}\n                {{#isDashboard}}\n                  <th class="percentage">Results</th>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n            <tr class="table-second-heading">\n              <th class="winner-column"></th>\n              <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>\n              {{#(partisan && show_party === undefined)}}\n                <th></th>\n              {{/()}}\n              {{#(ranked_choice == 1)}}\n                <th class="first-choice-column first-choice-heading">1st choice</th>\n                <th class="second-choice-column second-choice-heading">2nd choice</th>\n                <th class="third-choice-column third-choice-heading">3rd choice</th>\n                <th class="final-column"></th>\n              {{/()}}\n              {{#(ranked_choice != 1)}}\n                <th></th>\n                {{^isDashboard}}\n                  <th></th>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n          </thead>\n\n          <tbody>\n            {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party != undefined && party_id == show_party)))}}\n              <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? \'even\' : \'odd\' }} {{#primary}}{{ party_id.toLowerCase() }}{{/primary}}">\n                <td class="winner-column">{{#winner}}<span class="fa fa-check"></span>{{/winner}}</td>\n\n                <td class="candidate-column">{{ candidate }}</td>\n\n                {{#(partisan && show_party === undefined)}}\n                  <td>\n                    {{#([\'WI\', \'NP\'].indexOf(party_id) === -1)}}\n                      <span class="party-label bg-color-political-{{ party_id.toLowerCase() }}" title="{{ parties[party_id.toLowerCase()] }}">{{ party_id }}</span>\n                    {{/()}}\n                  </td>\n                {{/()}}\n\n                {{#(ranked_choice == 1)}}\n                  <td class="first-choice-column first-choice-heading">{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="second-choice-column first-choice-heading">{{ formatters.number(ranked_choices.2.percentage) }}% ({{ formatters.number(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="third-choice-column first-choice-heading">{{ formatters.number(ranked_choices.3.percentage) }}% ({{ formatters.number(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="final-column first-choice-heading">{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% ({{ formatters.number(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>\n                {{/()}}\n\n                {{#(ranked_choice != 1)}}\n                  <td class="percentage">{{ formatters.number(percentage) }}%</td>\n                  {{^isDashboard}}\n                    <td class="votes">{{ formatters.number(votes_candidate, 0) }}</td>\n                  {{/isDashboard}}\n                {{/()}}\n              </tr>\n            {{/()}} {{/results}}\n          </tbody>\n        </table>\n      </div>\n\n      <a href="#contest/{{ id }}" class="contest-link">{{#isDashboard}}Full results{{/isDashboard}}{{^isDashboard}}Permalink{{/isDashboard}}</a>\n    </div>\n\n    {{^isDashboard}}\n      <div class="column-medium-30 inner-column-right">\n        <div class="contest-map" id="contest-map-{{ id }}"></div>\n      </div>\n    {{/isDashboard}}\n  </div>\n</div>\n';});
+define('text!templates/contest.mustache',[],function () { return '<div class="contest {{#isDashboard}}dashboard-contest{{/isDashboard}} {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}}{{#(final === true)}}is-final{{/()}} {{#primary}}primary{{/primary}}">\n  {{^isDashboard}}\n    <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n  {{/isDashboard}}\n\n  <div>\n    {{#((results.length == 0 || results == undefined) && !synced)}}\n      {{>loading}}\n    {{/()}}\n  </div>\n\n  {{#((results.length == 0 || results == undefined) && synced)}}\n    <h3>Did not find any contests</h3>\n  {{/()}}\n\n\n  {{#((results.length > 0) && synced)}}\n    <h3>\n      {{ title }}\n      {{#(show_party != undefined)}}<span class="show-party party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}\n    </h3>\n\n    {{#sub_title}}\n      <h5>{{ sub_title }}</h5>\n    {{/sub_title}}\n\n    {{^isDashboard}}\n      <div class="last-updated">Last updated {{ updated.formatToday() }}</div>\n    {{/isDashboard}}\n\n    {{#(!!question_body)}}\n      <p>{{{ question_body }}}</p>\n    {{/()}}\n\n    {{#percent_needed}}\n      <p><em>This contest requires {{ formatters.number(percent_needed, 1) }}% or more "yes" votes for the measure to pass.</em></p>\n    {{/percent_needed}}\n  {{/()}}\n\n  <div class="{{^isDashboard}}row{{/isDashboard}}">\n    <div class="{{^isDashboard}}column-medium-70 inner-column-left{{/isDashboard}}">\n      <div class="">\n        <table class="striped">\n          <thead>\n            <tr class="table-first-heading">\n              <th class="winner-column"></th>\n              <th>Candidate</th>\n              {{#(partisan && show_party === undefined)}}\n                <th>\n                  <span class="large-table-label">Party</span>\n                  <span class="small-table-label"></span>\n                </th>\n              {{/()}}\n              {{#(ranked_choice == 1)}}\n                <th class="first-choice-column">Results</th>\n                <th class="second-choice-column"></th>\n                <th class="third-choice-column"></th>\n                <th class="final-column">Final</th>\n              {{/()}}\n              {{#(ranked_choice != 1)}}\n                {{^isDashboard}}\n                  <th class="percentage">\n                    <span class="large-table-label">Percentage</span>\n                    <span class="small-table-label">%</span>\n                  </th>\n                  <th class="votes">Votes</th>\n                {{/isDashboard}}\n                {{#isDashboard}}\n                  <th class="percentage">Results</th>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n            <tr class="table-second-heading">\n              <th class="winner-column"></th>\n              <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>\n              {{#(partisan && show_party === undefined)}}\n                <th></th>\n              {{/()}}\n              {{#(ranked_choice == 1)}}\n                <th class="first-choice-column first-choice-heading">1st choice</th>\n                <th class="second-choice-column second-choice-heading">2nd choice</th>\n                <th class="third-choice-column third-choice-heading">3rd choice</th>\n                <th class="final-column"></th>\n              {{/()}}\n              {{#(ranked_choice != 1)}}\n                <th></th>\n                {{^isDashboard}}\n                  <th></th>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n          </thead>\n\n          <tbody>\n            {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party != undefined && party_id == show_party)))}}\n              <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? \'even\' : \'odd\' }} {{#primary}}{{ party_id.toLowerCase() }}{{/primary}}">\n                <td class="winner-column">{{#winner}}<span class="fa fa-check"></span>{{/winner}}</td>\n\n                <td class="candidate-column">{{ candidate }}</td>\n\n                {{#(partisan && show_party === undefined)}}\n                  <td>\n                    {{#([\'WI\', \'NP\'].indexOf(party_id) === -1)}}\n                      <span class="party-label bg-color-political-{{ party_id.toLowerCase() }}" title="{{ parties[party_id.toLowerCase()] }}">{{ party_id }}</span>\n                    {{/()}}\n                  </td>\n                {{/()}}\n\n                {{#(ranked_choice == 1)}}\n                  <td class="first-choice-column first-choice-heading">{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="second-choice-column first-choice-heading">{{ formatters.number(ranked_choices.2.percentage) }}% ({{ formatters.number(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="third-choice-column first-choice-heading">{{ formatters.number(ranked_choices.3.percentage) }}% ({{ formatters.number(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="final-column first-choice-heading">{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% ({{ formatters.number(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>\n                {{/()}}\n\n                {{#(ranked_choice != 1)}}\n                  <td class="percentage">{{ formatters.number(percentage) }}%</td>\n                  {{^isDashboard}}\n                    <td class="votes">{{ formatters.number(votes_candidate, 0) }}</td>\n                  {{/isDashboard}}\n                {{/()}}\n              </tr>\n            {{/()}} {{/results}}\n          </tbody>\n        </table>\n      </div>\n\n      <a href="#contest/{{ id }}" class="contest-link">{{#isDashboard}}Full results{{/isDashboard}}{{^isDashboard}}Permalink{{/isDashboard}}</a>\n    </div>\n\n    {{^isDashboard}}\n      <div class="column-medium-30 inner-column-right">\n        <div class="contest-map" id="contest-map-{{ id }}"></div>\n      </div>\n    {{/isDashboard}}\n  </div>\n</div>\n';});
 
 
 define('text!templates/contests.mustache',[],function () { return '<div class="contests">\n  <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n\n  <div class="row">\n    <div class="column-medium-70 inner-column-left contests-title-section">\n      <h2 class="contests-title {{#(lonlat != undefined)}}with-location{{/()}}">{{ (title) ? title : \'Contests\' }}</h2>\n\n      <p class="caption">\n        Found\n          {{#(models.length == 0 && !synced)}}\n            <i class="loading small"></i>\n          {{/())}}\n          {{#synced}}\n            {{ models.length }}\n          {{/synced}}\n        results.\n      </p>\n\n      {{#(lonlat != undefined)}}\n        <p class="caption">The map below shows the approximate location of your search. If the location is not correct, try <a href="#dashboard">searching for a more specific address</a>.</p>\n\n        <div id="location-map"></div>\n      {{/())}}\n    </div>\n\n    <div class="column-medium-30 inner-column-right"></div>\n  </div>\n\n  <div>\n    {{#(models.length == 0 && !synced)}}\n      {{>loading}}\n    {{/())}}\n\n    {{#(models.length == 0 && synced)}}\n      <p class="large">Unable to find any contests.</p>\n    {{/())}}\n  </div>\n\n  <div class="contest-list">\n    {{#models:i}}\n      {{>contest}}\n    {{/models}}\n  </div>\n</div>\n';});
@@ -1919,7 +1919,7 @@ define('routers',[
 });
 
 
-define('text!templates/dashboard-state-leg.mustache',[],function () { return '<div class="dashboard-state-leg">\n  <h3>MN House of Representatives</h3>\n\n  {{#(!contests.length)}}\n    {{>loading}}\n  {{/()}}\n\n  <div class="state-leg-boxes cf">\n    <div class="state-leg-boxes-left">\n      {{#contests:ci}}{{#(ci < contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n    <div class="state-leg-boxes-right">\n      {{#contests:ci}}{{#(ci >= contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n  </div>\n\n  <div class="state-leg-totals">\n    {{#counts:ci}}\n      <span class="color-political-{{ id.toLowerCase() }}" title="{{ party }}">{{ count }}</span>\n      {{#(ci < counts.length - 1)}} -&nbsp; {{/()}}\n    {{/counts}}\n  </div>\n\n  <div class="state-leg-legend">\n    <div class="legend-item">\n      <div class="legend-box unknown"></div> Not reporting yet\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box some"></div> Some reporting\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box solid"></div> Colored box is fully reported\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box party-shift"></div> District has changed parties\n    </div>\n  </div>\n\n  <div class="state-leg-rnet">\n    <div class="heading">\n      Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n      <span class="color-political-r rnet">\n        {{ (rNet > 0) ? \'+\' : \'\' }}{{ rNet }}\n      </span>\n    </div>\n    <div class="sub-heading">Republicans need a net gain of at least +7 to win control of the House.</div>\n  </div>\n</div>\n';});
+define('text!templates/dashboard-state-leg.mustache',[],function () { return '<div class="dashboard-state-leg">\n  <h3>{{#(chamber === "senate")}}MN Senate{{/()}}{{#(chamber === "house")}}MN House of Representatives{{/()}}</h3>\n\n  {{#(!contests.length)}}\n    {{>loading}}\n  {{/()}}\n\n  <div class="state-leg-boxes cf">\n    <div class="state-leg-boxes-left">\n      {{#contests:ci}}{{#(ci < contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n    <div class="state-leg-boxes-right">\n      {{#contests:ci}}{{#(ci >= contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n  </div>\n\n  <div class="state-leg-totals">\n    {{#counts:ci}}\n      <span class="color-political-{{ id.toLowerCase() }}" title="{{ party }}">{{ count }}</span>\n      {{#(ci < counts.length - 1)}} -&nbsp; {{/()}}\n    {{/counts}}\n  </div>\n\n  <div class="state-leg-legend">\n    <div class="legend-item">\n      <div class="legend-box unknown"></div> Not reporting yet\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box some"></div> Some reporting\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box solid"></div> Colored box is fully reported\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box party-shift"></div> District has changed parties\n    </div>\n  </div>\n\n  {{#(chamber === "house")}}\n    <div class="state-leg-rnet">\n      <div class="heading">\n        DFL net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n        <span class="color-political-dfl dflnet">\n          {{ (dflNet > 0) ? \'+\' : \'\' }}{{ dflNet }}\n        </span>\n      </div>\n      <div class="sub-heading">DFLers need a net gain of at least +7 to win control of the House.</div>\n    </div>\n  {{/()}}\n\n  {{#(chamber === "senate")}}\n    <div class="state-leg-rnet">\n      <div class="heading">\n        Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n        <span class="color-political-r rnet">\n          {{ (rNet > 0) ? \'+\' : \'\' }}{{ rNet }}\n        </span>\n      </div>\n      <div class="sub-heading">Republicans need a net gain of at least +6 to win control of the Senate.</div>\n    </div>\n  {{/()}}\n\n</div>\n';});
 
 /**
  * Main application file for: minnpost-elections-dashboard
@@ -1945,7 +1945,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
+      electionsAPI: '//elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
@@ -1972,71 +1972,301 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       dashboard: [
         {
           type: 'race',
-          title: 'Congressional District 2, Republicans',
-          show_party: 'R',
+          title: 'President (Minnesota)',
+          itemClass: 'president',
+          id: 'id-MN----0101',
+          rows: 3
+        },
+        {
+          type: 'race',
+          title: 'Congressional District 2',
           itemClass: 'congress-district',
           id: 'id-MN---2-0105',
-          rows: 4
+          rows: 2
+        },
+        {
+          type: 'race',
+          title: 'Congressional District 3',
+          itemClass: 'congress-district',
+          id: 'id-MN---3-0106',
+          rows: 3
+        },
+        {
+          type: 'race',
+          title: 'Congressional District 8',
+          itemClass: 'congress-district',
+          id: 'id-MN---8-0111',
+          rows: 2
         },
         {
           type: 'race',
           title: 'MN Supreme Court Associate Justice',
           itemClass: 'supreme-court',
           id: 'id-MN----7007',
+          rows: 2
+        },
+        {
+          type: 'custom',
+          id: 'state-sen',
+          template: tDStateLeg,
+          query: "SELECT r.id AS results_id, r.candidate, r.party_id, r.percentage, " +
+            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party " +
+            "FROM contests AS c LEFT JOIN results AS r " +
+            "ON c.id = r.contest_id WHERE title LIKE '%state senator%' " +
+            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
+          parse: function(response, options) {
+            var parsed = {};
+            var tempContests = [];
+
+            parsed.chamber = "senate";
+
+            // Put contest info into friendly format
+            parsed.contests = {};
+            _.each(response, function(r, ri) {
+              parsed.contests[r.id] = parsed.contests[r.id] || {
+                id: r.id,
+                title: r.title,
+                precincts_reporting: r.precincts_reporting,
+                total_effected_precincts: r.total_effected_precincts,
+                incumbent_party: r.incumbent_party,
+                results: []
+              };
+              parsed.contests[r.id].results.push({
+                id: r.results_id,
+                candidate: r.candidate,
+                party_id: r.party_id,
+                percentage: r.percentage
+              });
+            });
+
+            // Process contests
+            parsed.contests = _.map(parsed.contests, function(c, ci) {
+              c.done = (c.precincts_reporting === c.total_effected_precincts);
+              c.some = (c.precincts_reporting > 0);
+              c.partyWon = _.max(c.results, function(r, ri) {
+                return r.percentage;
+              }).party_id;
+
+              // Test data
+              /*
+              var t = Math.random();
+              if (t < 0.9) {
+                c.done = true;
+                c.partyWon = (Math.random() < 0.5) ? 'DFL' : 'R';
+              }
+              */
+
+              c.partyShift = (c.partyWon !== c.incumbent_party && c.done);
+              c.results = _.sortBy(c.results, 'candidate').reverse();
+              c.results = _.sortBy(c.results, 'percentage').reverse();
+
+              return c;
+            });
+
+            // Sort contests, this could get messey
+            parsed.contests = _.sortBy(parsed.contests, 'title');
+            parsed.contests = _.sortBy(parsed.contests, 'partyShift').reverse();
+            parsed.contests = _.sortBy(parsed.contests, function(c, ci) {
+              if (c.done) {
+                return (c.partyWon === 'DFL') ? 'AAAADFL' :
+                  (c.partyWon === 'R') ? 'ZZZZZR' : 'MMMMMM' + c.partyWon;
+              }
+              else {
+                return (c.some) ? 'MMMAAAAAA' : 'MMMMMM';
+              }
+            });
+
+            // Counts
+            parsed.counts = {};
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done) {
+                if (parsed.counts[c.partyWon]) {
+                  parsed.counts[c.partyWon].count += 1;
+                }
+                else {
+                  parsed.counts[c.partyWon] = {
+                    id: c.partyWon,
+                    count: 1,
+                    party: mpConfig.politicalParties[c.partyWon.toLowerCase()]
+                  };
+                }
+              }
+              else {
+                if (parsed.counts.unknown) {
+                  parsed.counts.unknown.count += 1;
+                }
+                else {
+                  parsed.counts.unknown = {
+                    id: 'MMMMMMMunknown',
+                    count: 1,
+                    party: 'Not fully reported yet'
+                  };
+                }
+              }
+            });
+            parsed.counts = _.sortBy(parsed.counts, 'id');
+
+            // R net because senate is dfl controlled
+            parsed.rNet = 0;
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done && c.partyShift && c.partyWon === 'R') {
+                parsed.rNet += 1;
+              }
+              if (c.done && c.partyShift && c.incumbent_party === 'R') {
+                parsed.rNet -= 1;
+              }
+            });
+
+            // Is everything done
+            parsed.allDone = (_.where(parsed.contests, { done: true }).length ===
+              parsed.contests.length);
+
+            return parsed;
+          }
+        },
+        {
+          type: 'custom',
+          id: 'state-leg',
+          template: tDStateLeg,
+          query: "SELECT r.id AS results_id, r.candidate, r.party_id, r.percentage, " +
+            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party " +
+            "FROM contests AS c LEFT JOIN results AS r " +
+            "ON c.id = r.contest_id WHERE title LIKE '%state representative%' " +
+            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
+          parse: function(response, options) {
+            var parsed = {};
+            var tempContests = [];
+
+            parsed.chamber = "house";
+
+            // Put contest info into friendly format
+            parsed.contests = {};
+            _.each(response, function(r, ri) {
+              parsed.contests[r.id] = parsed.contests[r.id] || {
+                id: r.id,
+                title: r.title,
+                precincts_reporting: r.precincts_reporting,
+                total_effected_precincts: r.total_effected_precincts,
+                incumbent_party: r.incumbent_party,
+                results: []
+              };
+              parsed.contests[r.id].results.push({
+                id: r.results_id,
+                candidate: r.candidate,
+                party_id: r.party_id,
+                percentage: r.percentage
+              });
+            });
+
+            // Process contests
+            parsed.contests = _.map(parsed.contests, function(c, ci) {
+              c.done = (c.precincts_reporting === c.total_effected_precincts);
+              c.some = (c.precincts_reporting > 0);
+              c.partyWon = _.max(c.results, function(r, ri) {
+                return r.percentage;
+              }).party_id;
+
+              // Test data
+              /*
+              var t = Math.random();
+              if (t < 0.9) {
+                c.done = true;
+                c.partyWon = (Math.random() < 0.5) ? 'DFL' : 'R';
+              }
+              */
+
+
+              c.partyShift = (c.partyWon !== c.incumbent_party && c.done);
+              c.results = _.sortBy(c.results, 'candidate').reverse();
+              c.results = _.sortBy(c.results, 'percentage').reverse();
+
+              return c;
+            });
+
+            // Sort contests, this could get messey
+            parsed.contests = _.sortBy(parsed.contests, 'title');
+            parsed.contests = _.sortBy(parsed.contests, 'partyShift').reverse();
+            parsed.contests = _.sortBy(parsed.contests, function(c, ci) {
+              if (c.done) {
+                return (c.partyWon === 'DFL') ? 'AAAADFL' :
+                  (c.partyWon === 'R') ? 'ZZZZZR' : 'MMMMMM' + c.partyWon;
+              }
+              else {
+                return (c.some) ? 'MMMAAAAAA' : 'MMMMMM';
+              }
+            });
+
+            // Counts
+            parsed.counts = {};
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done) {
+                if (parsed.counts[c.partyWon]) {
+                  parsed.counts[c.partyWon].count += 1;
+                }
+                else {
+                  parsed.counts[c.partyWon] = {
+                    id: c.partyWon,
+                    count: 1,
+                    party: mpConfig.politicalParties[c.partyWon.toLowerCase()]
+                  };
+                }
+              }
+              else {
+                if (parsed.counts.unknown) {
+                  parsed.counts.unknown.count += 1;
+                }
+                else {
+                  parsed.counts.unknown = {
+                    id: 'MMMMMMMunknown',
+                    count: 1,
+                    party: 'Not fully reported yet'
+                  };
+                }
+              }
+            });
+            parsed.counts = _.sortBy(parsed.counts, 'id');
+
+            // DFL net
+            parsed.dflNet = 0;
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done && c.partyShift && c.partyWon === 'DFL') {
+                parsed.dflNet += 1;
+              }
+              if (c.done && c.partyShift && c.incumbent_party === 'DFL') {
+                parsed.dflNet -= 1;
+              }
+            });
+
+            // Is everything done
+            parsed.allDone = (_.where(parsed.contests, { done: true }).length ===
+              parsed.contests.length);
+
+            return parsed;
+          }
+        },
+        {
+          type: 'race',
+          title: 'Constitutional Amendment',
+          itemClass: 'ballot-question',
+          id: 'id-MN----0351',
           rows: 3
-        },
-        {
-          type: 'race',
-          title: 'Hennepin County Commissioner, District 5',
-          itemClass: 'county-commissioner',
-          id: 'id-MN-27--05-0395',
-          rows: 6
-        },
-        {
-          type: 'spacer'
-        },
-        {
-          type: 'spacer'
-        },
-        {
-          type: 'race',
-          title: 'State House district 60B, DFL',
-          show_party: 'DFL',
-          itemClass: 'state-house',
-          id: 'id-MN---60B-0307',
-          rows: 3
-        },
-        {
-          type: 'race',
-          title: 'State House district 31A, GOP',
-          show_party: 'R',
-          itemClass: 'state-house',
-          id: 'id-MN---31A-0248',
-          rows: 2
-        },
-        {
-          type: 'race',
-          title: 'State Senator distrirct 62, DFL',
-          show_party: 'DFL',
-          itemClass: 'state-senate',
-          id: 'id-MN---62-0182',
-          rows: 2
-        },
-        {
-          type: 'race',
-          title: 'State House district 65A',
-          show_party: 'DFL',
-          itemClass: 'state-house',
-          id: 'id-MN---65A-0316',
-          rows: 2
         },
         {
           type: 'links',
-          itemClass: 'dashboard-links',
+          itemClass: 'dashboard-links mobile-only',
           links: [
-            { href: '#search/state+senator', text: 'All State Senate' },
-            { href: '#search/state+representative', text: 'All State House' },
-            { href: '#search/question', text: 'Ballot questions' }
+            { href: '#search/school%20board%20member%20(ssd%20%231)', text: 'Minneapolis School Board' },
+            { href: '#contest/id-MN---1-1-5031', text: 'Minneapolis school referendum' },
+            { href: '#search/question', text: 'All ballot questions' }
+          ]
+        },
+        {
+          type: 'links',
+          itemClass: 'dashboard-links non-mobile',
+          links: [
+            { href: '#search/school%20board%20member%20(ssd%20%231)', text: 'Minneapolis School Board' },
+            { href: '#contest/id-MN---1-1-5031', text: 'Minneapolis school referendum' },
+            { href: '#search/question', text: 'All ballot questions' }
           ]
         }
       ]
