@@ -436,7 +436,132 @@ scraper_sources_inline = """
       "url": "BallotQuestions.txt",
       "table": "questions",
       "type": "questions"
-    }}
+    }
+  },
+  "20161108": {
+    "meta": {
+      "base_url": "ftp://media:results@ftp.sos.state.mn.us/20161108/",
+      "date": "2016-11-08",
+      "primary": false
+    },
+    "us_president_results": {
+      "url": "USPres.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "constitutional_amendment_results": {
+      "url": "ConstAmend.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "us_house_results": {
+      "url": "ushouse.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "us_house"
+    },
+    "state_senate_results": {
+      "url": "stsenate.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state_senate"
+    },
+    "state_house_results": {
+      "url": "LegislativeByDistrict.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state_house"
+    },
+    "judicial_results": {
+      "url": "judicial.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "judicial_district_results": {
+      "url": "judicialdst.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "district_court"
+    },
+    "county_results": {
+      "url": "cntyRaceQuestions.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "county",
+      "notes": "Questions and candidate races."
+    },
+    "municipal_results": {
+      "url": "local.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "municipal"
+    },
+    "school_district_results": {
+      "url": "SDRaceQuestions.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "school",
+      "notes": "Questions and candidate races."
+    },
+    "hospital_results": {
+      "url": "hospital.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "hospital"
+    },
+    "parties": {
+      "url": "PartyTbl.txt",
+      "table": "parties",
+      "type": "parties"
+    },
+    "candidates": {
+      "url": "cand.txt",
+      "table": "candidates",
+      "type": "candidates"
+    },
+    "local_candidates": {
+      "url": "LocalCandTbl.txt",
+      "table": "candidates",
+      "type": "local_candidates"
+    },
+    "counties": {
+      "url": "Cntytbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "municipalities": {
+      "url": "mcdtbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "precincts": {
+      "url": "PrctTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "school_districts": {
+      "url": "SchoolDistTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "ballot_questions": {
+      "url": "BallotQuestions.txt",
+      "table": "questions",
+      "type": "questions"
+    },
+    "supplemental_contests": {
+      "spreadsheet_id": "13exfuojIcZjR-tezPfD6Ue-F7o5q5Z2dK-LGlgLn178",
+      "worksheet_id": 0,
+      "notes": "Workesheet ID is the zero-based ID from the order of workssheets and is used to find the actual ID."
+    },
+    "supplemental_results": {
+      "spreadsheet_id": "13exfuojIcZjR-tezPfD6Ue-F7o5q5Z2dK-LGlgLn178",
+      "worksheet_id": 1
+    }
+  }
 }
 
 """
@@ -685,21 +810,22 @@ class ElectionScraper:
             'ranked_choice_place': int,
             'percent_needed': float
         }
-        if len(rows) > 0:
-            p_rows = []
-            for r in rows:
-                p_row = {}
-                for f in r.custom:
-                    # Try typing
-                    c = f.replace('.', '_')
-                    if r.custom[f].text is not None and c in s_types:
-                        p_row[c] = s_types[c](r.custom[f].text)
-                    else:
-                        p_row[c] = r.custom[f].text
+        if rows:
+            if len(rows) > 0:
+                p_rows = []
+                for r in rows:
+                    p_row = {}
+                    for f in r.custom:
+                        # Try typing
+                        c = f.replace('.', '_')
+                        if r.custom[f].text is not None and c in s_types:
+                            p_row[c] = s_types[c](r.custom[f].text)
+                        else:
+                            p_row[c] = r.custom[f].text
 
-                p_rows.append(p_row)
+                    p_rows.append(p_row)
 
-            return p_rows
+                return p_rows
 
         return rows
 
@@ -736,7 +862,7 @@ class ElectionScraper:
             parsed['id'] =    parsed['id'] + row[0] + '-' + row[2]
             parsed['county_id'] = row[0]
             parsed['county_name'] = row[1]
-            parsed['mcd_id'] = row[2]
+            parsed['mcd_id'] = "{0:05d}".format(int(row[2])) #enforce 5 digit
             parsed['name'] = row[1]
 
         if group == 'counties':
@@ -795,11 +921,19 @@ class ElectionScraper:
         # School
         # ^0 - - 3 - 1
         # id-MN---110-5031
+
+        # SSD1 is Minneapolis and ISD1 is Aitkin, though they have the same
+        # numbers and therefor make the same ID
+        mpls_ssd = re.compile('.*\(SSD #1\).*', re.IGNORECASE).match(row[4])
+        if mpls_ssd is not None:
+            row[3] = '1-1'
+
         contest_id = 'id-MN-' + row[0] + '-' + row[3] + '-' + row[2] + '-' + row[1]
         if row[2] is not None and row[2] != '':
             contest_id = 'id-MN---' + row[2] + '-' + row[1]
         if row[3] is not None and row[3] != '':
             contest_id = 'id-MN---' + row[3] + '-' + row[1]
+
 
         # Make row
         parsed = {
@@ -1191,8 +1325,8 @@ class ElectionScraper:
                     for r in mcd:
                         # Find intersection
                         mcd_boundary_id = self.boundary_make_mcd(r['county_id'], parsed_row['district_code'])
-                        boundary_url = 'http://boundaries.minnpost.com/1.0/boundary/?intersects=%s&sets=%s';
-                        request = requests.get(boundary_url % (mcd_boundary_id, 'hospital-districts-2012'))
+                        boundary_url = 'https://boundaries.minnpost.com/1.0/boundary/?intersects=%s&sets=%s';
+                        request = requests.get(boundary_url % (mcd_boundary_id, 'hospital-districts-2012'), verify = False)
 
                         if request.status_code == 200:
                             r = request.json()
@@ -1225,7 +1359,8 @@ class ElectionScraper:
             '2713702872': '2713702890', # Aurora City
             '2703909154': '2710909154', # Bryon
             '2706109316': '2706103916', # Calumet
-            '2716345952': '2716358900' # Scandia
+            '2716345952': '2716358900', # Scandia
+            '2702353296': '2706753296'  # Raymond
         }
         fips = '{0:03d}'.format((int(county_id) * 2) - 1)
         mcd_id = '27' + fips + district
@@ -1311,12 +1446,13 @@ class ElectionScraper:
                 r['seats'] = int(seats) * 2
 
             # Check for any supplemental data
-            for s in s_rows:
-                if s['id'] == r['id']:
-                    supplemented = supplemented + 1
-                    for f in s:
-                        if s[f] is not None and s[f] != '':
-                            r[f] = s[f]
+            if s_rows:
+                for s in s_rows:
+                    if s['id'] == r['id']:
+                        supplemented = supplemented + 1
+                        for f in s:
+                            if s[f] is not None and s[f] != '':
+                                r[f] = s[f]
 
             # Save to database
             self.save(['id'], r, 'contests')
@@ -1333,7 +1469,7 @@ class ElectionScraper:
         Checks that boundary sets match to an actual boundary set from
         the API.    Can take a bit of time.
         """
-        boundary_url = 'http://boundaries.minnpost.com/1.0/boundary/%s'
+        boundary_url = 'https://boundaries.minnpost.com/1.0/boundary/%s'
         contests = scraperwiki.sql.select("* FROM contests")
         contests_count = 0;
         boundaries_found = 0;
@@ -1341,7 +1477,7 @@ class ElectionScraper:
         for c in contests:
             contests_count = contests_count + 1
             for b in c['boundary'].split(','):
-                request = requests.get(boundary_url % b)
+                request = requests.get(boundary_url % b, verify = False)
 
                 if request.status_code == 200:
                     boundaries_found = boundaries_found + 1
