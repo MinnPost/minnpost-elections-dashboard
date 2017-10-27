@@ -598,9 +598,9 @@ class ElectionScraper:
                         'votes_candidate': votes_candidate,
                         'ranked_choice_place': ranked_choice_place,
                         'candidate': s['candidate'],
-                        'office_name': s['officename'],
-                        'contest_id': s['contestid'],
-                        'candidate_id': s['candidateid'],
+                        'office_name': s['office_name'],
+                        'contest_id': s['contest_id'],
+                        'candidate_id': s['candidate_id'],
                         'results_group': 'supplemental_results'
                     }
                     self.save(['id'], result, 'results')
