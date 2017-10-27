@@ -56,9 +56,15 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         },
         {
           type: 'race',
-          title: 'Park Commissioner at Large (Minneapolis)',
+          title: 'Minneapolis City Council - Ward 3',
           id: 'id-MN---43000-2121',
           rows: 3
+        },
+        {
+          type: 'race',
+          title: 'Minneapolis City Council - Ward 4',
+          id: 'id-MN---43000-2131',
+          row: 3
         },
         {
           type: 'race',
@@ -74,10 +80,16 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           rows: 5
         },
         {
+          type: 'race',
+          title: 'School Board Member at Large (ISD #625 — St. Paul)',
+          id: 'id-MN---0625-5000',
+          rows: 4
+        },
+        {
           type: 'links',
           itemClass: 'dashboard-links mobile-only',
           links: [
-            { href: '#search/park', text: 'Minneapolis Park Board' },
+            { href: '#search/minneapolis%20park', text: 'Minneapolis Park Board' },
             { href: '#search/question', text: 'All ballot questions' }
           ]
         },
@@ -85,7 +97,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           type: 'links',
           itemClass: 'dashboard-links non-mobile',
           links: [
-            { href: '#search/park', text: 'Minneapolis Park Board' },
+            { href: '#search/minneapolis%20park', text: 'Minneapolis Park Board' },
             { href: '#search/question', text: 'All ballot questions' }
           ]
         }
