@@ -579,7 +579,7 @@ class ElectionScraper:
             if row_id is not None and s['contest_id'] is not None and s['candidate_id'] is not None:
                 # If results exist and enabled then update, else if results and not
                 # enabled and is supplemental remove, otherwise add
-                if (votes_candidate > 0 or s['votescandidate'] == '0') and results != [] and enabled:
+                if (votes_candidate > 0 or s['votes_candidate'] == '0') and results != [] and enabled:
                     result = results[0]
                     result['percentage'] = percentage
                     result['votes_candidate'] = votes_candidate
