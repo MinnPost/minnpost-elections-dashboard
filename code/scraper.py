@@ -59,7 +59,7 @@ class ElectionScraper:
     Election scraper class.
     """
     sources_file = os.path.join(os.path.dirname(__file__), '../scraper_sources.json')
-    nonpartisan_parties = ['NP', 'WI']
+    nonpartisan_parties = ['NP', 'WI', 'N P']
     index_created = {}
     grouped_inserts = 1000
     db_file = os.path.join(os.path.dirname(__file__), '../scraperwiki.sqlite')
