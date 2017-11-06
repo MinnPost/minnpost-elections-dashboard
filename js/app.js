@@ -22,7 +22,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//localhost:5000/?q=',
+      electionsAPI: '//elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
@@ -61,16 +61,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           rows: 3
         },
         {
-          type: 'race',
-          title: 'Minneapolis City Council - Ward 4',
-          id: 'id-MN---43000-2131',
-          row: 3
-        },
-        {
-          type: 'race',
-          title: 'Park Commissioner at Large (Minneapolis)',
-          id: 'id-MN---43000-2501',
-          rows: 5
+          type: 'spacer'
         },
         {
           type: 'race',
@@ -87,17 +78,10 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         },
         {
           type: 'links',
-          itemClass: 'dashboard-links mobile-only',
+          itemClass: 'dashboard-links',
           links: [
             { href: '#search/minneapolis%20park', text: 'Minneapolis Park Board' },
-            { href: '#search/question', text: 'All ballot questions' }
-          ]
-        },
-        {
-          type: 'links',
-          itemClass: 'dashboard-links non-mobile',
-          links: [
-            { href: '#search/minneapolis%20park', text: 'Minneapolis Park Board' },
+            { href: '#search/Minneapolis%20Council%20Member', text: 'Minneapolis City Council'},
             { href: '#search/question', text: 'All ballot questions' }
           ]
         }
