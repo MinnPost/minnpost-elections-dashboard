@@ -421,9 +421,6 @@ $color-dark-gray: #282828;
     .dashboard-links {
       margin-bottom: 3em;
 
-      &.mobile-only {
-        display: none;
-      }
     }
   }
 
@@ -487,14 +484,6 @@ $color-dark-gray: #282828;
     }
     .dashboard .inner-column-right .elections-search {
       display: block;
-    }
-
-    .dashboard .dashboard-links {
-      display: none;
-
-      &.mobile-only {
-        display: block;
-      }
     }
 
     .dashboard-state-leg .state-leg-rnet {
