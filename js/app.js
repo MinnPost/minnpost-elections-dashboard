@@ -72,7 +72,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         },
         {
           type: 'race',
-          title: 'School Board Member at Large (ISD #625 — St. Paul)',
+          customTitle: 'St. Paul School Board Member at Large',
           id: 'id-MN---0625-5000',
           rows: 4
         },
