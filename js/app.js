@@ -56,9 +56,9 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         },
         {
           type: 'race',
-          title: 'Minneapolis City Council - Ward 3',
+          customTitle: 'Minneapolis City Council - Ward 3',
           id: 'id-MN---43000-2121',
-          rows: 3
+          rows: 4
         },
         {
           type: 'spacer'
@@ -72,7 +72,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         },
         {
           type: 'race',
-          customTitle: 'St. Paul School Board Member at Large',
+          customTitle: 'St. Paul School Board at Large',
           id: 'id-MN---0625-5000',
           rows: 4
         },
@@ -82,6 +82,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           links: [
             { href: '#search/minneapolis%20park', text: 'Minneapolis Park Board' },
             { href: '#search/Minneapolis%20Council%20Member', text: 'Minneapolis City Council'},
+            { href: "#search/duluth%20council", text: 'Duluth City Council'},
             { href: '#search/question', text: 'All ballot questions' }
           ]
         }
