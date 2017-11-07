@@ -237,6 +237,12 @@
 .mp .minnpost-elections-dashboard-container .dashboard .location-search-section form .form-input-group .button-group {
   width: 5em;
 }
+.mp .minnpost-elections-dashboard-container .dashboard .other-elections {
+  font-size: 1.2em;
+}
+.mp .minnpost-elections-dashboard-container .dashboard .other-elections li {
+  margin-bottom: .5em;
+}
 .mp .minnpost-elections-dashboard-container .dashboard .elections-search .form-input-group {
   width: 100%;
 }
@@ -344,9 +350,6 @@
 .mp .minnpost-elections-dashboard-container .dashboard .dashboard-links {
   margin-bottom: 3em;
 }
-.mp .minnpost-elections-dashboard-container .dashboard .dashboard-links.mobile-only {
-  display: none;
-}
 @media screen and (min-width: 1025px) {
   .mp .minnpost-elections-dashboard-container.fullscreen {
     font-size: 1.25em;
@@ -392,12 +395,6 @@
     display: none;
   }
   .mp .minnpost-elections-dashboard-container .dashboard .inner-column-right .elections-search {
-    display: block;
-  }
-  .mp .minnpost-elections-dashboard-container .dashboard .dashboard-links {
-    display: none;
-  }
-  .mp .minnpost-elections-dashboard-container .dashboard .dashboard-links.mobile-only {
     display: block;
   }
   .mp .minnpost-elections-dashboard-container .dashboard-state-leg .state-leg-rnet {
