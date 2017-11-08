@@ -29,6 +29,10 @@
       <div class="last-updated">Last updated {{ updated.formatToday() }}</div>
     {{/isDashboard}}
 
+    {{#(id == "id-MN---58000-2001" && !isDashboard)}}
+      <p class="caption color-light-gray"><em>Note: St. Paul mayor second and third choice results may not be available immediately.</em></p>
+    {{/()}}
+
     {{#(!!question_body)}}
       <p>{{{ question_body }}}</p>
     {{/()}}
@@ -126,8 +130,14 @@
         </table>
       </div>
 
+      {{#(id == "id-MN---58000-2001" && isDashboard)}}
+        <p class="footnote"><em>Note: St. Paul mayor second and third choice results may not be available immediately.</em></p>
+      {{/()}}
+
       <a href="#contest/{{ id }}" class="contest-link">{{#isDashboard}}Full results{{/isDashboard}}{{^isDashboard}}Permalink{{/isDashboard}}</a>
     </div>
+
+
 
     {{^isDashboard}}
       <div class="column-medium-30 inner-column-right">
