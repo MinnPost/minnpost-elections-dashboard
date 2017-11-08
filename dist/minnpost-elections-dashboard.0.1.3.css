@@ -164,6 +164,12 @@
 .mp .minnpost-elections-dashboard-container .is-final table .winner-column {
   padding: .5em;
 }
+.mp .minnpost-elections-dashboard-container .dashboard-contest.is-ranked-choice.is-final .second-choice-column {
+  display: none;
+}
+.mp .minnpost-elections-dashboard-container .dashboard-contest.is-ranked-choice.is-final .third-choice-column {
+  display: none;
+}
 .mp .minnpost-elections-dashboard-container .contest {
   margin-bottom: 2em;
 }
