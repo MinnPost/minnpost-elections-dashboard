@@ -187,6 +187,11 @@ $color-dark-gray: #282828;
   .is-final table .winner-column {
     padding: .5em;
   }
+  //Hide second and third choice votes on dashboard for RCV elections if final
+  .dashboard-contest.is-ranked-choice.is-final {
+    .second-choice-column { display: none; }
+    .third-choice-column { display: none; }
+  }
 
   // Contest
   .contest {
