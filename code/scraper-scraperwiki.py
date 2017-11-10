@@ -561,6 +561,69 @@ scraper_sources_inline = """
       "spreadsheet_id": "13exfuojIcZjR-tezPfD6Ue-F7o5q5Z2dK-LGlgLn178",
       "worksheet_id": 1
     }
+  },
+  "20171107": {
+    "meta": {
+      "base_url": "ftp://media:results@ftp.sos.state.mn.us/20171107/",
+      "date": "2017-11-07",
+      "primary": false
+    },
+    "municipal_results": {
+      "url": "local.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "municipal"
+    },
+    "school_district_results": {
+      "url": "SDRaceQuestions.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "school"
+    },
+    "ballot_questions": {
+      "url": "BallotQuestions.txt",
+      "table": "questions",
+      "type": "questions"
+    },
+    "parties": {
+      "url": "PartyTbl.txt",
+      "table": "parties",
+      "type": "parties"
+    },
+    "local_candidates": {
+      "url": "LocalCandTbl.txt",
+      "table": "candidates",
+      "type": "local_candidates"
+    },
+    "counties": {
+      "url": "Cntytbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "municipalities": {
+      "url": "MunTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "precincts": {
+      "url": "PrctTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "school_districts": {
+      "url": "SchoolDistTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "supplemental_results": {
+      "spreadsheet_id": "1uGkgLA0A1ZqfBlYSAN1iTgWQtVLULTG-f2mXqWpCEjI",
+      "worksheet_id": 1,
+      "notes": "Workesheet ID is the zero-based ID from the order of workssheets and is used to find the actual ID."
+    },
+    "supplemental_contests": {
+      "spreadsheet_id": "1uGkgLA0A1ZqfBlYSAN1iTgWQtVLULTG-f2mXqWpCEjI",
+      "worksheet_id": 0
+    }
   }
 }
 
@@ -605,7 +668,7 @@ class ElectionScraper:
     Election scraper class.
     """
     sources_file = os.path.join(os.path.dirname(__file__), '../scraper_sources.json')
-    nonpartisan_parties = ['NP', 'WI']
+    nonpartisan_parties = ['NP', 'WI', 'N P']
     index_created = {}
     grouped_inserts = 1000
     db_file = os.path.join(os.path.dirname(__file__), '../scraperwiki.sqlite')
@@ -622,7 +685,7 @@ class ElectionScraper:
         # Scraperwiki's default db is relative to where the script
         # is running but be default the db is created at scraperwiki.sqlite
         # where you are, but this should be empty since we don't use it
-        #scraperwiki.sql._connect(self.db_file)
+        scraperwiki.sql._connect(self.db_file)
 
         # Make sure the DB is efficient.  Synchronous off means that power outage
         # or possible interruption can corrupt database
@@ -1067,6 +1130,11 @@ class ElectionScraper:
                 'scope': source['contest_scope'] if 'contest_scope' in source else None,
                 'updated': int(timestamp)
             }
+            #Special handling for errors in 2017 data
+            if contests_record['id'] == "id-MN---43000-2401":
+                contests_record['seats'] = 2 #board of est and tax
+            if contests_record['id'] == "id-MN---43000-2501":
+                contests_record['seats'] = 3
 
         # Update the contests table. This should really only happen once per
         # contest
@@ -1125,7 +1193,8 @@ class ElectionScraper:
             if row_id is not None and s['contest_id'] is not None and s['candidate_id'] is not None:
                 # If results exist and enabled then update, else if results and not
                 # enabled and is supplemental remove, otherwise add
-                if (votes_candidate > 0 or s['votescandidate'] == '0') and results != [] and enabled:
+                if (votes_candidate >= 0) and results != [] and enabled:
+
                     result = results[0]
                     result['percentage'] = percentage
                     result['votes_candidate'] = votes_candidate
@@ -1136,7 +1205,7 @@ class ElectionScraper:
                     scraperwiki.sql.execute("DELETE FROM results WHERE id = '%s'" % (row_id))
                     scraperwiki.sql.commit()
                     supplement_delete = supplement_delete + 1
-                elif (votes_candidate > 0 or s['votes_candidate'] == '0') and enabled:
+                elif (votes_candidate >= 0) and enabled:
                     # Add new row, make sure to mark the row as supplemental
                     result = {
                         'id': row_id,
@@ -1144,9 +1213,9 @@ class ElectionScraper:
                         'votes_candidate': votes_candidate,
                         'ranked_choice_place': ranked_choice_place,
                         'candidate': s['candidate'],
-                        'office_name': s['officename'],
-                        'contest_id': s['contestid'],
-                        'candidate_id': s['candidateid'],
+                        'office_name': s['office_name'],
+                        'contest_id': s['contest_id'],
+                        'candidate_id': s['candidate_id'],
                         'results_group': 'supplemental_results'
                     }
                     self.save(['id'], result, 'results')
@@ -1500,9 +1569,10 @@ if __name__ == "__main__":
     scraper = ElectionScraper()
     scraper.route()
 
-
+    
     # Scraperwiki commands
     scraper.scrape('areas', None)
     scraper.scrape('questions', None)
     scraper.scrape('results', None)
     scraper.match_contests(None)
+
