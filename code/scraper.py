@@ -489,12 +489,6 @@ class ElectionScraper:
             contests_record['total_effected_precincts'] = int(row[12])
             contests_record['total_votes_for_office'] = int(row[15])
             contests_record['updated'] = int(timestamp)
-
-            #Special handling for errors in 2017 data
-            if contest_id == "id-MN---43000-2401":
-                contests_record['seats'] = 2 #board of est and tax
-            if contest_id == "id-MN---43000-2501":
-                contests_record['seats'] = 3
         else:
             # The only way to know if there are multiple seats is look at the office
             # name which has "(Elect X)" in it.
