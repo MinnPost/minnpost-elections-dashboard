@@ -97,7 +97,7 @@ define([
       // Put results in a basic order.
       parsed.results = _.sortBy(parsed.results, 'candidate');
       parsed.results = _.sortBy(parsed.results, function(r) {
-        return r.percentage * -1;
+        return r.votes_candidate * -1;
       });
       // If primary, sort by party
       if (parsed.primary) {
