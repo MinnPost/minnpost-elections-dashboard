@@ -884,7 +884,7 @@ define('models',[
       // Put results in a basic order.
       parsed.results = _.sortBy(parsed.results, 'candidate');
       parsed.results = _.sortBy(parsed.results, function(r) {
-        return r.percentage * -1;
+        return r.votes_candidate * -1;
       });
       // If primary, sort by party
       if (parsed.primary) {
@@ -1951,9 +1951,10 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
+      electionsAPI: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
+      // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
       boundaryAPI: '//boundaries.minnpost.com/1.0/',
       boundarySets: [
@@ -1978,40 +1979,48 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       dashboard: [
         {
           type: 'race',
-          title: 'Mayor (Minneapolis)',
-          itemClass: 'mayor',
-          id: 'id-MN---43000-2001',
-          rows: 5
+          title: 'Governor and Lt. Governor',
+          id: 'id-MN----0331',
+          rows: 8
         },
         {
           type: 'race',
-          customTitle: 'Minneapolis City Council - Ward 3',
-          id: 'id-MN---43000-2121',
-          rows: 4
+          title: 'Attorney General',
+          id: 'id-MN----0335',
+          rows: 5
         },
         {
           type: 'spacer'
         },
         {
           type: 'race',
-          title: 'Mayor (St. Paul)',
-          itemClass: 'mayor',
-          id: 'id-MN---58000-2001',
-          rows: 5
+          title: 'Senator - Special Election',
+          id: 'id-MN----0103',
+          rows: 2
         },
         {
           type: 'race',
-          customTitle: 'St. Paul School Board at Large',
-          id: 'id-MN---0625-5000',
+          title: 'Congressional District 1',
+          id: 'id-MN---1-0104',
           rows: 4
+        },
+        {
+          type: 'race',
+          title: 'Congressional District 5',
+          id: 'id-MN---5-0108',
+          rows: 6
+        },
+        {
+          type: 'race',
+          title: 'Congressional District 8',
+          id: 'id-MN---8-0111',
+          rows: 7
         },
         {
           type: 'links',
           itemClass: 'dashboard-links',
           links: [
-            { href: '#search/minneapolis%20park', text: 'Minneapolis Park Board' },
-            { href: '#search/Minneapolis%20Council%20Member', text: 'Minneapolis City Council'},
-            { href: "#search/duluth%20council", text: 'Duluth City Council'},
+            { href: '#search/state%20representative', text: 'All Minnesota House Districts' },
             { href: '#search/question', text: 'All ballot questions' }
           ]
         }
