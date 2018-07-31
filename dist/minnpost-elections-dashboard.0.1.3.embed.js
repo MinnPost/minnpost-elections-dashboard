@@ -47167,6 +47167,17 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           rows: 2
         },
         {
+          type: 'links',
+          itemClass: 'dashboard-links',
+          links: [
+            { href: '#search/state%20representative', text: 'All Minnesota House Districts' },
+            { href: '#search/question', text: 'All ballot questions' }
+          ]
+        },
+        {
+          type: 'spacer'
+        },
+        {
           type: 'race',
           title: 'Congressional District 1',
           id: 'id-MN---1-0104',
@@ -47185,12 +47196,10 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           rows: 7
         },
         {
-          type: 'links',
-          itemClass: 'dashboard-links',
-          links: [
-            { href: '#search/state%20representative', text: 'All Minnesota House Districts' },
-            { href: '#search/question', text: 'All ballot questions' }
-          ]
+          type: 'race',
+          title: 'House District 60B',
+          id: 'id-MN---60B-0307',
+          rows: 7
         }
       ]
     },
