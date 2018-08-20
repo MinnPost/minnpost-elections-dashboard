@@ -624,6 +624,108 @@ scraper_sources_inline = """
       "spreadsheet_id": "1uGkgLA0A1ZqfBlYSAN1iTgWQtVLULTG-f2mXqWpCEjI",
       "worksheet_id": 0
     }
+  },
+  "20180814": {
+    "meta": {
+      "base_url": "ftp://media:results@ftp.sos.state.mn.us/20180814/",
+      "date": "2018-08-14",
+      "primary": true
+    },
+    "us_house_results": {
+      "url": "ushouse.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "us_house"
+    },
+    "us_senate_results": {
+      "url": "ussenate.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "attorney_general_results": {
+      "url": "attorneygen.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "governor_results": {
+      "url": "Governor.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "state_house_results": {
+      "url": "LegislativeByDistrict.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state_house"
+    },
+    "judicial_results": {
+      "url": "judicialdst.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "district_court"
+    },
+    "county_results": {
+      "url": "cntyRaceQuestions.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "county"
+    },
+    "municipal_results": {
+      "url": "local.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "municipal"
+    },
+    "school_district_results": {
+      "url": "SDRaceQuestions.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "school",
+      "notes": "Questions and candidate races."
+    },
+    "parties": {
+      "url": "PartyTbl.txt",
+      "table": "parties",
+      "type": "parties"
+    },
+    "candidates": {
+      "url": "cand.txt",
+      "table": "candidates",
+      "type": "candidates"
+    },
+    "local_candidates": {
+      "url": "LocalCandTbl.txt",
+      "table": "candidates",
+      "type": "local_candidates"
+    },
+    "counties": {
+      "url": "Cntytbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "municipalities": {
+      "url": "mcdtbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "precincts": {
+      "url": "PrctTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "school_districts": {
+      "url": "SchoolDistTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "ballot_questions": {
+      "url": "BallotQuestions.txt",
+      "table": "questions",
+      "type": "questions"
+    }
   }
 }
 
@@ -799,8 +901,8 @@ class ElectionScraper:
                     # Get data from URL
                     try:
                         scraped = scraperwiki.scrape(s['url'])
-                        # latin-1 is to support the occasional accent character
-                        rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='latin-1')
+                        # utf-8 should handle accents
+                        rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='utf-8')
                     except Exception, err:
                         self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (s['type'], s['url']))
                         raise
