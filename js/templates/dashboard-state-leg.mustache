@@ -33,21 +33,6 @@
     {{/counts}}
   </div>
 
-  {{#(chamber === "house")}}
-    <div class="why-133 small"><a href="#" on-tap="toggleInfo133">Why are there only 133 races?</a></div>
-    <div class="hidden small cf" id="info133" style="margin-bottom:1em;">
-      <p>In September, the Minnesota Supreme Court ruled that Bob Barrett, the Republican
-         incumbent in District 32B, was ineligible to run because he doesn’t reside
-         in the district. Because the ruling came so close to the election, the court
-         declared the election void, and no results will be reported. There will be
-         a special election in 32B in February.
-      </p>
-      <div style="text-align: center;">
-        <button class="button"  on-tap="toggleInfo133">Got it!</button>
-      </div>
-    </div>
-  {{/()}}
-
   <div class="state-leg-legend">
     <div class="legend-item">
       <div class="legend-box unknown"></div> Not reporting yet
@@ -74,7 +59,7 @@
           {{ (dflNet > 0) ? '+' : '' }}{{ dflNet }}
         </span>
       </div>
-      <div class="sub-heading">DFLers need a net gain of at least +6 to win control of the House prior to the February special election.</div>
+      <div class="sub-heading">DFLers need a net gain of at least +11 to win control of the House.</div>
     </div>
   {{/()}}
 

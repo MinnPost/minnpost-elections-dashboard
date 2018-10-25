@@ -83,12 +83,6 @@ define([
         partials: partials
       });
 
-      //Handle special info popup
-      this.app.dashboardView.on('toggleInfo133', function(e) {
-        e.original.preventDefault();
-        this.app.$('#info133').toggleClass('hidden');
-      });
-
       // Handle searches here as we have an easy reference
       // to the router.
       this.app.dashboardView.on('addresssSearch', function(e) {
