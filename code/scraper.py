@@ -190,8 +190,8 @@ class ElectionScraper:
                     # Get data from URL
                     try:
                         scraped = scraperwiki.scrape(s['url'])
-                        # utf-8 should handle accents
-                        rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='utf-8')
+                        # Ballot questions spreadsheet requires latin-1 encoding
+                        rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='latin-1')
                     except Exception, err:
                         self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (s['type'], s['url']))
                         raise
