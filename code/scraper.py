@@ -875,6 +875,10 @@ class ElectionScraper:
                 county_index = int(r['county_id']) - 1
                 r['title'] = mn_counties[county_index] + " " + r['title']
 
+            # Add county name to county sheriff contest titles
+            if 'County Sheriff' in r['title'] and r['county_id']:
+                county_index = int(r['county_id']) - 1
+                r['title'] = mn_counties[county_index] + " " + r['title']
 
             # Match to a boundary or boundaries keys
             r['boundary'] = self.boundary_match_contests(r)
