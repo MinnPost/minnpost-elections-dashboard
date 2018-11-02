@@ -521,11 +521,6 @@ class ElectionScraper:
                 'scope': source['contest_scope'] if 'contest_scope' in source else None,
                 'updated': int(timestamp)
             }
-            #Special handling for errors in 2017 data
-            if contests_record['id'] == "id-MN---43000-2401":
-                contests_record['seats'] = 2 #board of est and tax
-            if contests_record['id'] == "id-MN---43000-2501":
-                contests_record['seats'] = 3
 
         # Update the contests table. This should really only happen once per
         # contest
