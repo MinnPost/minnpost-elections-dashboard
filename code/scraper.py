@@ -850,6 +850,9 @@ class ElectionScraper:
         # Get question data
         questions = scraperwiki.sql.select('* FROM questions')
 
+        # Get areas data
+        areas = scraperwiki.sql.select('* FROM areas')
+
         # Track which boundary sets we use
         self.found_boundary_types = []
 
@@ -879,6 +882,19 @@ class ElectionScraper:
             if 'County Sheriff' in r['title'] and r['county_id']:
                 county_index = int(r['county_id']) - 1
                 r['title'] = mn_counties[county_index] + " " + r['title']
+
+            #Add school district names to school district contests
+            #with special handling for the SSD1 vs ISD1 issue
+            if r['scope'] == "school" and r['district_code']:
+                if r['district_code'] == '0001':
+                    r['title'] = r['title'][0:-1] + " - Aitkin)"
+                elif r['district_code'] == '1-1':
+                    r['title'] = r['title'][0:-1] + " - Minneapolis)"
+                else:
+                    for a in areas:
+                        if a['school_district_id']:
+                            if r['district_code'] == a['school_district_id']:
+                                r['title'] = r['title'][0:-1] + " - " + a['school_district_name'].title() + ")"
 
             # Match to a boundary or boundaries keys
             r['boundary'] = self.boundary_match_contests(r)
