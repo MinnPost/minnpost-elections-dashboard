@@ -47113,7 +47113,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//localhost:5000/?q=',
+      electionsAPI: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
@@ -47189,7 +47189,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
             "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party " +
             "FROM contests AS c LEFT JOIN results AS r " +
             "ON c.id = r.contest_id WHERE title LIKE '%state representative%' " +
-            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
+            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 402",
           parse: function(response, options) {
             var parsed = {};
             var tempContests = [];
@@ -47224,13 +47224,13 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
               }).party_id;
 
               // Test data
-              /*
-              var t = Math.random();
-              if (t < 0.9) {
-                c.done = true;
-                c.partyWon = (Math.random() < 0.5) ? 'DFL' : 'R';
-              }
-              */
+
+              // var t = Math.random();
+              // if (t < 0.9) {
+              //   c.done = true;
+              //   c.partyWon = (Math.random() < 0.5) ? 'DFL' : 'R';
+              // }
+
 
 
               c.partyShift = (c.partyWon !== c.incumbent_party && c.done);
@@ -47308,11 +47308,20 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           rows: 2
         },
         {
+          type: 'race',
+          title: 'Hennepin County Sheriff',
+          id: 'id-MN-27---0404',
+          rows: 2
+        },
+        {
           type: 'links',
           itemClass: 'dashboard-links',
           links: [
-            { href: '#search/state%20representative', text: 'All Minnesota House Districts' },
-            { href: '#search/question', text: 'All ballot questions' }
+            { href: '#contest/id-MN-62---0404', text: 'Ramsey County Sheriff' },
+            { href: '#search/hennepin+county+commissioner', text: 'Hennepin County commissioners' },
+            { href: '#search/ramsey+county+commissioner', text: 'Ramsey County commissioners'},
+            { href: '#search/school+board+ssd+%231', text: 'Minneapolis school board'},
+            { href: '#contest/id-MN---43000-1131', text: 'Minneapolis Charter amendment' }
           ]
         }
       ]
