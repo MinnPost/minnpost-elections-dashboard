@@ -47189,7 +47189,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
             "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party " +
             "FROM contests AS c LEFT JOIN results AS r " +
             "ON c.id = r.contest_id WHERE title LIKE '%state representative%' " +
-            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 402",
+            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 410",
           parse: function(response, options) {
             var parsed = {};
             var tempContests = [];
