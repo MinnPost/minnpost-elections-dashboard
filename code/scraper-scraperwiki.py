@@ -726,6 +726,146 @@ scraper_sources_inline = """
       "table": "questions",
       "type": "questions"
     }
+  },
+  "20181106": {
+    "meta": {
+      "base_url": "ftp://media:results@ftp.sos.state.mn.us/20181106/",
+      "date": "2018-11-06",
+      "primary": false
+    },
+    "us_house_results": {
+      "url": "ushouse.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "us_house"
+    },
+    "us_senate_results": {
+      "url": "ussenate.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "attorney_general_results": {
+      "url": "attorneygen.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "auditor_results": {
+      "url": "auditor.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "governor_results": {
+      "url": "Governor.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "secretary_results": {
+      "url": "secofstate.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "state_senate_results": {
+      "url": "stsenate.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state_senate"
+    },
+    "state_house_results": {
+      "url": "LegislativeByDistrict.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state_house"
+    },
+    "judicial_results": {
+      "url": "judicial.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "state"
+    },
+    "judicial_district_results": {
+      "url": "judicialdst.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "district_court"
+    },
+    "county_results": {
+      "url": "cntyRaceQuestions.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "county"
+    },
+    "municipal_results": {
+      "url": "local.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "municipal",
+      "notes": "Includes both municpal questions (cityquestions.txt) and candidate results."
+    },
+    "school_district_results": {
+      "url": "SDRaceQuestions.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "school",
+      "notes": "Includes both school questions (SchoolQuestions.txt) and candidate results."
+    },
+    "hospital_results": {
+      "url": "hospital.txt",
+      "table": "results",
+      "type": "results",
+      "contest_scope": "hospital"
+    },
+    "parties": {
+      "url": "PartyTbl.txt",
+      "table": "parties",
+      "type": "parties"
+    },
+    "candidates": {
+      "url": "cand.txt",
+      "table": "candidates",
+      "type": "candidates"
+    },
+    "local_candidates": {
+      "url": "LocalCandTbl.txt",
+      "table": "candidates",
+      "type": "local_candidates"
+    },
+    "counties": {
+      "url": "Cntytbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "municipalities": {
+      "url": "mcdtbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "precincts": {
+      "url": "PrctTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+    "school_districts": {
+      "url": "SchoolDistTbl.txt",
+      "table": "areas",
+      "type": "areas"
+    },
+
+    "ballot_questions": {
+      "url": "BallotQuestions.txt",
+      "table": "questions",
+      "type": "questions"
+    },
+
+    "supplemental_contests": {
+      "spreadsheet_id": "1nlqeNYMbquug2zuKoCgfzYTbRbCjclXU83lwvgMKwZA",
+      "worksheet_id": 0,
+      "notes": "Workesheet ID is the zero-based ID from the order of workssheets and is used to find the actual ID."
+    }
   }
 }
 
@@ -901,8 +1041,8 @@ class ElectionScraper:
                     # Get data from URL
                     try:
                         scraped = scraperwiki.scrape(s['url'])
-                        # utf-8 should handle accents
-                        rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='utf-8')
+                        # Ballot questions spreadsheet requires latin-1 encoding
+                        rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='latin-1')
                     except Exception, err:
                         self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (s['type'], s['url']))
                         raise
@@ -1232,11 +1372,6 @@ class ElectionScraper:
                 'scope': source['contest_scope'] if 'contest_scope' in source else None,
                 'updated': int(timestamp)
             }
-            #Special handling for errors in 2017 data
-            if contests_record['id'] == "id-MN---43000-2401":
-                contests_record['seats'] = 2 #board of est and tax
-            if contests_record['id'] == "id-MN---43000-2501":
-                contests_record['seats'] = 3
 
         # Update the contests table. This should really only happen once per
         # contest
@@ -1566,6 +1701,9 @@ class ElectionScraper:
         # Get question data
         questions = scraperwiki.sql.select('* FROM questions')
 
+        # Get areas data
+        areas = scraperwiki.sql.select('* FROM areas')
+
         # Track which boundary sets we use
         self.found_boundary_types = []
 
@@ -1591,6 +1729,23 @@ class ElectionScraper:
                 county_index = int(r['county_id']) - 1
                 r['title'] = mn_counties[county_index] + " " + r['title']
 
+            # Add county name to county sheriff contest titles
+            if 'County Sheriff' in r['title'] and r['county_id']:
+                county_index = int(r['county_id']) - 1
+                r['title'] = mn_counties[county_index] + " " + r['title']
+
+            #Add school district names to school district contests
+            #with special handling for the SSD1 vs ISD1 issue
+            if r['scope'] == "school" and r['district_code']:
+                if r['district_code'] == '0001':
+                    r['title'] = r['title'][0:-1] + " - Aitkin)"
+                elif r['district_code'] == '1-1':
+                    r['title'] = r['title'][0:-1] + " - Minneapolis)"
+                else:
+                    for a in areas:
+                        if a['school_district_id']:
+                            if r['district_code'] == a['school_district_id']:
+                                r['title'] = r['title'][0:-1] + " - " + a['school_district_name'].title() + ")"
 
             # Match to a boundary or boundaries keys
             r['boundary'] = self.boundary_match_contests(r)
