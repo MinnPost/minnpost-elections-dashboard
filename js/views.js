@@ -232,7 +232,7 @@ define([
 
       // Make a map if boundary has been found
       this.observe('boundarySets', function(newValue, oldValue) {
-        if (_.isArray(newValue) && _.isObject(newValue[0])) {
+        if (_.isObject(newValue)) {
           this.makeMap('contest-map-' + this.get('id'), newValue);
         }
       });

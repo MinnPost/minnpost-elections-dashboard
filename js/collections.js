@@ -168,7 +168,7 @@ define([
       var thisCollection = this;
 
       helpers.jsonpRequest({
-        url: this.app.options.boundaryAPI + 'boundary/?contains=' +
+        url: this.app.options.boundaryAPI + 'boundaries/?contains=' +
           encodeURIComponent(this.options.lonlat[1]) + ',' +
           encodeURIComponent(this.options.lonlat[0]) + '&sets=' +
           encodeURIComponent(this.app.options.boundarySets.join(','))

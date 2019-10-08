@@ -22,12 +22,12 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
+      electionsAPI: '//localhost:5000/?q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
-      boundaryAPI: '//boundaries.minnpost.com/1.0/',
+      boundaryAPI: '//represent-minnesota.herokuapp.com/',
       boundarySets: [
         'minor-civil-divisions-2010',
         'wards-2012',

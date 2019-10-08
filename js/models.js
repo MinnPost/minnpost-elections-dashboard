@@ -181,12 +181,12 @@ define([
       var thisModel = this;
 
       helpers.jsonpRequest({
-        url: this.app.options.boundaryAPI + 'boundary/?limit=10&slug__in=' +
-          encodeURIComponent(this.get('boundary'))
+        url: this.app.options.boundaryAPI + 'boundaries/' +
+          encodeURIComponent(this.get('boundary')) + '/simple_shape'
       }, this.app.options)
       .done(function(response) {
-        if (_.isArray(response.objects)) {
-          thisModel.set('boundarySets', response.objects);
+        if (response) {
+          thisModel.set('boundarySets', {'slug': thisModel.get('boundary'), 'simple_shape': response});
           thisModel.set('fetchedBoundary', true);
         }
       });
