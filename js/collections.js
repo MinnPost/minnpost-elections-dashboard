@@ -67,7 +67,6 @@ define([
     // Gets boundary data from boundary service in one call.
     fetchBoundary: function() {
       var thisCollection = this;
-
       helpers.jsonpRequest({
         url: this.app.options.boundaryAPI + 'boundary/?limit=30&slug__in=' +
           encodeURIComponent(this.pluck('boundary').join(','))
@@ -148,8 +147,15 @@ define([
     matchBoundary: function() {
       var thisCollection = this;
       _.each(this.fullBoundaries, function(b) {
-        _.each(thisCollection.where({ boundary: b.slug }), function(m) {
-          m.set('boundarySets', [b]);
+        var parts = b.url.split("/");
+        var slug = parts[2] + "/" + parts[3];
+        _.each(thisCollection.where({ boundary: slug }), function(m) {
+          helpers.jsonpRequest({
+            url: thisCollection.app.options.boundaryAPI + "boundaries/" + slug + '/simple_shape'
+          }, thisCollection.app.options)
+          .done(function(response){
+            m.set('boundarySets', {'slug': slug, 'simple_shape': response});
+          });
         });
       });
 
@@ -176,7 +182,13 @@ define([
       .done(function(response) {
         if (_.isArray(response.objects)) {
           thisCollection.fullBoundaries = response.objects;
-          thisCollection.boundaries = _.pluck(response.objects, 'slug');
+          var slugs = [];
+          _.each(response.objects, function(r) {
+            var parts = r.url.split("/");
+            var slug = parts[2] + "/" + parts[3];
+            slugs.push(slug);
+          });
+          thisCollection.boundaries = slugs;
           thisCollection.trigger('fetchedBoundary');
         }
       });
