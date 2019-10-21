@@ -186,7 +186,7 @@ define([
       }, this.app.options)
       .done(function(response) {
         if (response) {
-          thisModel.set('boundarySets', {'slug': thisModel.get('boundary'), 'simple_shape': response});
+          thisModel.set('boundarySets', [{'slug': thisModel.get('boundary'), 'simple_shape': response}]);
           thisModel.set('fetchedBoundary', true);
         }
       });

@@ -154,7 +154,7 @@ define([
             url: thisCollection.app.options.boundaryAPI + "boundaries/" + slug + '/simple_shape'
           }, thisCollection.app.options)
           .done(function(response){
-            m.set('boundarySets', {'slug': slug, 'simple_shape': response});
+            m.set('boundarySets', [{'slug': slug, 'simple_shape': response}]);
           });
         });
       });
