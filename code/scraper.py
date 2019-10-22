@@ -622,14 +622,14 @@ class ElectionScraper:
 
         # State level race
         if parsed_row['scope'] == 'state':
-            boundary = '27-minnesota-state-2014'
+            boundary = 'minnesota-state-2014/27-1'
             boundary_type = 'minnesota-state-2014'
 
         # US House districts
         if parsed_row['scope'] == 'us_house':
             us_house_match = re.compile('.*\U.S. Representative District ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if us_house_match is not None:
-                boundary = us_house_match.group(1) + '-congressional-district-2012'
+                boundary = 'congressional-districts-2012/' + us_house_match.group(1)
                 boundary_type = 'congressional-districts-2012'
             else:
                 self.log.info('[%s] Could not find US House boundary for: %s' % ('results', parsed_row['office_name']))
@@ -638,7 +638,7 @@ class ElectionScraper:
         if parsed_row['scope'] == 'state_senate':
             state_senate_match = re.compile('.*\State Senator District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if state_senate_match is not None:
-                boundary = state_senate_match.group(1).lower() + '-state-senate-district-2012'
+                boundary = 'state-senate-districts-2012/' + state_senate_match.group(1).lower() + "-1"
                 boundary_type = 'state-senate-districts-2012'
             else:
                 self.log.info('[%s] Could not find State Senate boundary for: %s' % ('results', parsed_row['office_name']))
@@ -647,7 +647,7 @@ class ElectionScraper:
         if parsed_row['scope'] == 'state_house':
             state_house_match = re.compile('.*\State Representative District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if state_house_match is not None:
-                boundary = state_house_match.group(1).lower() + '-state-house-district-2012'
+                boundary = 'state-house-districts-2012/' + state_house_match.group(1).lower()
                 boundary_type = 'state-house-districts-2012'
             else:
                 self.log.info('[%s] Could not find State House boundary for: %s' % ('results', parsed_row['office_name']))
@@ -656,7 +656,7 @@ class ElectionScraper:
         if parsed_row['scope'] == 'district_court':
             court_match = re.compile('.*\Judge - ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if court_match is not None:
-                boundary = court_match.group(1).lower() + '-district-court-2012'
+                boundary = 'district-courts-2012/' + court_match.group(1).lower() + '-1'
                 boundary_type = 'district-courts-2012'
             else:
                 self.log.info('[%s] Could not find State District Court boundary for: %s' % ('results', parsed_row['office_name']))
@@ -685,16 +685,16 @@ class ElectionScraper:
                 isd_match_value = isd_match.group(1)
                 isd_match_value = isd_bad_data[isd_match_value] if isd_match_value in isd_bad_data else isd_match_value
 
-                boundary = isd_match_value + '-school-district-2013'
+                boundary =  'school-districts-2013/' + isd_match_value
                 boundary_type = 'school-districts-2013'
             elif ssd_match is not None:
-                ssd_match_value = '1-1' if ssd_match.group(1) == '1' else ssd_match.group(1)
+                ssd_match_value = '1-3' if ssd_match.group(1) == '1' else ssd_match.group(1)
 
                 if ssd_match_value == '1-1' and district_match is not None:
-                    boundary = district_match.group(1) + '-minneapolis-parks-and-recreation-district-2012'
-                    boundary_type = 'minneapolis-parks-and-recreation-districts-2012'
+                    boundary =  'minneapolis-parks-and-recreation-districts-2014/' + district_match.group(1)
+                    boundary_type = 'minneapolis-parks-and-recreation-districts-2014'
                 else:
-                    boundary = ssd_match_value + '-school-district-2013'
+                    boundary = 'school-districts-2013/' + ssd_match_value
                     boundary_type = 'school-districts-2013'
             else:
                 self.log.info('[%s] Could not find (I|S)SD boundary for: %s' % ('results', parsed_row['office_name']))
@@ -704,13 +704,13 @@ class ElectionScraper:
         if parsed_row['scope'] == 'county':
             comissioner_match = re.compile('.*Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
             if comissioner_match is not None:
-                boundary =    '%s-%02d-county-commissioner-district-2012' % (int(parsed_row['county_id']),    int(parsed_row['district_code']))
+                boundary = 'county-commissioner-districts-2012/%s-%02d' % (int(parsed_row['county_id']),    int(parsed_row['district_code']))
                 boundary_type = 'county-commissioner-districts-2012'
             else:
-                boundary = '%s-county-2010' % int(parsed_row['county_id'])
+                boundary = 'counties-2010/%s' % int(parsed_row['county_id'])
                 boundary_type = 'counties-2010'
 
-        # This includes both municpal (city) level results, plus sub-municpal, such
+        # This includes both municipal (city) level results, plus sub-municpal, such
         # as city council results.
         #
         # For municpal results.    The boundary code is SSCCCMMMM where:
@@ -724,7 +724,7 @@ class ElectionScraper:
         # which is in multiple counties which means they have more than one
         # boundary.
         #
-        # For the sub-municpal results, we need wards.    Unfortunately the boundary
+        # For the sub-municipal results, we need wards.    Unfortunately the boundary
         # id for wards is the actual name of the city and the ward number due to the
         # face that the original boundary data did not have mcd codes in it.
         #
@@ -739,10 +739,10 @@ class ElectionScraper:
 
             # Check for sub municpal parts first
             if wards_matched is not None:
-                boundary = self.slugify(wards_matched.group(3)) + '-w-' + '{0:02d}'.format(int(wards_matched.group(2))) + '-ward-2012'
+                boundary = 'wards-2012/' + self.slugify(wards_matched.group(3)) + '-w-' + '{0:02d}'.format(int(wards_matched.group(2))) + '-1'
                 boundary_type = 'wards-2012'
             elif mpls_parks_matched is not None:
-                boundary = mpls_parks_matched.group(1) + '-minneapolis-parks-and-recreation-district-2014'
+                boundary = 'minneapolis-parks-and-recreation-districts-2014/' + mpls_parks_matched.group(1)
                 boundary_type = 'minneapolis-parks-and-recreation-districts-2014'
             else:
                 if parsed_row['county_id']:
@@ -770,7 +770,7 @@ class ElectionScraper:
             # MCD districts are 5 digits with leading zeros, while hospital districts
             # are 3 or 4
             if len(parsed_row['district_code']) < 5:
-                boundary = '%s-hospital-district-2012' % (int(parsed_row['district_code']))
+                boundary = 'hospital-districts-2012/%s-1' % (int(parsed_row['district_code']))
                 boundary_type = 'hospital-districts-2012'
             else:
                 # We need the county ID and it is not in results, so we have to look
@@ -789,7 +789,7 @@ class ElectionScraper:
                             break
 
                     if boundary == '':
-                        self.log.info('[%s] Hosptial boundary intersection not found: %s' % ('results', parsed_row['title']))
+                        self.log.info('[%s] Hospital boundary intersection not found: %s' % ('results', parsed_row['title']))
 
                 else:
                     self.log.info('[%s] Could not find corresponding county for municpality: %s' % ('results', parsed_row['office_name']))
@@ -821,7 +821,7 @@ class ElectionScraper:
         mcd_id = '27' + fips + district
         if mcd_id in bad_data:
             mcd_id = bad_data[mcd_id]
-        return mcd_id + '-minor-civil-division-2010'
+        return 'minor-civil-divisions-2010/' + mcd_id
 
 
     def match_contests(self, election, *args):
@@ -946,8 +946,8 @@ class ElectionScraper:
         """
         boundary_url = 'https://boundaries.minnpost.com/1.0/boundary/%s'
         contests = scraperwiki.sql.select("* FROM contests")
-        contests_count = 0;
-        boundaries_found = 0;
+        contests_count = 0
+        boundaries_found = 0
 
         for c in contests:
             contests_count = contests_count + 1
