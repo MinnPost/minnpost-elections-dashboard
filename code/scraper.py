@@ -685,13 +685,13 @@ class ElectionScraper:
                 isd_match_value = isd_match.group(1)
                 isd_match_value = isd_bad_data[isd_match_value] if isd_match_value in isd_bad_data else isd_match_value
 
-                boundary =  'school-districts-2013/' + isd_match_value
+                boundary =  'school-districts-2013/' + isd_match_value + "-1"
                 boundary_type = 'school-districts-2013'
             elif ssd_match is not None:
                 ssd_match_value = '1-3' if ssd_match.group(1) == '1' else ssd_match.group(1)
 
-                if ssd_match_value == '1-1' and district_match is not None:
-                    boundary =  'minneapolis-parks-and-recreation-districts-2014/' + district_match.group(1)
+                if ssd_match_value == '1-3' and district_match is not None:
+                    boundary =  'minneapolis-parks-and-recreation-districts-2014/' + district_match.group(1) + "-1"
                     boundary_type = 'minneapolis-parks-and-recreation-districts-2014'
                 else:
                     boundary = 'school-districts-2013/' + ssd_match_value
