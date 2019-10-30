@@ -80,31 +80,6 @@ define([
         });
       });
 
-
-      // helpers.jsonpRequest({
-      //   url: this.app.options.boundaryAPI + 'boundary/?limit=30&slug__in=' +
-      //     encodeURIComponent(this.pluck('boundary').join(','))
-      // }, this.app.options)
-      // .done(function(response) {
-      //   if (_.isArray(response.objects)) {
-      //     // Match up slugs to models
-      //     _.each(response.objects, function(b) {
-      //       _.each(thisCollection.filter(function(m) {
-      //         return (m.get('boundary').indexOf(b.slug) >= 0);
-      //       }), function(m) {
-      //         m.set('boundarySets', [b]);
-      //       });
-      //     });
-      //     thisCollection.fetchedBoundary = true;
-
-      //     // Since Ractive's backbone adaptor does not seem to
-      //     // react to properties that are not attributes of a model
-      //     // or a model in a collection
-      //     thisCollection.each(function(m) {
-      //       m.set('fetchedBoundary', true);
-      //     });
-      //   }
-      // });
     },
 
     // Our API is pretty simple, so we do a basic time based
