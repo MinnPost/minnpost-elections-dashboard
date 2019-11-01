@@ -968,12 +968,12 @@ define('models',[
       var thisModel = this;
 
       helpers.jsonpRequest({
-        url: this.app.options.boundaryAPI + 'boundary/?limit=10&slug__in=' +
-          encodeURIComponent(this.get('boundary'))
+        url: this.app.options.boundaryAPI + 'boundaries/' +
+          encodeURIComponent(this.get('boundary')) + '/simple_shape'
       }, this.app.options)
       .done(function(response) {
-        if (_.isArray(response.objects)) {
-          thisModel.set('boundarySets', response.objects);
+        if (response) {
+          thisModel.set('boundarySets', [{'slug': thisModel.get('boundary'), 'simple_shape': response}]);
           thisModel.set('fetchedBoundary', true);
         }
       });
@@ -1190,34 +1190,22 @@ define('collections',[
       }
     },
 
-    // Gets boundary data from boundary service in one call.
+    // Gets boundary data from boundary service.
     fetchBoundary: function() {
       var thisCollection = this;
 
-      helpers.jsonpRequest({
-        url: this.app.options.boundaryAPI + 'boundary/?limit=30&slug__in=' +
-          encodeURIComponent(this.pluck('boundary').join(','))
-      }, this.app.options)
-      .done(function(response) {
-        if (_.isArray(response.objects)) {
-          // Match up slugs to models
-          _.each(response.objects, function(b) {
-            _.each(thisCollection.filter(function(m) {
-              return (m.get('boundary').indexOf(b.slug) >= 0);
-            }), function(m) {
-              m.set('boundarySets', [b]);
-            });
-          });
-          thisCollection.fetchedBoundary = true;
-
-          // Since Ractive's backbone adaptor does not seem to
-          // react to properties that are not attributes of a model
-          // or a model in a collection
-          thisCollection.each(function(m) {
+      thisCollection.each(function(m){
+        helpers.jsonpRequest({
+          url: thisCollection.app.options.boundaryAPI + 'boundaries/' + encodeURIComponent(m.get('boundary')) + '/simple_shape'
+        }, thisCollection.app.options)
+        .done(function(response){
+            if (response) {
+            m.set('boundarySets', [{'slug': m.get('boundary'), 'simple_shape': response}]);
             m.set('fetchedBoundary', true);
-          });
-        }
+          }
+        });
       });
+
     },
 
     // Our API is pretty simple, so we do a basic time based
@@ -1274,8 +1262,15 @@ define('collections',[
     matchBoundary: function() {
       var thisCollection = this;
       _.each(this.fullBoundaries, function(b) {
-        _.each(thisCollection.where({ boundary: b.slug }), function(m) {
-          m.set('boundarySets', [b]);
+        var parts = b.url.split("/");
+        var slug = parts[2] + "/" + parts[3];
+        _.each(thisCollection.where({ boundary: slug }), function(m) {
+          helpers.jsonpRequest({
+            url: thisCollection.app.options.boundaryAPI + "boundaries/" + slug + '/simple_shape'
+          }, thisCollection.app.options)
+          .done(function(response){
+            m.set('boundarySets', [{'slug': slug, 'simple_shape': response}]);
+          });
         });
       });
 
@@ -1294,7 +1289,7 @@ define('collections',[
       var thisCollection = this;
 
       helpers.jsonpRequest({
-        url: this.app.options.boundaryAPI + 'boundary/?contains=' +
+        url: this.app.options.boundaryAPI + 'boundaries/?contains=' +
           encodeURIComponent(this.options.lonlat[1]) + ',' +
           encodeURIComponent(this.options.lonlat[0]) + '&sets=' +
           encodeURIComponent(this.app.options.boundarySets.join(','))
@@ -1302,7 +1297,13 @@ define('collections',[
       .done(function(response) {
         if (_.isArray(response.objects)) {
           thisCollection.fullBoundaries = response.objects;
-          thisCollection.boundaries = _.pluck(response.objects, 'slug');
+          var slugs = [];
+          _.each(response.objects, function(r) {
+            var parts = r.url.split("/");
+            var slug = parts[2] + "/" + parts[3];
+            slugs.push(slug);
+          });
+          thisCollection.boundaries = slugs;
           thisCollection.trigger('fetchedBoundary');
         }
       });
@@ -1317,7 +1318,7 @@ define('collections',[
 define('text!templates/application.mustache',[],function () { return '\n\n<a href="#"\n  on-tap="toggleFullscreen"\n  class="fullscreen-toggle"\n  title="{{^isFullscreen}}Enable{{/isFullscreen}}{{#isFullscreen}}Disable{{/isFullscreen}} fullscreen">\n  <i class="fa {{^isFullscreen}}fa-expand{{/isFullscreen}}{{#isFullscreen}}fa-compress{{/isFullscreen}}"></i>\n</a>\n\n<div class="fullscreen-overlay"></div>\n\n<div class="message-container">\n</div>\n\n<div class="content-container">\n</div>\n\n<div class="footnote-container">\n</div>\n';});
 
 
-define('text!templates/footnote.mustache',[],function () { return '<div class="footnote">\n  <p>Unofficial election data provided by the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a>.  For ranked-choice contests data is supplemented manually from the <a href="http://vote.minneapolismn.gov/" target="_blank">City of Minneapolis</a> and the <a href="http://www.stpaul.gov/index.aspx?NID=188" target="_blank">City of St. Paul</a>.  Test data will be provided until 8PM on Election Night.</p>\n\n  <p>The geographical boundaries, though received from official sources and queried from our <a href="http://boundaries.minnpost.com" target="_blank">boundary service</a>, may not represent the exact, offical area for a contest, race, or election.  It is also possible that for a given location the contests may not be accurate due to data quality with multiple agencies.  Please refer to your local and state election officials to know exactly what contests happen for a given location.</p>\n\n  <p>Some map data © OpenStreetMap contributors; licensed under the <a href="http://www.openstreetmap.org/copyright" target="_blank">Open Data Commons Open Database License</a>.  Some map design © MapBox; licensed according to the <a href="http://mapbox.com/tos/" target="_blank">MapBox Terms of Service</a>.  Location geocoding provided by <a href="http://www.mapquest.com/" target="_blank">Mapquest</a> and is not guaranteed to be accurate.</p>\n\n  <p>This application was designed and built by Alan Palazzolo, Kaeti Hinck and Tom Nehil. Some code, techniques, and data on <a href="https://github.com/minnpost/minnpost-elections-dashboard" target="_blank">Github</a>.</p>\n</div>\n';});
+define('text!templates/footnote.mustache',[],function () { return '<div class="footnote">\n  <p>Unofficial election data provided by the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a>.  For ranked-choice contests data is supplemented manually with data from the respective jurisdictions.  Test data will be provided until 8PM on Election Night.</p>\n\n  <p>The geographical boundaries, though received from official sources and queried from our <a href="https://represent-minnesota.herokuapp.com" target="_blank">boundary service</a>, may not represent the exact, offical area for a contest, race, or election.  It is also possible that for a given location the contests may not be accurate due to data quality with multiple agencies.  Please refer to your local and state election officials to know exactly what contests happen for a given location.</p>\n\n  <p>Some map data © OpenStreetMap contributors; licensed under the <a href="http://www.openstreetmap.org/copyright" target="_blank">Open Data Commons Open Database License</a>.  Some map design © MapBox; licensed according to the <a href="http://mapbox.com/tos/" target="_blank">MapBox Terms of Service</a>.  Location geocoding provided by <a href="http://www.mapquest.com/" target="_blank">Mapquest</a> and is not guaranteed to be accurate.</p>\n\n  <p>This application was designed and built by Alan Palazzolo, Kaeti Hinck and Tom Nehil. Some code, techniques, and data on <a href="https://github.com/minnpost/minnpost-elections-dashboard" target="_blank">Github</a>.</p>\n</div>\n';});
 
 
 define('text!templates/contest.mustache',[],function () { return '<div class="contest {{#isDashboard}}dashboard-contest{{/isDashboard}} {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}} {{#(final === true)}}is-final{{/()}} {{#primary}}primary{{/primary}}">\n  {{^isDashboard}}\n    <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n  {{/isDashboard}}\n\n  <div>\n    {{#((results.length == 0 || results == undefined) && !synced)}}\n      {{>loading}}\n    {{/()}}\n  </div>\n\n  {{#((results.length == 0 || results == undefined) && synced)}}\n    <h3>Did not find any contests</h3>\n  {{/()}}\n\n\n  {{#((results.length > 0) && synced)}}\n    <h3>\n      {{#(customTitle != undefined)}}{{ customTitle }}{{/()}}\n      {{#(customTitle == undefined)}}{{ title }}{{/()}}\n      {{#(show_party != undefined)}}<span class="show-party party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}\n    </h3>\n\n    {{#sub_title}}\n      <h5>{{ sub_title }}</h5>\n    {{/sub_title}}\n\n    {{^isDashboard}}\n      <div class="last-updated">Last updated {{ updated.formatToday() }}</div>\n    {{/isDashboard}}\n\n    {{#(!!question_body)}}\n      <p>{{{ question_body }}}</p>\n    {{/()}}\n\n    {{#percent_needed}}\n      <p><em>This contest requires {{ formatters.number(percent_needed, 1) }}% or more "yes" votes for the measure to pass.</em></p>\n    {{/percent_needed}}\n  {{/()}}\n\n  <div class="{{^isDashboard}}row{{/isDashboard}}">\n    <div class="{{^isDashboard}}column-medium-70 inner-column-left{{/isDashboard}}">\n      <div class="">\n        <table class="striped">\n          <thead>\n            <tr class="table-first-heading">\n              <th class="winner-column"></th>\n              <th>Candidate</th>\n              {{#(partisan && show_party === undefined)}}\n                <th>\n                  <span class="large-table-label">Party</span>\n                  <span class="small-table-label"></span>\n                </th>\n              {{/()}}\n              {{#(ranked_choice == 1)}}\n                <th class="first-choice-column">Results</th>\n                <th class="second-choice-column"></th>\n                <th class="third-choice-column"></th>\n                <th class="final-column">Final</th>\n              {{/()}}\n              {{#(ranked_choice != 1)}}\n                {{^isDashboard}}\n                  <th class="percentage">\n                    <span class="large-table-label">Percentage</span>\n                    <span class="small-table-label">%</span>\n                  </th>\n                  <th class="votes">Votes</th>\n                {{/isDashboard}}\n                {{#isDashboard}}\n                  <th class="percentage">Results</th>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n            <tr class="table-second-heading">\n              <th class="winner-column"></th>\n              <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>\n              {{#(partisan && show_party === undefined)}}\n                <th></th>\n              {{/()}}\n              {{#(ranked_choice == 1)}}\n                <th class="first-choice-column first-choice-heading">1st choice</th>\n                <th class="second-choice-column second-choice-heading">2nd choice</th>\n                <th class="third-choice-column third-choice-heading">3rd choice</th>\n                <th class="final-column"></th>\n              {{/()}}\n              {{#(ranked_choice != 1)}}\n                <th></th>\n                {{^isDashboard}}\n                  <th></th>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n          </thead>\n\n          <tbody>\n            {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party != undefined && party_id == show_party)))}}\n              <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? \'even\' : \'odd\' }} {{#primary}}{{ party_id.toLowerCase() }}{{/primary}}">\n                <td class="winner-column">{{#winner}}<span class="fa fa-check"></span>{{/winner}}</td>\n\n                <td class="candidate-column">{{ candidate }}</td>\n\n                {{#(partisan && show_party === undefined)}}\n                  <td>\n                    {{#([\'WI\', \'NP\'].indexOf(party_id) === -1)}}\n                      <span class="party-label bg-color-political-{{ party_id.toLowerCase() }}" title="{{ parties[party_id.toLowerCase()] }}">{{ party_id }}</span>\n                    {{/()}}\n                  </td>\n                {{/()}}\n\n                {{#(ranked_choice == 1)}}\n                  <td class="first-choice-column first-choice-heading">{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="second-choice-column first-choice-heading">{{ formatters.number(ranked_choices.2.percentage) }}% ({{ formatters.number(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="third-choice-column first-choice-heading">{{ formatters.number(ranked_choices.3.percentage) }}% ({{ formatters.number(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="final-column first-choice-heading">{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% ({{ formatters.number(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>\n                {{/()}}\n\n                {{#(ranked_choice != 1)}}\n                  <td class="percentage">{{ formatters.number(percentage) }}%</td>\n                  {{^isDashboard}}\n                    <td class="votes">{{ formatters.number(votes_candidate, 0) }}</td>\n                  {{/isDashboard}}\n                {{/()}}\n              </tr>\n            {{/()}} {{/results}}\n          </tbody>\n        </table>\n      </div>\n      \n      <a href="#contest/{{ id }}" class="contest-link">{{#isDashboard}}Full results{{/isDashboard}}{{^isDashboard}}Permalink{{/isDashboard}}</a>\n    </div>\n\n\n\n    {{^isDashboard}}\n      <div class="column-medium-30 inner-column-right">\n        <div class="contest-map" id="contest-map-{{ id }}"></div>\n      </div>\n    {{/isDashboard}}\n  </div>\n</div>\n';});
@@ -1568,7 +1569,7 @@ define('views',[
 
       // Make a map if boundary has been found
       this.observe('boundarySets', function(newValue, oldValue) {
-        if (_.isArray(newValue) && _.isObject(newValue[0])) {
+        if (_.isObject(newValue)) {
           this.makeMap('contest-map-' + this.get('id'), newValue);
         }
       });
@@ -1945,12 +1946,12 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
+      electionsAPI: '//elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
-      boundaryAPI: '//boundaries.minnpost.com/1.0/',
+      boundaryAPI: '//represent-minnesota.herokuapp.com/',
       boundarySets: [
         'minor-civil-divisions-2010',
         'wards-2012',
@@ -1973,187 +1974,62 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       dashboard: [
         {
           type: 'race',
-          title: 'Governor and Lt. Governor',
-          id: 'id-MN----0331',
+          title: 'St. Paul City Question 1',
+          id: 'id-MN---58000-1131',
           rows: 2
         },
         {
           type: 'race',
-          title: 'Senator - Special Election',
-          id: 'id-MN----0103',
+          title: 'St. Paul Council Member Ward 6',
+          id: 'id-MN---58000-2151',
+          rows: 5
+        },
+        {
+          type: 'race',
+          title: 'Duluth Mayor',
+          id: 'id-MN---17000-1001',
+          rows: 2
+        },
+        {
+          type: 'spacer'
+        },
+        {
+          type: 'spacer'
+        },
+        {
+          type: 'race',
+          title: 'St. Louis Park Mayor',
+          id: 'id-MN---57220-2001',
           rows: 2
         },
         {
           type: 'race',
-          title: 'Congressional District 1',
-          id: 'id-MN---1-0104',
+          title: 'Bloomington Mayor',
+          id: 'id-MN---06616-1001',
           rows: 2
         },
         {
           type: 'race',
-          title: 'Congressional District 2',
-          id: 'id-MN---2-0105',
+          title: 'Ramsey County Commissioner — District 1',
+          id: 'id-MN---53026-1022',
           rows: 2
         },
         {
           type: 'race',
-          title: 'Congressional District 3',
-          id: 'id-MN---3-0106',
-          rows: 2
-        },
-        {
-          type: 'race',
-          title: 'Congressional District 8',
-          id: 'id-MN---8-0111',
-          rows: 2
-        },
-        {
-          type: 'race',
-          title: 'Attorney General',
-          id: 'id-MN----0335',
-          rows: 3
-        },
-        {
-          type: 'custom',
-          id: 'state-leg',
-          template: tDStateLeg,
-          query: "SELECT r.id AS results_id, r.candidate, r.party_id, r.percentage, " +
-            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party " +
-            "FROM contests AS c LEFT JOIN results AS r " +
-            "ON c.id = r.contest_id WHERE title LIKE '%state representative%' " +
-            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 410",
-          parse: function(response, options) {
-            var parsed = {};
-            var tempContests = [];
-
-            parsed.chamber = "house";
-
-            // Put contest info into friendly format
-            parsed.contests = {};
-            _.each(response, function(r, ri) {
-              parsed.contests[r.id] = parsed.contests[r.id] || {
-                id: r.id,
-                title: r.title,
-                precincts_reporting: r.precincts_reporting,
-                total_effected_precincts: r.total_effected_precincts,
-                incumbent_party: r.incumbent_party,
-                results: []
-              };
-              parsed.contests[r.id].results.push({
-                id: r.results_id,
-                candidate: r.candidate,
-                party_id: r.party_id,
-                percentage: r.percentage
-              });
-            });
-
-            // Process contests
-            parsed.contests = _.map(parsed.contests, function(c, ci) {
-              c.done = (c.precincts_reporting === c.total_effected_precincts);
-              c.some = (c.precincts_reporting > 0);
-              c.partyWon = _.max(c.results, function(r, ri) {
-                return r.percentage;
-              }).party_id;
-
-              // Test data
-
-              // var t = Math.random();
-              // if (t < 0.9) {
-              //   c.done = true;
-              //   c.partyWon = (Math.random() < 0.5) ? 'DFL' : 'R';
-              // }
-
-
-
-              c.partyShift = (c.partyWon !== c.incumbent_party && c.done);
-              c.results = _.sortBy(c.results, 'candidate').reverse();
-              c.results = _.sortBy(c.results, 'percentage').reverse();
-
-              return c;
-            });
-
-            // Sort contests, this could get messey
-            parsed.contests = _.sortBy(parsed.contests, 'title');
-            parsed.contests = _.sortBy(parsed.contests, 'partyShift').reverse();
-            parsed.contests = _.sortBy(parsed.contests, function(c, ci) {
-              if (c.done) {
-                return (c.partyWon === 'DFL') ? 'AAAADFL' :
-                  (c.partyWon === 'R') ? 'ZZZZZR' : 'MMMMMM' + c.partyWon;
-              }
-              else {
-                return (c.some) ? 'MMMAAAAAA' : 'MMMMMM';
-              }
-            });
-
-            // Counts
-            parsed.counts = {};
-            _.each(parsed.contests, function(c, ci) {
-              if (c.done) {
-                if (parsed.counts[c.partyWon]) {
-                  parsed.counts[c.partyWon].count += 1;
-                }
-                else {
-                  parsed.counts[c.partyWon] = {
-                    id: c.partyWon,
-                    count: 1,
-                    party: mpConfig.politicalParties[c.partyWon.toLowerCase()]
-                  };
-                }
-              }
-              else {
-                if (parsed.counts.unknown) {
-                  parsed.counts.unknown.count += 1;
-                }
-                else {
-                  parsed.counts.unknown = {
-                    id: 'MMMMMMMunknown',
-                    count: 1,
-                    party: 'Not fully reported yet'
-                  };
-                }
-              }
-            });
-            parsed.counts = _.sortBy(parsed.counts, 'id');
-
-            // DFL net
-            parsed.dflNet = 0;
-            _.each(parsed.contests, function(c, ci) {
-              if (c.done && c.partyShift && c.partyWon === 'DFL') {
-                parsed.dflNet += 1;
-              }
-              if (c.done && c.partyShift && c.incumbent_party === 'DFL') {
-                parsed.dflNet -= 1;
-              }
-            });
-
-            // Is everything done
-            parsed.allDone = (_.where(parsed.contests, { done: true }).length ===
-              parsed.contests.length);
-
-            return parsed;
-          }
-        },
-        {
-          type: 'race',
-          title: 'State Senator District 13',
-          id: 'id-MN---13-0133',
-          rows: 2
-        },
-        {
-          type: 'race',
-          title: 'Hennepin County Sheriff',
-          id: 'id-MN-27---0404',
-          rows: 2
+          title: 'Anoka County Commissioner — District 6',
+          id: 'id-MN-02--06-0396',
+          rows: 4
         },
         {
           type: 'links',
           itemClass: 'dashboard-links',
           links: [
-            { href: '#contest/id-MN-62---0404', text: 'Ramsey County Sheriff' },
-            { href: '#search/hennepin+county+commissioner', text: 'Hennepin County commissioners' },
-            { href: '#search/ramsey+county+commissioner', text: 'Ramsey County commissioners'},
-            { href: '#search/school+board+ssd+%231', text: 'Minneapolis school board'},
-            { href: '#contest/id-MN---43000-1131', text: 'Minneapolis Charter amendment' }
+            { href: '#search/st. paul council member ward', text: 'All St. Paul City Council seats' },
+            { href: '#search/school board', text: "All school board seats"},
+            { href: '#search/school question', text: 'School referendums'},
+            { href: '#search/county commissioner', text: 'County Commissioner special elections'},
+            { href: '#contest/id-MN---06616-1131', text: 'Bloomington liquor sales question'}
+            
           ]
         }
       ]
