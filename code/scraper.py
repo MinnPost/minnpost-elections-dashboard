@@ -191,7 +191,7 @@ class ElectionScraper:
                     try:
                         scraped = scraperwiki.scrape(s['url'])
                         # Ballot questions spreadsheet requires latin-1 encoding
-                        rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='latin-1')
+                        rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='utf-8')
                     except Exception, err:
                         self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (s['type'], s['url']))
                         raise
@@ -388,14 +388,18 @@ class ElectionScraper:
         if row[3] is not None and row[3] != '':
             contest_id = 'id-MN---' + row[3] + '-' + row[1]
 
+        #Clean random formatting problems in question text
+        question_body = row[6].replace("^", "").strip()
+        question_body = question_body.replace("&ldquo",'"')
+        question_body = question_body.replace("&ldquo",'"')
 
         # Make row
         parsed = {
             'id': combined_id,
             'contest_id': contest_id,
             'title': row[4],
-            'sub_title': row[5],
-            'question_body': row[6],
+            'sub_title': row[5].title(),
+            'question_body': question_body,
             'updated': int(timestamp)
         }
 
