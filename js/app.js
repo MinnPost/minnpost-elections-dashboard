@@ -58,17 +58,54 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           type: 'race',
           title: 'St. Paul Council Member Ward 6',
           id: 'id-MN---58000-2151',
+          rows: 5
+        },
+        {
+          type: 'race',
+          title: 'Duluth Mayor',
+          id: 'id-MN---17000-1001',
           rows: 2
+        },
+        {
+          type: 'spacer'
+        },
+        {
+          type: 'spacer'
+        },
+        {
+          type: 'race',
+          title: 'St. Louis Park Mayor',
+          id: 'id-MN---57220-2001',
+          rows: 2
+        },
+        {
+          type: 'race',
+          title: 'Bloomington Mayor',
+          id: 'id-MN---06616-1001',
+          rows: 2
+        },
+        {
+          type: 'race',
+          title: 'Ramsey County Commissioner — District 1',
+          id: 'id-MN---53026-1022',
+          rows: 2
+        },
+        {
+          type: 'race',
+          title: 'Anoka County Commissioner — District 6',
+          id: 'id-MN-02--06-0396',
+          rows: 4
         },
         {
           type: 'links',
           itemClass: 'dashboard-links',
           links: [
-            { href: '#contest/id-MN-62---0404', text: 'Ramsey County Sheriff' },
-            { href: '#search/hennepin+county+commissioner', text: 'Hennepin County commissioners' },
-            { href: '#search/ramsey+county+commissioner', text: 'Ramsey County commissioners'},
-            { href: '#search/school+board+ssd+%231', text: 'Minneapolis school board'},
-            { href: '#contest/id-MN---43000-1131', text: 'Minneapolis Charter amendment' }
+            { href: '#search/st. paul council member ward', text: 'All St. Paul City Council seats' },
+            { href: '#search/school board', text: "All school board seats"},
+            { href: '#search/school question', text: 'School referendums'},
+            { href: '#search/county commissioner', text: 'County Commissioner special elections'},
+            { href: '#contest/id-MN---06616-1131', text: 'Bloomington liquor sales question'}
+            
           ]
         }
       ]
