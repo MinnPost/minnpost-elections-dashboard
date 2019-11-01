@@ -675,10 +675,10 @@ class ElectionScraper:
         # districts.    There are a number of sub-school districts it looks
         # like
         isd_bad_data = {
-            '2769': '769',
-            '2906': '627',
-            '2907': '513',
-            '2908': '207',
+            '2769': '0769',
+            '2906': '0627',
+            '2907': '0513',
+            '2908': '0207',
         }
         if parsed_row['scope'] == 'school':
             isd_match = re.compile('.*\(ISD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
@@ -689,8 +689,8 @@ class ElectionScraper:
                 isd_match_value = isd_match.group(1)
                 isd_match_value = isd_bad_data[isd_match_value] if isd_match_value in isd_bad_data else isd_match_value
 
-                boundary =  'school-districts-2013/' + isd_match_value + "-1"
-                boundary_type = 'school-districts-2013'
+                boundary =  'school-districts-2018/' + "%04d" % (int(isd_match_value)) + "-1"
+                boundary_type = 'school-districts-2018'
             elif ssd_match is not None:
                 ssd_match_value = '1-3' if ssd_match.group(1) == '1' else ssd_match.group(1)
 
@@ -698,8 +698,8 @@ class ElectionScraper:
                     boundary =  'minneapolis-parks-and-recreation-districts-2014/' + district_match.group(1) + "-1"
                     boundary_type = 'minneapolis-parks-and-recreation-districts-2014'
                 else:
-                    boundary = 'school-districts-2013/' + ssd_match_value
-                    boundary_type = 'school-districts-2013'
+                    boundary = 'school-districts-2018/' + "%04d" % (int(ssd_match_value)) + "-1"
+                    boundary_type = 'school-districts-2018'
             else:
                 self.log.info('[%s] Could not find (I|S)SD boundary for: %s' % ('results', parsed_row['office_name']))
 
