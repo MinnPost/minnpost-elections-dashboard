@@ -1956,7 +1956,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         'minor-civil-divisions-2010',
         'wards-2012',
         'minnesota-state-2014',
-        'school-districts-2013',
+        'school-districts-2018',
         'minneapolis-parks-and-recreation-districts-2012',
         'congressional-districts-2012',
         'state-senate-districts-2012',
