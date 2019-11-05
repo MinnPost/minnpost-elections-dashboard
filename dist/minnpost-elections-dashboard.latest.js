@@ -2011,7 +2011,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         {
           type: 'race',
           title: 'Ramsey County Commissioner — District 1',
-          id: 'id-MN---53026-1022',
+          id: 'id-MN-62--01-0391',
           rows: 2
         },
         {
