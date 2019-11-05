@@ -669,17 +669,11 @@ class ElectionScraper:
         # Minneapolis is "1-1".  Unfotunralty SSD1 and ISD1 are essentially the
         # same as far as the incoming data so we have to look at title.
         #
-        # There are some bad data and not sure if it
-        # is boundary data (from the Leg) or on the SoS side.    Minneapolis
+        # Minneapolis
         # sub-school districts are the same at the Minneapolis Park and Rec
         # districts.    There are a number of sub-school districts it looks
         # like
-        isd_bad_data = {
-            '2769': '0769',
-            '2906': '0627',
-            '2907': '0513',
-            '2908': '0207',
-        }
+
         if parsed_row['scope'] == 'school':
             isd_match = re.compile('.*\(ISD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
             ssd_match = re.compile('.*\(SSD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
@@ -687,7 +681,6 @@ class ElectionScraper:
 
             if isd_match is not None:
                 isd_match_value = isd_match.group(1)
-                isd_match_value = isd_bad_data[isd_match_value] if isd_match_value in isd_bad_data else isd_match_value
 
                 boundary =  'school-districts-2018/' + "%04d" % (int(isd_match_value)) + "-1"
                 boundary_type = 'school-districts-2018'
