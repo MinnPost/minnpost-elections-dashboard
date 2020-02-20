@@ -191,7 +191,7 @@ class ElectionScraper:
                     try:
                         scraped = scraperwiki.scrape(s['url'])
                         # Ballot questions spreadsheet requires latin-1 encoding
-                        rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='utf-8')
+                        rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='latin-1')
                     except Exception, err:
                         self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (s['type'], s['url']))
                         raise
@@ -635,6 +635,10 @@ class ElectionScraper:
             if us_house_match is not None:
                 boundary = 'congressional-districts-2012/' + us_house_match.group(1)
                 boundary_type = 'congressional-districts-2012'
+            #special presidential primary handling
+            elif parsed_row['office_name'] == "U.S. Presidential Nominee":
+                boundary = 'congressional-districts-2012/' + parsed_row['district_code']
+                boundary_type = 'congressional-districts-2012'
             else:
                 self.log.info('[%s] Could not find US House boundary for: %s' % ('results', parsed_row['office_name']))
 
@@ -845,10 +849,16 @@ class ElectionScraper:
         s_rows = self.supplement_connect('supplemental_contests')
 
         # Get question data
-        questions = scraperwiki.sql.select('* FROM questions')
+        try:
+            questions = scraperwiki.sql.select('* FROM questions')
+        except:
+            questions = []
 
         # Get areas data
-        areas = scraperwiki.sql.select('* FROM areas')
+        try:
+            areas = scraperwiki.sql.select('* FROM areas')
+        except:
+            areas = []
 
         # Track which boundary sets we use
         self.found_boundary_types = []
