@@ -22,7 +22,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
+      electionsAPI: '//localhost:5000/?q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
@@ -50,64 +50,67 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       dashboard: [
         {
           type: 'race',
-          title: 'St. Paul City Question 1',
-          id: 'id-MN---58000-1131',
-          rows: 2
-        },
-        {
-          type: 'race',
-          title: 'St. Paul Council Member Ward 6',
-          id: 'id-MN---58000-2151',
+          customTitle: 'U.S. President — Statewide',
+          id: 'id-MN----0100',
+          show_party: 'DFL',
           rows: 5
         },
         {
           type: 'race',
-          title: 'Duluth Mayor',
-          id: 'id-MN---17000-1001',
-          rows: 2
-        },
-        {
-          type: 'spacer'
-        },
-        {
-          type: 'spacer'
+          customTitle: 'U.S. President — CD1',
+          id: 'id-MN---1-0100',
+          rows: 5,
+          show_party: 'DFL'
         },
         {
           type: 'race',
-          title: 'St. Louis Park Mayor',
-          id: 'id-MN---57220-2001',
-          rows: 2
+          customTitle: 'U.S. President — CD2',
+          id: 'id-MN---2-0100',
+          rows: 5,
+          show_party: 'DFL'
         },
         {
           type: 'race',
-          title: 'Bloomington Mayor',
-          id: 'id-MN---06616-1001',
-          rows: 2
+          customTitle: 'U.S. President — CD3',
+          id: 'id-MN---3-0100',
+          rows: 5,
+          show_party: 'DFL'
         },
         {
           type: 'race',
-          title: 'Ramsey County Commissioner — District 1',
-          id: 'id-MN-62--01-0391',
-          rows: 2
+          customTitle: 'U.S. President — CD4',
+          id: 'id-MN---4-0100',
+          rows: 5,
+          show_party: 'DFL'
         },
         {
           type: 'race',
-          title: 'Anoka County Commissioner — District 6',
-          id: 'id-MN-02--06-0396',
-          rows: 4
+          customTitle: 'U.S. President — CD5',
+          id: 'id-MN---5-0100',
+          rows: 5,
+          show_party: 'DFL'
         },
         {
-          type: 'links',
-          itemClass: 'dashboard-links',
-          links: [
-            { href: '#search/st. paul council member ward', text: 'All St. Paul City Council seats' },
-            { href: '#search/school board', text: "All school board seats"},
-            { href: '#search/school question', text: 'School referendums'},
-            { href: '#search/county commissioner', text: 'County Commissioner special elections'},
-            { href: '#contest/id-MN---06616-1131', text: 'Bloomington liquor sales question'}
-            
-          ]
-        }
+          type: 'race',
+          customTitle: 'U.S. President — CD6',
+          id: 'id-MN---6-0100',
+          rows: 5,
+          show_party: 'DFL'
+        },
+        {
+          type: 'race',
+          customTitle: 'U.S. President — CD7',
+          id: 'id-MN---7-0100',
+          rows: 5,
+          show_party: 'DFL'
+        },
+        {
+          type: 'race',
+          customTitle: 'U.S. President — CD8',
+          id: 'id-MN---8-0100',
+          rows: 5,
+          show_party: 'DFL'
+        },
       ]
     },
 
