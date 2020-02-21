@@ -144,6 +144,13 @@ define([
         });
         parsed.final = true;
       }
+
+      //Special case of presidential primary where we don't want to mark a winner 
+      //because it's only delegates awarded, not winner take all
+      else if (parsed.done && parsed.title == "U.S. Presidential Nominee") {
+        parsed.final = true;
+      }
+
       // If primary and partisan race
       else if (parsed.done && parsed.primary && parsed.partisan) {
         _.each(_.groupBy(parsed.results, 'party_id'), function(p, pi) {
