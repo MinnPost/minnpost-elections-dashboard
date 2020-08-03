@@ -17,7 +17,7 @@
   {{#((results.length > 0) && synced)}}
     <h3>
       {{#(customTitle != undefined)}}{{ customTitle }}{{/()}}
-      {{#(customTitle == undefined)}}{{ title }}{{#(title == "U.S. Presidential Nominee")}} {{#(district_code)}} — CD {{ district_code }}{{/()}} {{#(!district_code)}} — Statewide{{/()}} {{/()}}{{/()}}
+      {{#(customTitle == undefined)}}{{ title }}{{/()}}
       {{#(show_party != undefined)}}<span class="show-party party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}
     </h3>
 
@@ -93,7 +93,7 @@
           </thead>
 
           <tbody>
-            {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party != undefined && party_id == show_party && r < rows)))}}
+            {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party && party_id == show_party && r < rows)))}}
               <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? 'even' : 'odd' }} {{#primary}}{{ party_id.toLowerCase() }}{{/primary}}">
                 <td class="winner-column">{{#winner}}<span class="fa fa-check"></span>{{/winner}}</td>
 
