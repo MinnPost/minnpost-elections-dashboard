@@ -646,7 +646,7 @@ class ElectionScraper:
         if parsed_row['scope'] == 'state_senate':
             state_senate_match = re.compile('.*\State Senator District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if state_senate_match is not None:
-                boundary = 'state-senate-districts-2012/' + state_senate_match.group(1).lower() + "-1"
+                boundary = 'state-senate-districts-2012/' + "%02d" % (int(state_senate_match.group(1)),)
                 boundary_type = 'state-senate-districts-2012'
             else:
                 self.log.info('[%s] Could not find State Senate boundary for: %s' % ('results', parsed_row['office_name']))
