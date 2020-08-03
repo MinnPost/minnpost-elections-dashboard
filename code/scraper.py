@@ -694,6 +694,9 @@ class ElectionScraper:
                 if ssd_match_value == '1-3' and district_match is not None:
                     boundary =  'minneapolis-parks-and-recreation-districts-2014/' + district_match.group(1) + "-1"
                     boundary_type = 'minneapolis-parks-and-recreation-districts-2014'
+                elif ssd_match_value == '1-3' and district_match is None: #Minneapolis at-large seats
+                    boundary = 'minor-civil-divisions-2010/2705343000'
+                    boundary_type = 'minor-civil-divisions-2010'
                 else:
                     boundary = 'school-districts-2018/' + "%04d" % (int(ssd_match_value)) + "-1"
                     boundary_type = 'school-districts-2018'
