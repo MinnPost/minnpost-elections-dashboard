@@ -64,7 +64,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           type: 'race',
           id: 'id-MN---7-0127',
           rows: 2,
-          show_party: 'R'
+          show_party: 'DFL'
         },
         {
           type: 'race',
