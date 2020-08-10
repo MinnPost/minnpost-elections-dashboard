@@ -158,6 +158,7 @@ $color-dark-gray: #282828;
   .party-label {
     padding: 0.1em 0.35em;
     color: #FFFFFF;
+    display: inline-block;
     @include border-radius(2px);
   }
 
