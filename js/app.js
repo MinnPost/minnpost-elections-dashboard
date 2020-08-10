@@ -22,7 +22,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//localhost:5000/?q=',
+      electionsAPI: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
@@ -49,50 +49,80 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       originalTitle: document.title,
       dashboard: [
         {
+          title: 'CD5',
           type: 'race',
           id: 'id-MN---5-0108',
           show_party: 'DFL',
           rows: 3
         },
         {
+          title: 'CD7',
           type: 'race',
           id: 'id-MN---7-0110',
           rows: 3,
           show_party: 'R'
         },
         {
+          title: 'SD7',
           type: 'race',
           id: 'id-MN---7-0127',
           rows: 2,
           show_party: 'DFL'
         },
         {
+          title: 'SD47',
+          type: 'race',
+          id: 'id-MN---47-0167',
+          show_party: 'R'
+        },
+        {
+          title: 'SD62',
           type: 'race',
           id: 'id-MN---62-0182',
           rows: 2,
           show_party: 'DFL'
         },
         {
+          title: 'HD59B',
           type: 'race',
           id: 'id-MN---59B-0305',
           rows: 3,
           show_party: 'DFL'
         },
         {
+          title: 'HD66B',
+          type: 'race',
+          id: 'id-MN---66B-0319',
+          show_party: 'DFL'
+        },
+        {
+          title: 'Hennco commissioner',
           type: 'race',
           id: 'id-MN-27--06-0396',
           rows: 3,
         },
         {
+          title: 'Mpls Ward 6',
           type: 'race',
           id: 'id-MN---43000-2151',
           rows: 3,
         },
         {
+          title: 'Mpls School Board @large',
           type: 'race',
           id: 'id-MN---1-1-5000',
           rows: 3,
         },
+        {
+          type: 'links',
+          itemClass: 'dashboard-links',
+          links: [
+            { href: '#contest/id-MN----0102', text: 'U.S. Senate'},
+            { href: '#search/u.s.+representative', text: 'All U.S. House races' },
+            { href: '#search/state+senator', text: 'All State Senate races' },
+            { href: '#search/state+representative', text: 'All State House Races'}
+          ]
+        }
 
 
       ]
