@@ -146,6 +146,9 @@
   -webkit-border-radius: 2px;
   border-radius: 2px;
 }
+.mp .minnpost-elections-dashboard-container td .party-label {
+  display: inline-block;
+}
 .mp .minnpost-elections-dashboard-container table .winner-column {
   padding: 0;
   text-align: center;
