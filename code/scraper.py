@@ -655,7 +655,9 @@ class ElectionScraper:
         if parsed_row['scope'] == 'state_house':
             state_house_match = re.compile('.*\State Representative District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if state_house_match is not None:
-                boundary = 'state-house-districts-2012/' + state_house_match.group(1).lower()
+                district_number = "%02d" % (int(state_house_match.group(1)[0:-1]),)
+                district_letter = state_house_match.group(1)[-1].lower()
+                boundary = 'state-house-districts-2012/' + district_number + district_letter
                 boundary_type = 'state-house-districts-2012'
             else:
                 self.log.info('[%s] Could not find State House boundary for: %s' % ('results', parsed_row['office_name']))
