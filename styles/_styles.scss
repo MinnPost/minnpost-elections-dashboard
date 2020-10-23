@@ -197,13 +197,6 @@ $color-dark-gray: #282828;
     .third-choice-column { display: none; }
   }
 
-  //Special case in 2019: St. Paul not reporting 2nd and 3rd choices to SoS. So hiding them
-  .contest-id-MN---58000-2101, .contest-id-MN---58000-2111, .contest-id-MN---58000-2121, .contest-id-MN---58000-2131, 
-  .contest-id-MN---58000-2141, .contest-id-MN---58000-2151, .contest-id-MN---58000-2161, {
-    .second-choice-column { display: none; }
-    .third-choice-column { display: none; }
-  }
-
   // Contest
   .contest {
     margin-bottom: 2em;
