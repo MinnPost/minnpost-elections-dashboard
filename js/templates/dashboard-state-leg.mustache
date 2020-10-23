@@ -54,24 +54,24 @@
   {{#(chamber === "house")}}
     <div class="state-leg-rnet">
       <div class="heading">
-        DFL net gain{{^allDone}}&nbsp;so far{{/allDone}}:
-        <span class="color-political-dfl dflnet">
-          {{ (dflNet > 0) ? '+' : '' }}{{ dflNet }}
+        Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:
+        <span class="color-political-r rnet">
+          {{ (rNet > 0) ? '+' : '' }}{{ rNet }}
         </span>
       </div>
-      <div class="sub-heading">DFLers need a net gain of at least +11 to win control of the House.</div>
+      <div class="sub-heading">Republicans need a net gain of at least +9 to win control of the House.</div>
     </div>
   {{/()}}
 
   {{#(chamber === "senate")}}
     <div class="state-leg-rnet">
       <div class="heading">
-        Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:
-        <span class="color-political-r rnet">
-          {{ (rNet > 0) ? '+' : '' }}{{ rNet }}
+        DFL net gain{{^allDone}}&nbsp;so far{{/allDone}}:
+        <span class="color-political-dfl dflnet">
+          {{ (dflNet > 0) ? '+' : '' }}{{ dflNet }}
         </span>
       </div>
-      <div class="sub-heading">Republicans need a net gain of at least +6 to win control of the Senate.</div>
+      <div class="sub-heading">DFLers need a net gain of at least +2 to win control of the Senate.</div>
     </div>
   {{/()}}
 
