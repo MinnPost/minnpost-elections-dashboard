@@ -185,14 +185,14 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
             });
             parsed.counts = _.sortBy(parsed.counts, 'id');
 
-            // R net because senate is dfl controlled
-            parsed.rNet = 0;
+            // dflNet net because senate is R controlled
+            parsed.dflNet = 0;
             _.each(parsed.contests, function(c, ci) {
-              if (c.done && c.partyShift && c.partyWon === 'R') {
-                parsed.rNet += 1;
+              if (c.done && c.partyShift && c.partyWon === 'DFL') {
+                parsed.dflNet += 1;
               }
-              if (c.done && c.partyShift && c.incumbent_party === 'R') {
-                parsed.rNet -= 1;
+              if (c.done && c.partyShift && c.incumbent_party === 'DFL') {
+                parsed.dflNet -= 1;
               }
             });
 
@@ -211,7 +211,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
             "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party " +
             "FROM contests AS c LEFT JOIN results AS r " +
             "ON c.id = r.contest_id WHERE title LIKE '%state representative%' " +
-            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
+            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 425",
           parse: function(response, options) {
             var parsed = {};
             var tempContests = [];
@@ -305,16 +305,17 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
             });
             parsed.counts = _.sortBy(parsed.counts, 'id');
 
-            // DFL net
-            parsed.dflNet = 0;
+            // R net bc house is DFL controlled
+            parsed.rNet = 0;
             _.each(parsed.contests, function(c, ci) {
-              if (c.done && c.partyShift && c.partyWon === 'DFL') {
-                parsed.dflNet += 1;
+              if (c.done && c.partyShift && c.partyWon === 'R') {
+                parsed.rNet += 1;
               }
-              if (c.done && c.partyShift && c.incumbent_party === 'DFL') {
-                parsed.dflNet -= 1;
+              if (c.done && c.partyShift && c.incumbent_party === 'R') {
+                parsed.rNet -= 1;
               }
             });
+            
 
             // Is everything done
             parsed.allDone = (_.where(parsed.contests, { done: true }).length ===
