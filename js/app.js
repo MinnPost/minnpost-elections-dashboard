@@ -79,17 +79,11 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           rows: 2
         },
         {
-          title: 'U.S. House – Eighth District',
-          type: 'race',
-          id: 'id-MN---8-0111',
-          rows: 2
-        },
-        {
           type: 'custom',
           id: 'state-sen',
           template: tDStateLeg,
           query: "SELECT r.id AS results_id, r.candidate, r.party_id, r.percentage, " +
-            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party " +
+            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party, c.called " +
             "FROM contests AS c LEFT JOIN results AS r " +
             "ON c.id = r.contest_id WHERE title LIKE '%state senator%' " +
             "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
@@ -108,6 +102,8 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
                 precincts_reporting: r.precincts_reporting,
                 total_effected_precincts: r.total_effected_precincts,
                 incumbent_party: r.incumbent_party,
+                called: r.called,
+                toolcose: false,
                 results: []
               };
               parsed.contests[r.id].results.push({
@@ -139,6 +135,14 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
               c.results = _.sortBy(c.results, 'candidate').reverse();
               c.results = _.sortBy(c.results, 'percentage').reverse();
 
+              //Districts where the vote is within 3 percentage points are going to be considered
+              //too close to call due to late-arriving mail-in ballots in 2020
+              if (c.done && c.results[0].percentage - c.results[1].percentage < 3 && !c.called) {
+                c.partyWon = '';
+                c.partyShift = false;
+                c.tooclose = true;
+              }
+              
               return c;
             });
 
@@ -164,7 +168,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
                 }
                 else {
                   parsed.counts[c.partyWon] = {
-                    id: c.partyWon,
+                    id: (c.tooclose) ? 'YYYYYYYtooclose' : c.partyWon,  //Special handling for 2020 too close to call votes
                     count: 1,
                     party: mpConfig.politicalParties[c.partyWon.toLowerCase()]
                   };
@@ -208,7 +212,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           id: 'state-leg',
           template: tDStateLeg,
           query: "SELECT r.id AS results_id, r.candidate, r.party_id, r.percentage, " +
-            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party " +
+            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party, c.called " +
             "FROM contests AS c LEFT JOIN results AS r " +
             "ON c.id = r.contest_id WHERE title LIKE '%state representative%' " +
             "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 425",
@@ -227,6 +231,8 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
                 precincts_reporting: r.precincts_reporting,
                 total_effected_precincts: r.total_effected_precincts,
                 incumbent_party: r.incumbent_party,
+                called: r.called,
+                toolcose: false,
                 results: []
               };
               parsed.contests[r.id].results.push({
@@ -259,6 +265,14 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
               c.results = _.sortBy(c.results, 'candidate').reverse();
               c.results = _.sortBy(c.results, 'percentage').reverse();
 
+              //Districts where the vote is within 3 percentage points are going to be considered
+              //too close to call due to late-arriving mail-in ballots in 2020
+              if (c.done && c.results[0].percentage - c.results[1].percentage < 3 && !c.called) {
+                c.partyWon = '';
+                c.partyShift = false;
+                c.tooclose = true;
+              }
+              
               return c;
             });
 
@@ -284,7 +298,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
                 }
                 else {
                   parsed.counts[c.partyWon] = {
-                    id: c.partyWon,
+                    id: (c.tooclose) ? 'YYYYYYYtooclose' : c.partyWon,  //Special handling for 2020 too close to call votes
                     count: 1,
                     party: mpConfig.politicalParties[c.partyWon.toLowerCase()]
                   };
@@ -323,6 +337,12 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
 
             return parsed;
           }
+        },
+        {
+          title: 'Associate Justice of the Supreme Court',
+          type: 'race',
+          id: 'id-MN----7005',
+          rows: 2
         },
         {
           type: 'links',

@@ -11,6 +11,7 @@
         <a href="#/contest/{{ id }}" class="
           {{#(!done && some)}}some{{/()}}
           {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}
+          {{#tooclose}}too-close-to-call{{/tooclose}}
           {{#partyShift}}party-shift{{/partyShift}}
           state-leg-box" title="{{ title }}"></a>
       {{/()}}{{/contests}}
@@ -20,6 +21,7 @@
         <a href="#/contest/{{ id }}" class="
           {{#(!done && some)}}some{{/()}}
           {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}
+          {{#tooclose}}too-close-to-call{{/tooclose}}
           {{#partyShift}}party-shift{{/partyShift}}
           state-leg-box" title="{{ title }}"></a>
       {{/()}}{{/contests}}
@@ -28,7 +30,7 @@
 
   <div class="state-leg-totals">
     {{#counts:ci}}
-      <span class="color-political-{{ id.toLowerCase() }}" title="{{ party }}">{{ count }}</span>
+      <span class="color-political-{{ id.toLowerCase() }}  {{^party}}too-close-to-call{{/party}}" title="{{ party }}{{^party}}Too close to call{{/party}}">{{ count }}</span>
       {{#(ci < counts.length - 1)}} -&nbsp; {{/()}}
     {{/counts}}
   </div>
@@ -44,6 +46,10 @@
 
     <div class="legend-item">
       <div class="legend-box solid"></div> Colored box is fully reported
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-box too-close-to-call"></div> Too close to call
     </div>
 
     <div class="legend-item">

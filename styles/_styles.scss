@@ -352,6 +352,10 @@ $color-dark-gray: #282828;
           background-color: #676767;
         }
 
+        &.too-close-to-call {
+          background-color: #55307E;
+        }
+
         &.party-shift {
           @include box-shadow(0 0 0px 1.5px #232323);
           border: 1px solid #FFFFFF;
@@ -363,6 +367,10 @@ $color-dark-gray: #282828;
       text-align: center;
       font-size: 2em;
       margin-bottom: 0.5em;
+    }
+
+    .too-close-to-call {
+      color: #55307E;
     }
 
     .why-133 {
@@ -398,6 +406,11 @@ $color-dark-gray: #282828;
       .some {
         border: 2px solid #FFFFFF;
         background-color: #676767;
+      }
+
+      .too-close-to-call {
+        border: 2px solid #FFFFFF;
+        background-color: #55307E;
       }
 
       .solid {

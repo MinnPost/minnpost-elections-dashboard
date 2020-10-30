@@ -17,7 +17,7 @@ define([
     'office_id', 'precinct_id', 'precincts_reporting', 'question_body',
     'ranked_choice', 'results_group', 'seats', 'state', 'title', 'sub_title',
     'total_effected_precincts', 'total_votes_for_office', 'updated',
-    'question_body', 'question_help', 'primary', 'scope', 'partisan', 'incumbent_party', 'percent_needed'],
+    'question_body', 'question_help', 'primary', 'scope', 'partisan', 'incumbent_party', 'percent_needed', 'called'],
 
     // Non-Partisan parties
     npParties: ['NP', 'WI'],
@@ -164,6 +164,12 @@ define([
         });
 
         parsed.final = true;
+      }
+
+      //Due to delays in mail-in ballot counting in 2020, call some races too close to call
+      //according to an arbitrary threshold. 
+      if (parsed.results[0].percentage - parsed.results[1].percentage < 3) {
+        parsed.too_close_to_call = true;
       }
 
       // Further formatting
