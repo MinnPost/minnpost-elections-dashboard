@@ -903,6 +903,11 @@ class ElectionScraper:
                 county_index = int(r['county_id']) - 1
                 r['title'] = mn_counties[county_index] + " " + r['title']
 
+            #Add county name to county questions
+            if 'COUNTY QUESTION' in r['title'] and r['county_id']:
+                county_index = int(r['county_id']) - 1
+                r['title'] = mn_counties[county_index].upper() + " " + r['title']
+
             #Add school district names to school district contests
             #with special handling for the SSD1 vs ISD1 issue
             if r['scope'] == "school" and r['district_code']:
