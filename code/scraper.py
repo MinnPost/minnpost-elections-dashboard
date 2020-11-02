@@ -682,6 +682,7 @@ class ElectionScraper:
 
         if parsed_row['scope'] == 'school':
             isd_match = re.compile('.*\(ISD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
+            csd_match = re.compile('.*\( ?CSD +#([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
             ssd_match = re.compile('.*\(SSD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
             district_match = re.compile('.*district ([0-9]+) \(.*', re.IGNORECASE).match(parsed_row['office_name'])
 
@@ -690,6 +691,13 @@ class ElectionScraper:
 
                 boundary =  'school-districts-2018/' + "%04d" % (int(isd_match_value)) + "-1"
                 boundary_type = 'school-districts-2018'
+
+            elif csd_match is not None:
+                csd_match_value = csd_match.group(1)
+
+                boundary = 'school-districts-2018/' + "%04d" % (int(csd_match_value)) + "-1"
+                boundary_type = 'school-districts-2018'
+
             elif ssd_match is not None:
                 ssd_match_value = '1-3' if ssd_match.group(1) == '1' else ssd_match.group(1)
 
