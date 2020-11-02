@@ -230,10 +230,10 @@ define([
       // Add parties
       this.set('parties', mpConfig.politicalParties);
 
-      // Make a map if boundary has been found
-      this.observe('boundarySets', function(newValue, oldValue) {
-        if (_.isObject(newValue)) {
-          this.makeMap('contest-map-' + this.get('id'), newValue);
+      // Make a map if boundary has been fetched
+      this.observe('fetchedBoundary', function(newValue, oldValue) {
+        if (newValue) {
+          this.makeMap('contest-map-' + this.get('id'), this.get('boundarySets'));
         }
       });
     }
@@ -260,14 +260,15 @@ define([
 
       // React to boundary update.  For some reason, this is getting changed
       // more than once.
-      this.observe('models.*.boundarySets', function(newValue, oldValue, keypath) {
+      this.observe('models.*.fetchedBoundary', function(newValue, oldValue, keypath) {
+        //Keypath example models.0.fetchedBoundary
         var parts = keypath.split('.');
-        var m = this.get(parts[0] + '.' + parts[1]);
+        var m = this.get(parts[0] + '.' + parts[1]); // var m = this.get('models.0')
 
-        if (_.isArray(newValue) && _.isObject(newValue[0]) && _.isObject(m) &&
+        if (newValue && _.isArray(m.get('boundarySets')) && _.isObject(m.get('boundarySets')[0]) && _.isObject(m) &&
           !modelBoundarySet[m.get('id')]) {
           modelBoundarySet[m.get('id')] = true;
-          this.makeMap('contest-map-' + m.get('id'), newValue);
+          this.makeMap('contest-map-' + m.get('id'), m.get('boundarySets'));
         }
       });
 

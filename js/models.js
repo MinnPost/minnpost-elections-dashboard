@@ -193,16 +193,28 @@ define([
     fetchBoundary: function() {
       var thisModel = this;
 
-      helpers.jsonpRequest({
-        url: this.app.options.boundaryAPI + 'boundaries/' +
-          encodeURIComponent(this.get('boundary')) + '/simple_shape'
-      }, this.app.options)
-      .done(function(response) {
-        if (response) {
-          thisModel.set('boundarySets', [{'slug': thisModel.get('boundary'), 'simple_shape': response}]);
-          thisModel.set('fetchedBoundary', true);
-        }
+      thisModel.set('boundarySets', []);
+      boundaries = [this.get('boundary')];
+      if (boundaries[0].includes(",")) {
+        boundaries = boundaries[0].split(",");
+      }
+
+      _.each(boundaries, function(b){
+        helpers.jsonpRequest({
+          url: thisModel.app.options.boundaryAPI + 'boundaries/' + encodeURIComponent(b) + '/simple_shape'
+        }, thisModel.app.options)
+        .done(function(response) {
+          if (response) {
+            boundarySets = thisModel.get('boundarySets');
+            boundarySets.push({'slug': b, 'simple_shape': response});
+            thisModel.set('boundarySets', boundarySets);
+            if (boundarySets.length == boundaries.length) {
+              thisModel.set('fetchedBoundary', true);
+            }
+          }
+        });
       });
+
     },
 
     // Our API is pretty simple, so we do a basic time based

@@ -69,15 +69,29 @@ define([
       var thisCollection = this;
 
       thisCollection.each(function(m){
-        helpers.jsonpRequest({
-          url: thisCollection.app.options.boundaryAPI + 'boundaries/' + encodeURIComponent(m.get('boundary')) + '/simple_shape'
-        }, thisCollection.app.options)
-        .done(function(response){
+        m.set('boundarySets', []);
+        boundaries = [m.get('boundary')];
+        if (boundaries[0].includes(",")) {
+          boundaries = boundaries[0].split(",");
+        }
+        m.set('totalBoundaryCount', boundaries.length);
+        
+        _.each(boundaries, function(b){
+          helpers.jsonpRequest({
+            url: thisCollection.app.options.boundaryAPI + 'boundaries/' + encodeURIComponent(b) + '/simple_shape'
+          }, thisCollection.app.options)
+          .done(function(response) {
             if (response) {
-            m.set('boundarySets', [{'slug': m.get('boundary'), 'simple_shape': response}]);
-            m.set('fetchedBoundary', true);
-          }
+              boundarySets = m.get('boundarySets');
+              boundarySets.push({'slug': b, 'simple_shape': response});
+              m.set('boundarySets', boundarySets);
+              if (boundarySets.length == m.get('totalBoundaryCount')) {
+                m.set('fetchedBoundary', true);
+              }
+            }
+          });
         });
+
       });
 
     },
