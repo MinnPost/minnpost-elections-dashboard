@@ -173,14 +173,6 @@
 .mp .minnpost-elections-dashboard-container .dashboard-contest.is-ranked-choice.is-final .third-choice-column {
   display: none;
 }
-.mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2101 .second-choice-column, .mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2111 .second-choice-column, .mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2121 .second-choice-column, .mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2131 .second-choice-column,
-.mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2141 .second-choice-column, .mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2151 .second-choice-column, .mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2161 .second-choice-column {
-  display: none;
-}
-.mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2101 .third-choice-column, .mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2111 .third-choice-column, .mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2121 .third-choice-column, .mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2131 .third-choice-column,
-.mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2141 .third-choice-column, .mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2151 .third-choice-column, .mp .minnpost-elections-dashboard-container .contest-id-MN---58000-2161 .third-choice-column {
-  display: none;
-}
 .mp .minnpost-elections-dashboard-container .contest {
   margin-bottom: 2em;
 }
@@ -294,6 +286,9 @@
 .mp .minnpost-elections-dashboard-container .dashboard-state-leg .state-leg-boxes .state-leg-box.done, .mp .minnpost-elections-dashboard-container .dashboard-state-leg .state-leg-boxes .state-leg-box.some {
   background-color: #676767;
 }
+.mp .minnpost-elections-dashboard-container .dashboard-state-leg .state-leg-boxes .state-leg-box.too-close-to-call {
+  background-color: #55307E;
+}
 .mp .minnpost-elections-dashboard-container .dashboard-state-leg .state-leg-boxes .state-leg-box.party-shift {
   -moz-box-shadow: 0 0 0px 1.5px #232323;
   -webkit-box-shadow: 0 0 0px 1.5px #232323;
@@ -304,6 +299,9 @@
   text-align: center;
   font-size: 2em;
   margin-bottom: 0.5em;
+}
+.mp .minnpost-elections-dashboard-container .dashboard-state-leg .too-close-to-call {
+  color: #55307E;
 }
 .mp .minnpost-elections-dashboard-container .dashboard-state-leg .why-133 {
   margin-top: -0.75em;
@@ -336,6 +334,10 @@
 .mp .minnpost-elections-dashboard-container .dashboard-state-leg .state-leg-legend .some {
   border: 2px solid #FFFFFF;
   background-color: #676767;
+}
+.mp .minnpost-elections-dashboard-container .dashboard-state-leg .state-leg-legend .too-close-to-call {
+  border: 2px solid #FFFFFF;
+  background-color: #55307E;
 }
 .mp .minnpost-elections-dashboard-container .dashboard-state-leg .state-leg-legend .solid {
   width: 14px;

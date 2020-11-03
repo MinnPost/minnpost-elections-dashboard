@@ -1,4 +1,4 @@
-/*! MinnPost Elections Dashboard - LATEST VERSION - 2020-11-02
+/*! MinnPost Elections Dashboard - v0.1.7 - 2020-11-02
 * https://github.com/MinnPost/minnpost-elections-dashboard
 * Copyright (c) 2020 MinnPost; Licensed MIT */
 

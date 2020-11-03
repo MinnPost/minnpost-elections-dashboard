@@ -10792,7 +10792,7 @@ return jQuery;
 
 }));
 
-//     Underscore.js 1.7.0
+//     Underscore.js 1.6.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 //     Underscore may be freely distributed under the MIT license.
@@ -10808,6 +10808,9 @@ return jQuery;
   // Save the previous value of the `_` variable.
   var previousUnderscore = root._;
 
+  // Establish the object that gets returned to break out of a loop iteration.
+  var breaker = {};
+
   // Save bytes in the minified (but not gzipped) version:
   var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
 
@@ -10822,6 +10825,15 @@ return jQuery;
   // All **ECMAScript 5** native function implementations that we hope to use
   // are declared here.
   var
+    nativeForEach      = ArrayProto.forEach,
+    nativeMap          = ArrayProto.map,
+    nativeReduce       = ArrayProto.reduce,
+    nativeReduceRight  = ArrayProto.reduceRight,
+    nativeFilter       = ArrayProto.filter,
+    nativeEvery        = ArrayProto.every,
+    nativeSome         = ArrayProto.some,
+    nativeIndexOf      = ArrayProto.indexOf,
+    nativeLastIndexOf  = ArrayProto.lastIndexOf,
     nativeIsArray      = Array.isArray,
     nativeKeys         = Object.keys,
     nativeBind         = FuncProto.bind;
@@ -10835,7 +10847,8 @@ return jQuery;
 
   // Export the Underscore object for **Node.js**, with
   // backwards-compatibility for the old `require()` API. If we're in
-  // the browser, add `_` as a global object.
+  // the browser, add `_` as a global object via a string identifier,
+  // for Closure Compiler "advanced" mode.
   if (typeof exports !== 'undefined') {
     if (typeof module !== 'undefined' && module.exports) {
       exports = module.exports = _;
@@ -10846,125 +10859,98 @@ return jQuery;
   }
 
   // Current version.
-  _.VERSION = '1.7.0';
-
-  // Internal function that returns an efficient (for current engines) version
-  // of the passed-in callback, to be repeatedly applied in other Underscore
-  // functions.
-  var createCallback = function(func, context, argCount) {
-    if (context === void 0) return func;
-    switch (argCount == null ? 3 : argCount) {
-      case 1: return function(value) {
-        return func.call(context, value);
-      };
-      case 2: return function(value, other) {
-        return func.call(context, value, other);
-      };
-      case 3: return function(value, index, collection) {
-        return func.call(context, value, index, collection);
-      };
-      case 4: return function(accumulator, value, index, collection) {
-        return func.call(context, accumulator, value, index, collection);
-      };
-    }
-    return function() {
-      return func.apply(context, arguments);
-    };
-  };
-
-  // A mostly-internal function to generate callbacks that can be applied
-  // to each element in a collection, returning the desired result — either
-  // identity, an arbitrary callback, a property matcher, or a property accessor.
-  _.iteratee = function(value, context, argCount) {
-    if (value == null) return _.identity;
-    if (_.isFunction(value)) return createCallback(value, context, argCount);
-    if (_.isObject(value)) return _.matches(value);
-    return _.property(value);
-  };
+  _.VERSION = '1.6.0';
 
   // Collection Functions
   // --------------------
 
   // The cornerstone, an `each` implementation, aka `forEach`.
-  // Handles raw objects in addition to array-likes. Treats all
-  // sparse array-likes as if they were dense.
-  _.each = _.forEach = function(obj, iteratee, context) {
+  // Handles objects with the built-in `forEach`, arrays, and raw objects.
+  // Delegates to **ECMAScript 5**'s native `forEach` if available.
+  var each = _.each = _.forEach = function(obj, iterator, context) {
     if (obj == null) return obj;
-    iteratee = createCallback(iteratee, context);
-    var i, length = obj.length;
-    if (length === +length) {
-      for (i = 0; i < length; i++) {
-        iteratee(obj[i], i, obj);
+    if (nativeForEach && obj.forEach === nativeForEach) {
+      obj.forEach(iterator, context);
+    } else if (obj.length === +obj.length) {
+      for (var i = 0, length = obj.length; i < length; i++) {
+        if (iterator.call(context, obj[i], i, obj) === breaker) return;
       }
     } else {
       var keys = _.keys(obj);
-      for (i = 0, length = keys.length; i < length; i++) {
-        iteratee(obj[keys[i]], keys[i], obj);
+      for (var i = 0, length = keys.length; i < length; i++) {
+        if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker) return;
       }
     }
     return obj;
   };
 
-  // Return the results of applying the iteratee to each element.
-  _.map = _.collect = function(obj, iteratee, context) {
-    if (obj == null) return [];
-    iteratee = _.iteratee(iteratee, context);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        results = Array(length),
-        currentKey;
-    for (var index = 0; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
-      results[index] = iteratee(obj[currentKey], currentKey, obj);
-    }
+  // Return the results of applying the iterator to each element.
+  // Delegates to **ECMAScript 5**'s native `map` if available.
+  _.map = _.collect = function(obj, iterator, context) {
+    var results = [];
+    if (obj == null) return results;
+    if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
+    each(obj, function(value, index, list) {
+      results.push(iterator.call(context, value, index, list));
+    });
     return results;
   };
 
   var reduceError = 'Reduce of empty array with no initial value';
 
   // **Reduce** builds up a single result from a list of values, aka `inject`,
-  // or `foldl`.
-  _.reduce = _.foldl = _.inject = function(obj, iteratee, memo, context) {
+  // or `foldl`. Delegates to **ECMAScript 5**'s native `reduce` if available.
+  _.reduce = _.foldl = _.inject = function(obj, iterator, memo, context) {
+    var initial = arguments.length > 2;
     if (obj == null) obj = [];
-    iteratee = createCallback(iteratee, context, 4);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        index = 0, currentKey;
-    if (arguments.length < 3) {
-      if (!length) throw new TypeError(reduceError);
-      memo = obj[keys ? keys[index++] : index++];
+    if (nativeReduce && obj.reduce === nativeReduce) {
+      if (context) iterator = _.bind(iterator, context);
+      return initial ? obj.reduce(iterator, memo) : obj.reduce(iterator);
     }
-    for (; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
-      memo = iteratee(memo, obj[currentKey], currentKey, obj);
-    }
+    each(obj, function(value, index, list) {
+      if (!initial) {
+        memo = value;
+        initial = true;
+      } else {
+        memo = iterator.call(context, memo, value, index, list);
+      }
+    });
+    if (!initial) throw new TypeError(reduceError);
     return memo;
   };
 
   // The right-associative version of reduce, also known as `foldr`.
-  _.reduceRight = _.foldr = function(obj, iteratee, memo, context) {
+  // Delegates to **ECMAScript 5**'s native `reduceRight` if available.
+  _.reduceRight = _.foldr = function(obj, iterator, memo, context) {
+    var initial = arguments.length > 2;
     if (obj == null) obj = [];
-    iteratee = createCallback(iteratee, context, 4);
-    var keys = obj.length !== + obj.length && _.keys(obj),
-        index = (keys || obj).length,
-        currentKey;
-    if (arguments.length < 3) {
-      if (!index) throw new TypeError(reduceError);
-      memo = obj[keys ? keys[--index] : --index];
+    if (nativeReduceRight && obj.reduceRight === nativeReduceRight) {
+      if (context) iterator = _.bind(iterator, context);
+      return initial ? obj.reduceRight(iterator, memo) : obj.reduceRight(iterator);
     }
-    while (index--) {
-      currentKey = keys ? keys[index] : index;
-      memo = iteratee(memo, obj[currentKey], currentKey, obj);
+    var length = obj.length;
+    if (length !== +length) {
+      var keys = _.keys(obj);
+      length = keys.length;
     }
+    each(obj, function(value, index, list) {
+      index = keys ? keys[--length] : --length;
+      if (!initial) {
+        memo = obj[index];
+        initial = true;
+      } else {
+        memo = iterator.call(context, memo, obj[index], index, list);
+      }
+    });
+    if (!initial) throw new TypeError(reduceError);
     return memo;
   };
 
   // Return the first value which passes a truth test. Aliased as `detect`.
   _.find = _.detect = function(obj, predicate, context) {
     var result;
-    predicate = _.iteratee(predicate, context);
-    _.some(obj, function(value, index, list) {
-      if (predicate(value, index, list)) {
+    any(obj, function(value, index, list) {
+      if (predicate.call(context, value, index, list)) {
         result = value;
         return true;
       }
@@ -10973,58 +10959,61 @@ return jQuery;
   };
 
   // Return all the elements that pass a truth test.
+  // Delegates to **ECMAScript 5**'s native `filter` if available.
   // Aliased as `select`.
   _.filter = _.select = function(obj, predicate, context) {
     var results = [];
     if (obj == null) return results;
-    predicate = _.iteratee(predicate, context);
-    _.each(obj, function(value, index, list) {
-      if (predicate(value, index, list)) results.push(value);
+    if (nativeFilter && obj.filter === nativeFilter) return obj.filter(predicate, context);
+    each(obj, function(value, index, list) {
+      if (predicate.call(context, value, index, list)) results.push(value);
     });
     return results;
   };
 
   // Return all the elements for which a truth test fails.
   _.reject = function(obj, predicate, context) {
-    return _.filter(obj, _.negate(_.iteratee(predicate)), context);
+    return _.filter(obj, function(value, index, list) {
+      return !predicate.call(context, value, index, list);
+    }, context);
   };
 
   // Determine whether all of the elements match a truth test.
+  // Delegates to **ECMAScript 5**'s native `every` if available.
   // Aliased as `all`.
   _.every = _.all = function(obj, predicate, context) {
-    if (obj == null) return true;
-    predicate = _.iteratee(predicate, context);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        index, currentKey;
-    for (index = 0; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
-      if (!predicate(obj[currentKey], currentKey, obj)) return false;
-    }
-    return true;
+    predicate || (predicate = _.identity);
+    var result = true;
+    if (obj == null) return result;
+    if (nativeEvery && obj.every === nativeEvery) return obj.every(predicate, context);
+    each(obj, function(value, index, list) {
+      if (!(result = result && predicate.call(context, value, index, list))) return breaker;
+    });
+    return !!result;
   };
 
   // Determine if at least one element in the object matches a truth test.
+  // Delegates to **ECMAScript 5**'s native `some` if available.
   // Aliased as `any`.
-  _.some = _.any = function(obj, predicate, context) {
-    if (obj == null) return false;
-    predicate = _.iteratee(predicate, context);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        index, currentKey;
-    for (index = 0; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
-      if (predicate(obj[currentKey], currentKey, obj)) return true;
-    }
-    return false;
+  var any = _.some = _.any = function(obj, predicate, context) {
+    predicate || (predicate = _.identity);
+    var result = false;
+    if (obj == null) return result;
+    if (nativeSome && obj.some === nativeSome) return obj.some(predicate, context);
+    each(obj, function(value, index, list) {
+      if (result || (result = predicate.call(context, value, index, list))) return breaker;
+    });
+    return !!result;
   };
 
   // Determine if the array or object contains a given value (using `===`).
   // Aliased as `include`.
   _.contains = _.include = function(obj, target) {
     if (obj == null) return false;
-    if (obj.length !== +obj.length) obj = _.values(obj);
-    return _.indexOf(obj, target) >= 0;
+    if (nativeIndexOf && obj.indexOf === nativeIndexOf) return obj.indexOf(target) != -1;
+    return any(obj, function(value) {
+      return value === target;
+    });
   };
 
   // Invoke a method (with arguments) on every item in a collection.
@@ -11053,67 +11042,51 @@ return jQuery;
     return _.find(obj, _.matches(attrs));
   };
 
-  // Return the maximum element (or element-based computation).
-  _.max = function(obj, iteratee, context) {
-    var result = -Infinity, lastComputed = -Infinity,
-        value, computed;
-    if (iteratee == null && obj != null) {
-      obj = obj.length === +obj.length ? obj : _.values(obj);
-      for (var i = 0, length = obj.length; i < length; i++) {
-        value = obj[i];
-        if (value > result) {
-          result = value;
-        }
-      }
-    } else {
-      iteratee = _.iteratee(iteratee, context);
-      _.each(obj, function(value, index, list) {
-        computed = iteratee(value, index, list);
-        if (computed > lastComputed || computed === -Infinity && result === -Infinity) {
-          result = value;
-          lastComputed = computed;
-        }
-      });
+  // Return the maximum element or (element-based computation).
+  // Can't optimize arrays of integers longer than 65,535 elements.
+  // See [WebKit Bug 80797](https://bugs.webkit.org/show_bug.cgi?id=80797)
+  _.max = function(obj, iterator, context) {
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+      return Math.max.apply(Math, obj);
     }
+    var result = -Infinity, lastComputed = -Infinity;
+    each(obj, function(value, index, list) {
+      var computed = iterator ? iterator.call(context, value, index, list) : value;
+      if (computed > lastComputed) {
+        result = value;
+        lastComputed = computed;
+      }
+    });
     return result;
   };
 
   // Return the minimum element (or element-based computation).
-  _.min = function(obj, iteratee, context) {
-    var result = Infinity, lastComputed = Infinity,
-        value, computed;
-    if (iteratee == null && obj != null) {
-      obj = obj.length === +obj.length ? obj : _.values(obj);
-      for (var i = 0, length = obj.length; i < length; i++) {
-        value = obj[i];
-        if (value < result) {
-          result = value;
-        }
-      }
-    } else {
-      iteratee = _.iteratee(iteratee, context);
-      _.each(obj, function(value, index, list) {
-        computed = iteratee(value, index, list);
-        if (computed < lastComputed || computed === Infinity && result === Infinity) {
-          result = value;
-          lastComputed = computed;
-        }
-      });
+  _.min = function(obj, iterator, context) {
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+      return Math.min.apply(Math, obj);
     }
+    var result = Infinity, lastComputed = Infinity;
+    each(obj, function(value, index, list) {
+      var computed = iterator ? iterator.call(context, value, index, list) : value;
+      if (computed < lastComputed) {
+        result = value;
+        lastComputed = computed;
+      }
+    });
     return result;
   };
 
-  // Shuffle a collection, using the modern version of the
+  // Shuffle an array, using the modern version of the
   // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
   _.shuffle = function(obj) {
-    var set = obj && obj.length === +obj.length ? obj : _.values(obj);
-    var length = set.length;
-    var shuffled = Array(length);
-    for (var index = 0, rand; index < length; index++) {
-      rand = _.random(0, index);
-      if (rand !== index) shuffled[index] = shuffled[rand];
-      shuffled[rand] = set[index];
-    }
+    var rand;
+    var index = 0;
+    var shuffled = [];
+    each(obj, function(value) {
+      rand = _.random(index++);
+      shuffled[index - 1] = shuffled[rand];
+      shuffled[rand] = value;
+    });
     return shuffled;
   };
 
@@ -11128,14 +11101,21 @@ return jQuery;
     return _.shuffle(obj).slice(0, Math.max(0, n));
   };
 
-  // Sort the object's values by a criterion produced by an iteratee.
-  _.sortBy = function(obj, iteratee, context) {
-    iteratee = _.iteratee(iteratee, context);
+  // An internal function to generate lookup iterators.
+  var lookupIterator = function(value) {
+    if (value == null) return _.identity;
+    if (_.isFunction(value)) return value;
+    return _.property(value);
+  };
+
+  // Sort the object's values by a criterion produced by an iterator.
+  _.sortBy = function(obj, iterator, context) {
+    iterator = lookupIterator(iterator);
     return _.pluck(_.map(obj, function(value, index, list) {
       return {
         value: value,
         index: index,
-        criteria: iteratee(value, index, list)
+        criteria: iterator.call(context, value, index, list)
       };
     }).sort(function(left, right) {
       var a = left.criteria;
@@ -11150,12 +11130,12 @@ return jQuery;
 
   // An internal function used for aggregate "group by" operations.
   var group = function(behavior) {
-    return function(obj, iteratee, context) {
+    return function(obj, iterator, context) {
       var result = {};
-      iteratee = _.iteratee(iteratee, context);
-      _.each(obj, function(value, index) {
-        var key = iteratee(value, index, obj);
-        behavior(result, value, key);
+      iterator = lookupIterator(iterator);
+      each(obj, function(value, index) {
+        var key = iterator.call(context, value, index, obj);
+        behavior(result, key, value);
       });
       return result;
     };
@@ -11163,32 +11143,32 @@ return jQuery;
 
   // Groups the object's values by a criterion. Pass either a string attribute
   // to group by, or a function that returns the criterion.
-  _.groupBy = group(function(result, value, key) {
-    if (_.has(result, key)) result[key].push(value); else result[key] = [value];
+  _.groupBy = group(function(result, key, value) {
+    _.has(result, key) ? result[key].push(value) : result[key] = [value];
   });
 
   // Indexes the object's values by a criterion, similar to `groupBy`, but for
   // when you know that your index values will be unique.
-  _.indexBy = group(function(result, value, key) {
+  _.indexBy = group(function(result, key, value) {
     result[key] = value;
   });
 
   // Counts instances of an object that group by a certain criterion. Pass
   // either a string attribute to count by, or a function that returns the
   // criterion.
-  _.countBy = group(function(result, value, key) {
-    if (_.has(result, key)) result[key]++; else result[key] = 1;
+  _.countBy = group(function(result, key) {
+    _.has(result, key) ? result[key]++ : result[key] = 1;
   });
 
   // Use a comparator function to figure out the smallest index at which
   // an object should be inserted so as to maintain order. Uses binary search.
-  _.sortedIndex = function(array, obj, iteratee, context) {
-    iteratee = _.iteratee(iteratee, context, 1);
-    var value = iteratee(obj);
+  _.sortedIndex = function(array, obj, iterator, context) {
+    iterator = lookupIterator(iterator);
+    var value = iterator.call(context, obj);
     var low = 0, high = array.length;
     while (low < high) {
-      var mid = low + high >>> 1;
-      if (iteratee(array[mid]) < value) low = mid + 1; else high = mid;
+      var mid = (low + high) >>> 1;
+      iterator.call(context, array[mid]) < value ? low = mid + 1 : high = mid;
     }
     return low;
   };
@@ -11204,18 +11184,7 @@ return jQuery;
   // Return the number of elements in an object.
   _.size = function(obj) {
     if (obj == null) return 0;
-    return obj.length === +obj.length ? obj.length : _.keys(obj).length;
-  };
-
-  // Split a collection into two arrays: one whose elements all satisfy the given
-  // predicate, and one whose elements all do not satisfy the predicate.
-  _.partition = function(obj, predicate, context) {
-    predicate = _.iteratee(predicate, context);
-    var pass = [], fail = [];
-    _.each(obj, function(value, key, obj) {
-      (predicate(value, key, obj) ? pass : fail).push(value);
-    });
-    return [pass, fail];
+    return (obj.length === +obj.length) ? obj.length : _.keys(obj).length;
   };
 
   // Array Functions
@@ -11226,7 +11195,7 @@ return jQuery;
   // allows it to work with `_.map`.
   _.first = _.head = _.take = function(array, n, guard) {
     if (array == null) return void 0;
-    if (n == null || guard) return array[0];
+    if ((n == null) || guard) return array[0];
     if (n < 0) return [];
     return slice.call(array, 0, n);
   };
@@ -11236,14 +11205,14 @@ return jQuery;
   // the array, excluding the last N. The **guard** check allows it to work with
   // `_.map`.
   _.initial = function(array, n, guard) {
-    return slice.call(array, 0, Math.max(0, array.length - (n == null || guard ? 1 : n)));
+    return slice.call(array, 0, array.length - ((n == null) || guard ? 1 : n));
   };
 
   // Get the last element of an array. Passing **n** will return the last N
   // values in the array. The **guard** check allows it to work with `_.map`.
   _.last = function(array, n, guard) {
     if (array == null) return void 0;
-    if (n == null || guard) return array[array.length - 1];
+    if ((n == null) || guard) return array[array.length - 1];
     return slice.call(array, Math.max(array.length - n, 0));
   };
 
@@ -11252,7 +11221,7 @@ return jQuery;
   // the rest N values in the array. The **guard**
   // check allows it to work with `_.map`.
   _.rest = _.tail = _.drop = function(array, n, guard) {
-    return slice.call(array, n == null || guard ? 1 : n);
+    return slice.call(array, (n == null) || guard ? 1 : n);
   };
 
   // Trim out all falsy values from an array.
@@ -11261,26 +11230,23 @@ return jQuery;
   };
 
   // Internal implementation of a recursive `flatten` function.
-  var flatten = function(input, shallow, strict, output) {
+  var flatten = function(input, shallow, output) {
     if (shallow && _.every(input, _.isArray)) {
       return concat.apply(output, input);
     }
-    for (var i = 0, length = input.length; i < length; i++) {
-      var value = input[i];
-      if (!_.isArray(value) && !_.isArguments(value)) {
-        if (!strict) output.push(value);
-      } else if (shallow) {
-        push.apply(output, value);
+    each(input, function(value) {
+      if (_.isArray(value) || _.isArguments(value)) {
+        shallow ? push.apply(output, value) : flatten(value, shallow, output);
       } else {
-        flatten(value, shallow, strict, output);
+        output.push(value);
       }
-    }
+    });
     return output;
   };
 
   // Flatten out an array, either recursively (by default), or just one level.
   _.flatten = function(array, shallow) {
-    return flatten(array, shallow, false, []);
+    return flatten(array, shallow, []);
   };
 
   // Return a version of the array that does not contain the specified value(s).
@@ -11288,77 +11254,68 @@ return jQuery;
     return _.difference(array, slice.call(arguments, 1));
   };
 
+  // Split an array into two arrays: one whose elements all satisfy the given
+  // predicate, and one whose elements all do not satisfy the predicate.
+  _.partition = function(array, predicate) {
+    var pass = [], fail = [];
+    each(array, function(elem) {
+      (predicate(elem) ? pass : fail).push(elem);
+    });
+    return [pass, fail];
+  };
+
   // Produce a duplicate-free version of the array. If the array has already
   // been sorted, you have the option of using a faster algorithm.
   // Aliased as `unique`.
-  _.uniq = _.unique = function(array, isSorted, iteratee, context) {
-    if (array == null) return [];
-    if (!_.isBoolean(isSorted)) {
-      context = iteratee;
-      iteratee = isSorted;
+  _.uniq = _.unique = function(array, isSorted, iterator, context) {
+    if (_.isFunction(isSorted)) {
+      context = iterator;
+      iterator = isSorted;
       isSorted = false;
     }
-    if (iteratee != null) iteratee = _.iteratee(iteratee, context);
-    var result = [];
+    var initial = iterator ? _.map(array, iterator, context) : array;
+    var results = [];
     var seen = [];
-    for (var i = 0, length = array.length; i < length; i++) {
-      var value = array[i];
-      if (isSorted) {
-        if (!i || seen !== value) result.push(value);
-        seen = value;
-      } else if (iteratee) {
-        var computed = iteratee(value, i, array);
-        if (_.indexOf(seen, computed) < 0) {
-          seen.push(computed);
-          result.push(value);
-        }
-      } else if (_.indexOf(result, value) < 0) {
-        result.push(value);
+    each(initial, function(value, index) {
+      if (isSorted ? (!index || seen[seen.length - 1] !== value) : !_.contains(seen, value)) {
+        seen.push(value);
+        results.push(array[index]);
       }
-    }
-    return result;
+    });
+    return results;
   };
 
   // Produce an array that contains the union: each distinct element from all of
   // the passed-in arrays.
   _.union = function() {
-    return _.uniq(flatten(arguments, true, true, []));
+    return _.uniq(_.flatten(arguments, true));
   };
 
   // Produce an array that contains every item shared between all the
   // passed-in arrays.
   _.intersection = function(array) {
-    if (array == null) return [];
-    var result = [];
-    var argsLength = arguments.length;
-    for (var i = 0, length = array.length; i < length; i++) {
-      var item = array[i];
-      if (_.contains(result, item)) continue;
-      for (var j = 1; j < argsLength; j++) {
-        if (!_.contains(arguments[j], item)) break;
-      }
-      if (j === argsLength) result.push(item);
-    }
-    return result;
+    var rest = slice.call(arguments, 1);
+    return _.filter(_.uniq(array), function(item) {
+      return _.every(rest, function(other) {
+        return _.contains(other, item);
+      });
+    });
   };
 
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
   _.difference = function(array) {
-    var rest = flatten(slice.call(arguments, 1), true, true, []);
-    return _.filter(array, function(value){
-      return !_.contains(rest, value);
-    });
+    var rest = concat.apply(ArrayProto, slice.call(arguments, 1));
+    return _.filter(array, function(value){ return !_.contains(rest, value); });
   };
 
   // Zip together multiple lists into a single array -- elements that share
   // an index go together.
-  _.zip = function(array) {
-    if (array == null) return [];
-    var length = _.max(arguments, 'length').length;
-    var results = Array(length);
+  _.zip = function() {
+    var length = _.max(_.pluck(arguments, 'length').concat(0));
+    var results = new Array(length);
     for (var i = 0; i < length; i++) {
-      results[i] = _.pluck(arguments, i);
+      results[i] = _.pluck(arguments, '' + i);
     }
     return results;
   };
@@ -11379,8 +11336,10 @@ return jQuery;
     return result;
   };
 
-  // Return the position of the first occurrence of an item in an array,
-  // or -1 if the item is not included in the array.
+  // If the browser doesn't supply us with indexOf (I'm looking at you, **MSIE**),
+  // we need this function. Return the position of the first occurrence of an
+  // item in an array, or -1 if the item is not included in the array.
+  // Delegates to **ECMAScript 5**'s native `indexOf` if available.
   // If the array is large and already in sort order, pass `true`
   // for **isSorted** to use binary search.
   _.indexOf = function(array, item, isSorted) {
@@ -11388,23 +11347,26 @@ return jQuery;
     var i = 0, length = array.length;
     if (isSorted) {
       if (typeof isSorted == 'number') {
-        i = isSorted < 0 ? Math.max(0, length + isSorted) : isSorted;
+        i = (isSorted < 0 ? Math.max(0, length + isSorted) : isSorted);
       } else {
         i = _.sortedIndex(array, item);
         return array[i] === item ? i : -1;
       }
     }
+    if (nativeIndexOf && array.indexOf === nativeIndexOf) return array.indexOf(item, isSorted);
     for (; i < length; i++) if (array[i] === item) return i;
     return -1;
   };
 
+  // Delegates to **ECMAScript 5**'s native `lastIndexOf` if available.
   _.lastIndexOf = function(array, item, from) {
     if (array == null) return -1;
-    var idx = array.length;
-    if (typeof from == 'number') {
-      idx = from < 0 ? idx + from + 1 : Math.min(idx, from + 1);
+    var hasIndex = from != null;
+    if (nativeLastIndexOf && array.lastIndexOf === nativeLastIndexOf) {
+      return hasIndex ? array.lastIndexOf(item, from) : array.lastIndexOf(item);
     }
-    while (--idx >= 0) if (array[idx] === item) return idx;
+    var i = (hasIndex ? from : array.length);
+    while (i--) if (array[i] === item) return i;
     return -1;
   };
 
@@ -11416,13 +11378,15 @@ return jQuery;
       stop = start || 0;
       start = 0;
     }
-    step = step || 1;
+    step = arguments[2] || 1;
 
     var length = Math.max(Math.ceil((stop - start) / step), 0);
-    var range = Array(length);
+    var idx = 0;
+    var range = new Array(length);
 
-    for (var idx = 0; idx < length; idx++, start += step) {
-      range[idx] = start;
+    while(idx < length) {
+      range[idx++] = start;
+      start += step;
     }
 
     return range;
@@ -11432,7 +11396,7 @@ return jQuery;
   // ------------------
 
   // Reusable constructor function for prototype setting.
-  var Ctor = function(){};
+  var ctor = function(){};
 
   // Create a function bound to a given object (assigning `this`, and arguments,
   // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
@@ -11440,18 +11404,17 @@ return jQuery;
   _.bind = function(func, context) {
     var args, bound;
     if (nativeBind && func.bind === nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
-    if (!_.isFunction(func)) throw new TypeError('Bind must be called on a function');
+    if (!_.isFunction(func)) throw new TypeError;
     args = slice.call(arguments, 2);
-    bound = function() {
+    return bound = function() {
       if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
-      Ctor.prototype = func.prototype;
-      var self = new Ctor;
-      Ctor.prototype = null;
+      ctor.prototype = func.prototype;
+      var self = new ctor;
+      ctor.prototype = null;
       var result = func.apply(self, args.concat(slice.call(arguments)));
-      if (_.isObject(result)) return result;
+      if (Object(result) === result) return result;
       return self;
     };
-    return bound;
   };
 
   // Partially apply a function by creating a version that has had some of its
@@ -11474,34 +11437,27 @@ return jQuery;
   // are the method names to be bound. Useful for ensuring that all callbacks
   // defined on an object belong to it.
   _.bindAll = function(obj) {
-    var i, length = arguments.length, key;
-    if (length <= 1) throw new Error('bindAll must be passed function names');
-    for (i = 1; i < length; i++) {
-      key = arguments[i];
-      obj[key] = _.bind(obj[key], obj);
-    }
+    var funcs = slice.call(arguments, 1);
+    if (funcs.length === 0) throw new Error('bindAll must be passed function names');
+    each(funcs, function(f) { obj[f] = _.bind(obj[f], obj); });
     return obj;
   };
 
   // Memoize an expensive function by storing its results.
   _.memoize = function(func, hasher) {
-    var memoize = function(key) {
-      var cache = memoize.cache;
-      var address = hasher ? hasher.apply(this, arguments) : key;
-      if (!_.has(cache, address)) cache[address] = func.apply(this, arguments);
-      return cache[address];
+    var memo = {};
+    hasher || (hasher = _.identity);
+    return function() {
+      var key = hasher.apply(this, arguments);
+      return _.has(memo, key) ? memo[key] : (memo[key] = func.apply(this, arguments));
     };
-    memoize.cache = {};
-    return memoize;
   };
 
   // Delays a function for the given number of milliseconds, and then calls
   // it with the arguments supplied.
   _.delay = function(func, wait) {
     var args = slice.call(arguments, 2);
-    return setTimeout(function(){
-      return func.apply(null, args);
-    }, wait);
+    return setTimeout(function(){ return func.apply(null, args); }, wait);
   };
 
   // Defers a function, scheduling it to run after the current call stack has
@@ -11519,12 +11475,12 @@ return jQuery;
     var context, args, result;
     var timeout = null;
     var previous = 0;
-    if (!options) options = {};
+    options || (options = {});
     var later = function() {
       previous = options.leading === false ? 0 : _.now();
       timeout = null;
       result = func.apply(context, args);
-      if (!timeout) context = args = null;
+      context = args = null;
     };
     return function() {
       var now = _.now();
@@ -11532,12 +11488,12 @@ return jQuery;
       var remaining = wait - (now - previous);
       context = this;
       args = arguments;
-      if (remaining <= 0 || remaining > wait) {
+      if (remaining <= 0) {
         clearTimeout(timeout);
         timeout = null;
         previous = now;
         result = func.apply(context, args);
-        if (!timeout) context = args = null;
+        context = args = null;
       } else if (!timeout && options.trailing !== false) {
         timeout = setTimeout(later, remaining);
       }
@@ -11554,14 +11510,13 @@ return jQuery;
 
     var later = function() {
       var last = _.now() - timestamp;
-
-      if (last < wait && last > 0) {
+      if (last < wait) {
         timeout = setTimeout(later, wait - last);
       } else {
         timeout = null;
         if (!immediate) {
           result = func.apply(context, args);
-          if (!timeout) context = args = null;
+          context = args = null;
         }
       }
     };
@@ -11571,13 +11526,28 @@ return jQuery;
       args = arguments;
       timestamp = _.now();
       var callNow = immediate && !timeout;
-      if (!timeout) timeout = setTimeout(later, wait);
+      if (!timeout) {
+        timeout = setTimeout(later, wait);
+      }
       if (callNow) {
         result = func.apply(context, args);
         context = args = null;
       }
 
       return result;
+    };
+  };
+
+  // Returns a function that will be executed at most one time, no matter how
+  // often you call it. Useful for lazy initialization.
+  _.once = function(func) {
+    var ran = false, memo;
+    return function() {
+      if (ran) return memo;
+      ran = true;
+      memo = func.apply(this, arguments);
+      func = null;
+      return memo;
     };
   };
 
@@ -11588,23 +11558,16 @@ return jQuery;
     return _.partial(wrapper, func);
   };
 
-  // Returns a negated version of the passed-in predicate.
-  _.negate = function(predicate) {
-    return function() {
-      return !predicate.apply(this, arguments);
-    };
-  };
-
   // Returns a function that is the composition of a list of functions, each
   // consuming the return value of the function that follows.
   _.compose = function() {
-    var args = arguments;
-    var start = args.length - 1;
+    var funcs = arguments;
     return function() {
-      var i = start;
-      var result = args[start].apply(this, arguments);
-      while (i--) result = args[i].call(this, result);
-      return result;
+      var args = arguments;
+      for (var i = funcs.length - 1; i >= 0; i--) {
+        args = [funcs[i].apply(this, args)];
+      }
+      return args[0];
     };
   };
 
@@ -11616,23 +11579,6 @@ return jQuery;
       }
     };
   };
-
-  // Returns a function that will only be executed before being called N times.
-  _.before = function(times, func) {
-    var memo;
-    return function() {
-      if (--times > 0) {
-        memo = func.apply(this, arguments);
-      } else {
-        func = null;
-      }
-      return memo;
-    };
-  };
-
-  // Returns a function that will be executed at most one time, no matter how
-  // often you call it. Useful for lazy initialization.
-  _.once = _.partial(_.before, 2);
 
   // Object Functions
   // ----------------
@@ -11651,7 +11597,7 @@ return jQuery;
   _.values = function(obj) {
     var keys = _.keys(obj);
     var length = keys.length;
-    var values = Array(length);
+    var values = new Array(length);
     for (var i = 0; i < length; i++) {
       values[i] = obj[keys[i]];
     }
@@ -11662,7 +11608,7 @@ return jQuery;
   _.pairs = function(obj) {
     var keys = _.keys(obj);
     var length = keys.length;
-    var pairs = Array(length);
+    var pairs = new Array(length);
     for (var i = 0; i < length; i++) {
       pairs[i] = [keys[i], obj[keys[i]]];
     }
@@ -11691,62 +11637,45 @@ return jQuery;
 
   // Extend a given object with all the properties in passed-in object(s).
   _.extend = function(obj) {
-    if (!_.isObject(obj)) return obj;
-    var source, prop;
-    for (var i = 1, length = arguments.length; i < length; i++) {
-      source = arguments[i];
-      for (prop in source) {
-        if (hasOwnProperty.call(source, prop)) {
-            obj[prop] = source[prop];
+    each(slice.call(arguments, 1), function(source) {
+      if (source) {
+        for (var prop in source) {
+          obj[prop] = source[prop];
         }
       }
-    }
+    });
     return obj;
   };
 
   // Return a copy of the object only containing the whitelisted properties.
-  _.pick = function(obj, iteratee, context) {
-    var result = {}, key;
-    if (obj == null) return result;
-    if (_.isFunction(iteratee)) {
-      iteratee = createCallback(iteratee, context);
-      for (key in obj) {
-        var value = obj[key];
-        if (iteratee(value, key, obj)) result[key] = value;
-      }
-    } else {
-      var keys = concat.apply([], slice.call(arguments, 1));
-      obj = new Object(obj);
-      for (var i = 0, length = keys.length; i < length; i++) {
-        key = keys[i];
-        if (key in obj) result[key] = obj[key];
-      }
-    }
-    return result;
+  _.pick = function(obj) {
+    var copy = {};
+    var keys = concat.apply(ArrayProto, slice.call(arguments, 1));
+    each(keys, function(key) {
+      if (key in obj) copy[key] = obj[key];
+    });
+    return copy;
   };
 
    // Return a copy of the object without the blacklisted properties.
-  _.omit = function(obj, iteratee, context) {
-    if (_.isFunction(iteratee)) {
-      iteratee = _.negate(iteratee);
-    } else {
-      var keys = _.map(concat.apply([], slice.call(arguments, 1)), String);
-      iteratee = function(value, key) {
-        return !_.contains(keys, key);
-      };
+  _.omit = function(obj) {
+    var copy = {};
+    var keys = concat.apply(ArrayProto, slice.call(arguments, 1));
+    for (var key in obj) {
+      if (!_.contains(keys, key)) copy[key] = obj[key];
     }
-    return _.pick(obj, iteratee, context);
+    return copy;
   };
 
   // Fill in a given object with default properties.
   _.defaults = function(obj) {
-    if (!_.isObject(obj)) return obj;
-    for (var i = 1, length = arguments.length; i < length; i++) {
-      var source = arguments[i];
-      for (var prop in source) {
-        if (obj[prop] === void 0) obj[prop] = source[prop];
+    each(slice.call(arguments, 1), function(source) {
+      if (source) {
+        for (var prop in source) {
+          if (obj[prop] === void 0) obj[prop] = source[prop];
+        }
       }
-    }
+    });
     return obj;
   };
 
@@ -11768,7 +11697,7 @@ return jQuery;
   var eq = function(a, b, aStack, bStack) {
     // Identical objects are equal. `0 === -0`, but they aren't identical.
     // See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
-    if (a === b) return a !== 0 || 1 / a === 1 / b;
+    if (a === b) return a !== 0 || 1 / a == 1 / b;
     // A strict comparison is necessary because `null == undefined`.
     if (a == null || b == null) return a === b;
     // Unwrap any wrapped objects.
@@ -11776,27 +11705,29 @@ return jQuery;
     if (b instanceof _) b = b._wrapped;
     // Compare `[[Class]]` names.
     var className = toString.call(a);
-    if (className !== toString.call(b)) return false;
+    if (className != toString.call(b)) return false;
     switch (className) {
-      // Strings, numbers, regular expressions, dates, and booleans are compared by value.
-      case '[object RegExp]':
-      // RegExps are coerced to strings for comparison (Note: '' + /a/i === '/a/i')
+      // Strings, numbers, dates, and booleans are compared by value.
       case '[object String]':
         // Primitives and their corresponding object wrappers are equivalent; thus, `"5"` is
         // equivalent to `new String("5")`.
-        return '' + a === '' + b;
+        return a == String(b);
       case '[object Number]':
-        // `NaN`s are equivalent, but non-reflexive.
-        // Object(NaN) is equivalent to NaN
-        if (+a !== +a) return +b !== +b;
-        // An `egal` comparison is performed for other numeric values.
-        return +a === 0 ? 1 / +a === 1 / b : +a === +b;
+        // `NaN`s are equivalent, but non-reflexive. An `egal` comparison is performed for
+        // other numeric values.
+        return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
       case '[object Date]':
       case '[object Boolean]':
         // Coerce dates and booleans to numeric primitive values. Dates are compared by their
         // millisecond representations. Note that invalid dates with millisecond representations
         // of `NaN` are not equivalent.
-        return +a === +b;
+        return +a == +b;
+      // RegExps are compared by their source patterns and flags.
+      case '[object RegExp]':
+        return a.source == b.source &&
+               a.global == b.global &&
+               a.multiline == b.multiline &&
+               a.ignoreCase == b.ignoreCase;
     }
     if (typeof a != 'object' || typeof b != 'object') return false;
     // Assume equality for cyclic structures. The algorithm for detecting cyclic
@@ -11805,29 +11736,25 @@ return jQuery;
     while (length--) {
       // Linear search. Performance is inversely proportional to the number of
       // unique nested structures.
-      if (aStack[length] === a) return bStack[length] === b;
+      if (aStack[length] == a) return bStack[length] == b;
     }
     // Objects with different constructors are not equivalent, but `Object`s
     // from different frames are.
     var aCtor = a.constructor, bCtor = b.constructor;
-    if (
-      aCtor !== bCtor &&
-      // Handle Object.create(x) cases
-      'constructor' in a && 'constructor' in b &&
-      !(_.isFunction(aCtor) && aCtor instanceof aCtor &&
-        _.isFunction(bCtor) && bCtor instanceof bCtor)
-    ) {
+    if (aCtor !== bCtor && !(_.isFunction(aCtor) && (aCtor instanceof aCtor) &&
+                             _.isFunction(bCtor) && (bCtor instanceof bCtor))
+                        && ('constructor' in a && 'constructor' in b)) {
       return false;
     }
     // Add the first object to the stack of traversed objects.
     aStack.push(a);
     bStack.push(b);
-    var size, result;
+    var size = 0, result = true;
     // Recursively compare objects and arrays.
-    if (className === '[object Array]') {
+    if (className == '[object Array]') {
       // Compare array lengths to determine if a deep comparison is necessary.
       size = a.length;
-      result = size === b.length;
+      result = size == b.length;
       if (result) {
         // Deep compare the contents, ignoring non-numeric properties.
         while (size--) {
@@ -11836,16 +11763,20 @@ return jQuery;
       }
     } else {
       // Deep compare objects.
-      var keys = _.keys(a), key;
-      size = keys.length;
-      // Ensure that both objects contain the same number of properties before comparing deep equality.
-      result = _.keys(b).length === size;
-      if (result) {
-        while (size--) {
-          // Deep compare each member
-          key = keys[size];
+      for (var key in a) {
+        if (_.has(a, key)) {
+          // Count the expected number of properties.
+          size++;
+          // Deep compare each member.
           if (!(result = _.has(b, key) && eq(a[key], b[key], aStack, bStack))) break;
         }
+      }
+      // Ensure that both objects contain the same number of properties.
+      if (result) {
+        for (key in b) {
+          if (_.has(b, key) && !(size--)) break;
+        }
+        result = !size;
       }
     }
     // Remove the first object from the stack of traversed objects.
@@ -11863,7 +11794,7 @@ return jQuery;
   // An "empty" object has no enumerable own-properties.
   _.isEmpty = function(obj) {
     if (obj == null) return true;
-    if (_.isArray(obj) || _.isString(obj) || _.isArguments(obj)) return obj.length === 0;
+    if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
     for (var key in obj) if (_.has(obj, key)) return false;
     return true;
   };
@@ -11876,19 +11807,18 @@ return jQuery;
   // Is a given value an array?
   // Delegates to ECMA5's native Array.isArray
   _.isArray = nativeIsArray || function(obj) {
-    return toString.call(obj) === '[object Array]';
+    return toString.call(obj) == '[object Array]';
   };
 
   // Is a given variable an object?
   _.isObject = function(obj) {
-    var type = typeof obj;
-    return type === 'function' || type === 'object' && !!obj;
+    return obj === Object(obj);
   };
 
   // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp.
-  _.each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function(name) {
+  each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function(name) {
     _['is' + name] = function(obj) {
-      return toString.call(obj) === '[object ' + name + ']';
+      return toString.call(obj) == '[object ' + name + ']';
     };
   });
 
@@ -11896,14 +11826,14 @@ return jQuery;
   // there isn't any inspectable "Arguments" type.
   if (!_.isArguments(arguments)) {
     _.isArguments = function(obj) {
-      return _.has(obj, 'callee');
+      return !!(obj && _.has(obj, 'callee'));
     };
   }
 
-  // Optimize `isFunction` if appropriate. Work around an IE 11 bug.
-  if (typeof /./ !== 'function') {
+  // Optimize `isFunction` if appropriate.
+  if (typeof (/./) !== 'function') {
     _.isFunction = function(obj) {
-      return typeof obj == 'function' || false;
+      return typeof obj === 'function';
     };
   }
 
@@ -11914,12 +11844,12 @@ return jQuery;
 
   // Is the given value `NaN`? (NaN is the only number which does not equal itself).
   _.isNaN = function(obj) {
-    return _.isNumber(obj) && obj !== +obj;
+    return _.isNumber(obj) && obj != +obj;
   };
 
   // Is a given value a boolean?
   _.isBoolean = function(obj) {
-    return obj === true || obj === false || toString.call(obj) === '[object Boolean]';
+    return obj === true || obj === false || toString.call(obj) == '[object Boolean]';
   };
 
   // Is a given value equal to null?
@@ -11935,7 +11865,7 @@ return jQuery;
   // Shortcut function for checking if an object has a given property directly
   // on itself (in other words, not on a prototype).
   _.has = function(obj, key) {
-    return obj != null && hasOwnProperty.call(obj, key);
+    return hasOwnProperty.call(obj, key);
   };
 
   // Utility Functions
@@ -11948,18 +11878,16 @@ return jQuery;
     return this;
   };
 
-  // Keep the identity function around for default iteratees.
+  // Keep the identity function around for default iterators.
   _.identity = function(value) {
     return value;
   };
 
   _.constant = function(value) {
-    return function() {
+    return function () {
       return value;
     };
   };
-
-  _.noop = function(){};
 
   _.property = function(key) {
     return function(obj) {
@@ -11969,23 +11897,20 @@ return jQuery;
 
   // Returns a predicate for checking whether an object has a given set of `key:value` pairs.
   _.matches = function(attrs) {
-    var pairs = _.pairs(attrs), length = pairs.length;
     return function(obj) {
-      if (obj == null) return !length;
-      obj = new Object(obj);
-      for (var i = 0; i < length; i++) {
-        var pair = pairs[i], key = pair[0];
-        if (pair[1] !== obj[key] || !(key in obj)) return false;
+      if (obj === attrs) return true; //avoid comparing an object to itself.
+      for (var key in attrs) {
+        if (attrs[key] !== obj[key])
+          return false;
       }
       return true;
-    };
+    }
   };
 
   // Run a function **n** times.
-  _.times = function(n, iteratee, context) {
+  _.times = function(n, iterator, context) {
     var accum = Array(Math.max(0, n));
-    iteratee = createCallback(iteratee, context, 1);
-    for (var i = 0; i < n; i++) accum[i] = iteratee(i);
+    for (var i = 0; i < n; i++) accum[i] = iterator.call(context, i);
     return accum;
   };
 
@@ -11999,44 +11924,54 @@ return jQuery;
   };
 
   // A (possibly faster) way to get the current timestamp as an integer.
-  _.now = Date.now || function() {
-    return new Date().getTime();
-  };
+  _.now = Date.now || function() { return new Date().getTime(); };
 
-   // List of HTML entities for escaping.
-  var escapeMap = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#x27;',
-    '`': '&#x60;'
+  // List of HTML entities for escaping.
+  var entityMap = {
+    escape: {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#x27;'
+    }
   };
-  var unescapeMap = _.invert(escapeMap);
+  entityMap.unescape = _.invert(entityMap.escape);
+
+  // Regexes containing the keys and values listed immediately above.
+  var entityRegexes = {
+    escape:   new RegExp('[' + _.keys(entityMap.escape).join('') + ']', 'g'),
+    unescape: new RegExp('(' + _.keys(entityMap.unescape).join('|') + ')', 'g')
+  };
 
   // Functions for escaping and unescaping strings to/from HTML interpolation.
-  var createEscaper = function(map) {
-    var escaper = function(match) {
-      return map[match];
+  _.each(['escape', 'unescape'], function(method) {
+    _[method] = function(string) {
+      if (string == null) return '';
+      return ('' + string).replace(entityRegexes[method], function(match) {
+        return entityMap[method][match];
+      });
     };
-    // Regexes for identifying a key that needs to be escaped
-    var source = '(?:' + _.keys(map).join('|') + ')';
-    var testRegexp = RegExp(source);
-    var replaceRegexp = RegExp(source, 'g');
-    return function(string) {
-      string = string == null ? '' : '' + string;
-      return testRegexp.test(string) ? string.replace(replaceRegexp, escaper) : string;
-    };
-  };
-  _.escape = createEscaper(escapeMap);
-  _.unescape = createEscaper(unescapeMap);
+  });
 
   // If the value of the named `property` is a function then invoke it with the
   // `object` as context; otherwise, return it.
   _.result = function(object, property) {
     if (object == null) return void 0;
     var value = object[property];
-    return _.isFunction(value) ? object[property]() : value;
+    return _.isFunction(value) ? value.call(object) : value;
+  };
+
+  // Add your own custom functions to the Underscore object.
+  _.mixin = function(obj) {
+    each(_.functions(obj), function(name) {
+      var func = _[name] = obj[name];
+      _.prototype[name] = function() {
+        var args = [this._wrapped];
+        push.apply(args, arguments);
+        return result.call(this, func.apply(_, args));
+      };
+    });
   };
 
   // Generate a unique integer id (unique within the entire client session).
@@ -12067,26 +12002,22 @@ return jQuery;
     '\\':     '\\',
     '\r':     'r',
     '\n':     'n',
+    '\t':     't',
     '\u2028': 'u2028',
     '\u2029': 'u2029'
   };
 
-  var escaper = /\\|'|\r|\n|\u2028|\u2029/g;
-
-  var escapeChar = function(match) {
-    return '\\' + escapes[match];
-  };
+  var escaper = /\\|'|\r|\n|\t|\u2028|\u2029/g;
 
   // JavaScript micro-templating, similar to John Resig's implementation.
   // Underscore templating handles arbitrary delimiters, preserves whitespace,
   // and correctly escapes quotes within interpolated code.
-  // NB: `oldSettings` only exists for backwards compatibility.
-  _.template = function(text, settings, oldSettings) {
-    if (!settings && oldSettings) settings = oldSettings;
+  _.template = function(text, data, settings) {
+    var render;
     settings = _.defaults({}, settings, _.templateSettings);
 
     // Combine delimiters into one regular expression via alternation.
-    var matcher = RegExp([
+    var matcher = new RegExp([
       (settings.escape || noMatch).source,
       (settings.interpolate || noMatch).source,
       (settings.evaluate || noMatch).source
@@ -12096,18 +12027,19 @@ return jQuery;
     var index = 0;
     var source = "__p+='";
     text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
-      source += text.slice(index, offset).replace(escaper, escapeChar);
-      index = offset + match.length;
+      source += text.slice(index, offset)
+        .replace(escaper, function(match) { return '\\' + escapes[match]; });
 
       if (escape) {
         source += "'+\n((__t=(" + escape + "))==null?'':_.escape(__t))+\n'";
-      } else if (interpolate) {
+      }
+      if (interpolate) {
         source += "'+\n((__t=(" + interpolate + "))==null?'':__t)+\n'";
-      } else if (evaluate) {
+      }
+      if (evaluate) {
         source += "';\n" + evaluate + "\n__p+='";
       }
-
-      // Adobe VMs need the match returned to produce the correct offest.
+      index = offset + match.length;
       return match;
     });
     source += "';\n";
@@ -12117,31 +12049,29 @@ return jQuery;
 
     source = "var __t,__p='',__j=Array.prototype.join," +
       "print=function(){__p+=__j.call(arguments,'');};\n" +
-      source + 'return __p;\n';
+      source + "return __p;\n";
 
     try {
-      var render = new Function(settings.variable || 'obj', '_', source);
+      render = new Function(settings.variable || 'obj', '_', source);
     } catch (e) {
       e.source = source;
       throw e;
     }
 
+    if (data) return render(data, _);
     var template = function(data) {
       return render.call(this, data, _);
     };
 
-    // Provide the compiled source as a convenience for precompilation.
-    var argument = settings.variable || 'obj';
-    template.source = 'function(' + argument + '){\n' + source + '}';
+    // Provide the compiled function source as a convenience for precompilation.
+    template.source = 'function(' + (settings.variable || 'obj') + '){\n' + source + '}';
 
     return template;
   };
 
-  // Add a "chain" function. Start chaining a wrapped Underscore object.
+  // Add a "chain" function, which will delegate to the wrapper.
   _.chain = function(obj) {
-    var instance = _(obj);
-    instance._chain = true;
-    return instance;
+    return _(obj).chain();
   };
 
   // OOP
@@ -12155,44 +12085,42 @@ return jQuery;
     return this._chain ? _(obj).chain() : obj;
   };
 
-  // Add your own custom functions to the Underscore object.
-  _.mixin = function(obj) {
-    _.each(_.functions(obj), function(name) {
-      var func = _[name] = obj[name];
-      _.prototype[name] = function() {
-        var args = [this._wrapped];
-        push.apply(args, arguments);
-        return result.call(this, func.apply(_, args));
-      };
-    });
-  };
-
   // Add all of the Underscore functions to the wrapper object.
   _.mixin(_);
 
   // Add all mutator Array functions to the wrapper.
-  _.each(['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift'], function(name) {
+  each(['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift'], function(name) {
     var method = ArrayProto[name];
     _.prototype[name] = function() {
       var obj = this._wrapped;
       method.apply(obj, arguments);
-      if ((name === 'shift' || name === 'splice') && obj.length === 0) delete obj[0];
+      if ((name == 'shift' || name == 'splice') && obj.length === 0) delete obj[0];
       return result.call(this, obj);
     };
   });
 
   // Add all accessor Array functions to the wrapper.
-  _.each(['concat', 'join', 'slice'], function(name) {
+  each(['concat', 'join', 'slice'], function(name) {
     var method = ArrayProto[name];
     _.prototype[name] = function() {
       return result.call(this, method.apply(this._wrapped, arguments));
     };
   });
 
-  // Extracts the result from a wrapped and chained object.
-  _.prototype.value = function() {
-    return this._wrapped;
-  };
+  _.extend(_.prototype, {
+
+    // Start chaining a wrapped Underscore object.
+    chain: function() {
+      this._chain = true;
+      return this;
+    },
+
+    // Extracts the result from a wrapped and chained object.
+    value: function() {
+      return this._wrapped;
+    }
+
+  });
 
   // AMD registration happens at the end for compatibility with AMD loaders
   // that may not enforce next-turn semantics on modules. Even though general
@@ -12206,7 +12134,7 @@ return jQuery;
       return _;
     });
   }
-}.call(this));
+}).call(this);
 
 /*!
 * screenfull
@@ -43249,7 +43177,7 @@ define('models',[
     'office_id', 'precinct_id', 'precincts_reporting', 'question_body',
     'ranked_choice', 'results_group', 'seats', 'state', 'title', 'sub_title',
     'total_effected_precincts', 'total_votes_for_office', 'updated',
-    'question_body', 'question_help', 'primary', 'scope', 'partisan', 'incumbent_party', 'percent_needed'],
+    'question_body', 'question_help', 'primary', 'scope', 'partisan', 'incumbent_party', 'percent_needed', 'called'],
 
     // Non-Partisan parties
     npParties: ['NP', 'WI'],
@@ -43398,6 +43326,12 @@ define('models',[
         parsed.final = true;
       }
 
+      //Due to delays in mail-in ballot counting in 2020, call some races too close to call
+      //according to an arbitrary threshold. 
+      if (parsed.results[0].percentage - parsed.results[1].percentage < 3) {
+        parsed.too_close_to_call = true;
+      }
+
       // Further formatting
       parsed.updated = moment.unix(parsed.updated);
       return parsed;
@@ -43419,16 +43353,28 @@ define('models',[
     fetchBoundary: function() {
       var thisModel = this;
 
-      helpers.jsonpRequest({
-        url: this.app.options.boundaryAPI + 'boundaries/' +
-          encodeURIComponent(this.get('boundary')) + '/simple_shape'
-      }, this.app.options)
-      .done(function(response) {
-        if (response) {
-          thisModel.set('boundarySets', [{'slug': thisModel.get('boundary'), 'simple_shape': response}]);
-          thisModel.set('fetchedBoundary', true);
-        }
+      thisModel.set('boundarySets', []);
+      boundaries = [this.get('boundary')];
+      if (boundaries[0].includes(",")) {
+        boundaries = boundaries[0].split(",");
+      }
+
+      _.each(boundaries, function(b){
+        helpers.jsonpRequest({
+          url: thisModel.app.options.boundaryAPI + 'boundaries/' + encodeURIComponent(b) + '/simple_shape'
+        }, thisModel.app.options)
+        .done(function(response) {
+          if (response) {
+            boundarySets = thisModel.get('boundarySets');
+            boundarySets.push({'slug': b, 'simple_shape': response});
+            thisModel.set('boundarySets', boundarySets);
+            if (boundarySets.length == boundaries.length) {
+              thisModel.set('fetchedBoundary', true);
+            }
+          }
+        });
       });
+
     },
 
     // Our API is pretty simple, so we do a basic time based
@@ -43647,15 +43593,29 @@ define('collections',[
       var thisCollection = this;
 
       thisCollection.each(function(m){
-        helpers.jsonpRequest({
-          url: thisCollection.app.options.boundaryAPI + 'boundaries/' + encodeURIComponent(m.get('boundary')) + '/simple_shape'
-        }, thisCollection.app.options)
-        .done(function(response){
+        m.set('boundarySets', []);
+        boundaries = [m.get('boundary')];
+        if (boundaries[0].includes(",")) {
+          boundaries = boundaries[0].split(",");
+        }
+        m.set('totalBoundaryCount', boundaries.length);
+        
+        _.each(boundaries, function(b){
+          helpers.jsonpRequest({
+            url: thisCollection.app.options.boundaryAPI + 'boundaries/' + encodeURIComponent(b) + '/simple_shape'
+          }, thisCollection.app.options)
+          .done(function(response) {
             if (response) {
-            m.set('boundarySets', [{'slug': m.get('boundary'), 'simple_shape': response}]);
-            m.set('fetchedBoundary', true);
-          }
+              boundarySets = m.get('boundarySets');
+              boundarySets.push({'slug': b, 'simple_shape': response});
+              m.set('boundarySets', boundarySets);
+              if (boundarySets.length == m.get('totalBoundaryCount')) {
+                m.set('fetchedBoundary', true);
+              }
+            }
+          });
         });
+
       });
 
     },
@@ -43722,15 +43682,9 @@ define('collections',[
           }, thisCollection.app.options)
           .done(function(response){
             m.set('boundarySets', [{'slug': slug, 'simple_shape': response}]);
+            m.set('fetchedBoundary', true);
           });
         });
-      });
-
-      // Since Ractive's backbone adaptor does not seem to
-      // react to properties that are not attributes of a model
-      // or a model in a collection
-      this.each(function(m) {
-        m.set('fetchedBoundary', true);
       });
 
       this.matchedBoundary = true;
@@ -46395,6 +46349,10 @@ define("placeholders-js", ["jquery"], function(){});
       "#FF781F"
     ],
     [
+      "ia",
+      "#FF781F"
+    ],
+    [
       "lib",
       "#7A7A7A"
     ],
@@ -46424,7 +46382,7 @@ define("placeholders-js", ["jquery"], function(){});
     ],
     [
       "lmn",
-      "#7A7A7A"
+      "#286806"
     ],
     [
       "mop",
@@ -46440,10 +46398,6 @@ define("placeholders-js", ["jquery"], function(){});
     ],
     [
       "sl",
-      "#7A7A7A"
-    ],
-    [
-      "jp",
       "#7A7A7A"
     ]
   ]
@@ -46508,7 +46462,7 @@ define('text!templates/application.mustache',[],function () { return '\n\n<a hre
 define('text!templates/footnote.mustache',[],function () { return '<div class="footnote">\n  <p>Unofficial election data provided by the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a>.  For ranked-choice contests data is supplemented manually with data from the respective jurisdictions.  Test data will be provided until 8PM on Election Night.</p>\n\n  <p>The geographical boundaries, though received from official sources and queried from our <a href="https://represent-minnesota.herokuapp.com" target="_blank">boundary service</a>, may not represent the exact, offical area for a contest, race, or election.  It is also possible that for a given location the contests may not be accurate due to data quality with multiple agencies.  Please refer to your local and state election officials to know exactly what contests happen for a given location.</p>\n\n  <p>Some map data © OpenStreetMap contributors; licensed under the <a href="http://www.openstreetmap.org/copyright" target="_blank">Open Data Commons Open Database License</a>.  Some map design © MapBox; licensed according to the <a href="http://mapbox.com/tos/" target="_blank">MapBox Terms of Service</a>.  Location geocoding provided by <a href="http://www.mapquest.com/" target="_blank">Mapquest</a> and is not guaranteed to be accurate.</p>\n\n  <p>This application was designed and built by Alan Palazzolo, Kaeti Hinck and Tom Nehil. Some code, techniques, and data on <a href="https://github.com/minnpost/minnpost-elections-dashboard" target="_blank">Github</a>.</p>\n</div>\n';});
 
 
-define('text!templates/contest.mustache',[],function () { return '<div class="contest {{#isDashboard}}dashboard-contest{{/isDashboard}} {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}} {{#(final === true)}}is-final{{/()}} {{#primary}}primary{{/primary}} contest-{{id}}">\n  {{^isDashboard}}\n    <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n  {{/isDashboard}}\n\n  <div>\n    {{#((results.length == 0 || results == undefined) && !synced)}}\n      {{>loading}}\n    {{/()}}\n  </div>\n\n  {{#((results.length == 0 || results == undefined) && synced)}}\n    <h3>Did not find any contests</h3>\n  {{/()}}\n\n\n  {{#((results.length > 0) && synced)}}\n    <h3>\n      {{#(customTitle != undefined)}}{{ customTitle }}{{/()}}\n      {{#(customTitle == undefined)}}{{ title }}{{/()}}\n      {{#(show_party != undefined)}}<span class="show-party party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}\n    </h3>\n\n    {{#sub_title}}\n      <h5>{{ sub_title }}</h5>\n    {{/sub_title}}\n\n    {{^isDashboard}}\n      <div class="last-updated">Last updated {{ updated.formatToday() }}</div>\n    {{/isDashboard}}\n\n    {{#(!!question_body)}}\n      <p>{{{ question_body }}}</p>\n    {{/()}}\n\n    {{#percent_needed}}\n      <p><em>This contest requires {{ formatters.number(percent_needed, 1) }}% or more "yes" votes for the measure to pass.</em></p>\n    {{/percent_needed}}\n  {{/()}}\n\n  <div class="{{^isDashboard}}row{{/isDashboard}}">\n    <div class="{{^isDashboard}}column-medium-70 inner-column-left{{/isDashboard}}">\n      <div class="">\n        <table class="striped">\n          <thead>\n            <tr class="table-first-heading">\n              <th class="winner-column"></th>\n              <th>Candidate</th>\n              {{#(partisan && show_party === undefined)}}\n                <th>\n                  <span class="large-table-label">Party</span>\n                  <span class="small-table-label"></span>\n                </th>\n              {{/()}}\n              {{#(ranked_choice == 1)}}\n                <th class="first-choice-column">Results</th>\n                <th class="second-choice-column"></th>\n                <th class="third-choice-column"></th>\n                <th class="final-column">Final</th>\n              {{/()}}\n              {{#(ranked_choice != 1)}}\n                {{^isDashboard}}\n                  <th class="percentage">\n                    <span class="large-table-label">Percentage</span>\n                    <span class="small-table-label">%</span>\n                  </th>\n                  <th class="votes">Votes</th>\n                {{/isDashboard}}\n                {{#isDashboard}}\n                  <th class="percentage">Results</th>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n            <tr class="table-second-heading">\n              <th class="winner-column"></th>\n              <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>\n              {{#(partisan && show_party === undefined)}}\n                <th></th>\n              {{/()}}\n              {{#(ranked_choice == 1)}}\n                <th class="first-choice-column first-choice-heading">1st choice</th>\n                <th class="second-choice-column second-choice-heading">2nd choice</th>\n                <th class="third-choice-column third-choice-heading">3rd choice</th>\n                <th class="final-column"></th>\n              {{/()}}\n              {{#(ranked_choice != 1)}}\n                <th></th>\n                {{^isDashboard}}\n                  <th></th>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n          </thead>\n\n          <tbody>\n            {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party && party_id == show_party)))}}\n              <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? \'even\' : \'odd\' }} {{#primary}}{{ party_id.toLowerCase() }}{{/primary}}">\n                <td class="winner-column"><!--{{#winner}}<span class="fa fa-check"></span>{{/winner}}--></td>\n\n                <td class="candidate-column">{{ candidate }}</td>\n\n                {{#(partisan && show_party === undefined)}}\n                  <td>\n                    {{#([\'WI\', \'NP\'].indexOf(party_id) === -1)}}\n                      <span class="party-label bg-color-political-{{ party_id.toLowerCase() }}" title="{{ parties[party_id.toLowerCase()] }}">{{ party_id }}</span>\n                    {{/()}}\n                  </td>\n                {{/()}}\n\n                {{#(ranked_choice == 1)}}\n                  <td class="first-choice-column first-choice-heading">{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="second-choice-column first-choice-heading">{{ formatters.number(ranked_choices.2.percentage) }}% ({{ formatters.number(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="third-choice-column first-choice-heading">{{ formatters.number(ranked_choices.3.percentage) }}% ({{ formatters.number(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="final-column first-choice-heading">{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% ({{ formatters.number(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>\n                {{/()}}\n\n                {{#(ranked_choice != 1)}}\n                  <td class="percentage">{{ formatters.number(percentage) }}%</td>\n                  {{^isDashboard}}\n                    <td class="votes">{{ formatters.number(votes_candidate, 0) }}</td>\n                  {{/isDashboard}}\n                {{/()}}\n              </tr>\n            {{/()}} {{/results}}\n          </tbody>\n        </table>\n      </div>\n      \n      <a href="#contest/{{ id }}" class="contest-link">{{#isDashboard}}Full results{{/isDashboard}}{{^isDashboard}}Permalink{{/isDashboard}}</a>\n    </div>\n\n\n\n    {{^isDashboard}}\n      <div class="column-medium-30 inner-column-right">\n        <div class="contest-map" id="contest-map-{{ id }}"></div>\n      </div>\n    {{/isDashboard}}\n  </div>\n</div>\n';});
+define('text!templates/contest.mustache',[],function () { return '<div class="contest {{#isDashboard}}dashboard-contest{{/isDashboard}} {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}} {{#(final === true)}}is-final{{/()}} {{#primary}}primary{{/primary}} contest-{{id}}">\n  {{^isDashboard}}\n    <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n  {{/isDashboard}}\n\n  <div>\n    {{#((results.length == 0 || results == undefined) && !synced)}}\n      {{>loading}}\n    {{/()}}\n  </div>\n\n  {{#((results.length == 0 || results == undefined) && synced)}}\n    <h3>Did not find any contests</h3>\n  {{/()}}\n\n\n  {{#((results.length > 0) && synced)}}\n    <h3>\n      {{#(customTitle != undefined)}}{{ customTitle }}{{/()}}\n      {{#(customTitle == undefined)}}{{ title }}{{/()}}\n      {{#(show_party != undefined)}}<span class="show-party party-label bg-color-political-{{ show_party.toLowerCase() }}" title="{{ parties[show_party.toLowerCase()] }}">{{ show_party }}</span>{{/()}}\n    </h3>\n\n    {{#sub_title}}\n      <h5>{{ sub_title }}</h5>\n    {{/sub_title}}\n\n    {{^isDashboard}}\n      <div class="last-updated">Last updated {{ updated.formatToday() }}</div>\n    {{/isDashboard}}\n\n    {{#(!!question_body)}}\n      <p>{{{ question_body }}}</p>\n    {{/()}}\n\n    {{#percent_needed}}\n      <p><em>This contest requires {{ formatters.number(percent_needed, 1) }}% or more "yes" votes for the measure to pass.</em></p>\n    {{/percent_needed}}\n  {{/()}}\n\n  <div class="{{^isDashboard}}row{{/isDashboard}}">\n    <div class="{{^isDashboard}}column-medium-70 inner-column-left{{/isDashboard}}">\n      <div class="">\n        <table class="striped">\n          <thead>\n            <tr class="table-first-heading">\n              <th class="winner-column"></th>\n              <th>Candidate</th>\n              {{#(partisan && show_party === undefined)}}\n                <th>\n                  <span class="large-table-label">Party</span>\n                  <span class="small-table-label"></span>\n                </th>\n              {{/()}}\n              {{#(ranked_choice == 1)}}\n                <th class="first-choice-column">Results</th>\n                <th class="second-choice-column"></th>\n                <th class="third-choice-column"></th>\n                <th class="final-column">Final</th>\n              {{/()}}\n              {{#(ranked_choice != 1)}}\n                {{^isDashboard}}\n                  <th class="percentage">\n                    <span class="large-table-label">Percentage</span>\n                    <span class="small-table-label">%</span>\n                  </th>\n                  <th class="votes">Votes</th>\n                {{/isDashboard}}\n                {{#isDashboard}}\n                  <th class="percentage">Results</th>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n            <tr class="table-second-heading">\n              <th class="winner-column"></th>\n              <th>{{ precincts_reporting }} of {{ total_effected_precincts }} precincts reporting.  {{#(seats > 1)}}Choosing {{ seats }}.{{/()}}</th>\n              {{#(partisan && show_party === undefined)}}\n                <th></th>\n              {{/()}}\n              {{#(ranked_choice == 1)}}\n                <th class="first-choice-column first-choice-heading">1st choice</th>\n                <th class="second-choice-column second-choice-heading">2nd choice</th>\n                <th class="third-choice-column third-choice-heading">3rd choice</th>\n                <th class="final-column"></th>\n              {{/()}}\n              {{#(ranked_choice != 1)}}\n                <th></th>\n                {{^isDashboard}}\n                  <th></th>\n                {{/isDashboard}}\n              {{/()}}\n            </tr>\n          </thead>\n\n          <tbody>\n            {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party && party_id == show_party)))}}\n              <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? \'even\' : \'odd\' }} {{#primary}}{{ party_id.toLowerCase() }}{{/primary}}">\n                <td class="winner-column">{{#winner}}{{#(!too_close_to_call || called)}}<span class="fa fa-check"></span>{{/()}}{{/winner}}</td>\n\n                <td class="candidate-column">{{ candidate }}</td>\n\n                {{#(partisan && show_party === undefined)}}\n                  <td>\n                    {{#([\'WI\', \'NP\'].indexOf(party_id) === -1)}}\n                      <span class="party-label bg-color-political-{{ party_id.toLowerCase() }}" title="{{ parties[party_id.toLowerCase()] }}">{{ party_id }}</span>\n                    {{/()}}\n                  </td>\n                {{/()}}\n\n                {{#(ranked_choice == 1)}}\n                  <td class="first-choice-column first-choice-heading">{{ formatters.number(ranked_choices.1.percentage) }}% ({{ formatters.number(ranked_choices.1.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="second-choice-column first-choice-heading">{{ formatters.number(ranked_choices.2.percentage) }}% ({{ formatters.number(ranked_choices.2.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="third-choice-column first-choice-heading">{{ formatters.number(ranked_choices.3.percentage) }}% ({{ formatters.number(ranked_choices.3.votes_candidate, 0) }}&nbsp;votes)</td>\n                  <td class="final-column first-choice-heading">{{#ranked_choices.100.percentage}}{{ formatters.number(ranked_choices.100.percentage) }}% ({{ formatters.number(ranked_choices.100.votes_candidate, 0) }}&nbsp;votes){{/ranked_choices.100.percentage}}{{^ranked_choices.100.percentage}}&mdash;{{/ranked_choices.100.percentage}}</td>\n                {{/()}}\n\n                {{#(ranked_choice != 1)}}\n                  <td class="percentage">{{ formatters.number(percentage) }}%</td>\n                  {{^isDashboard}}\n                    <td class="votes">{{ formatters.number(votes_candidate, 0) }}</td>\n                  {{/isDashboard}}\n                {{/()}}\n              </tr>\n            {{/()}} {{/results}}\n          </tbody>\n        </table>\n      </div>\n      \n      <a href="#contest/{{ id }}" class="contest-link">{{#isDashboard}}Full results{{/isDashboard}}{{^isDashboard}}Permalink{{/isDashboard}}</a>\n    </div>\n\n\n\n    {{^isDashboard}}\n      <div class="column-medium-30 inner-column-right">\n        <div class="contest-map" id="contest-map-{{ id }}"></div>\n      </div>\n    {{/isDashboard}}\n  </div>\n</div>\n';});
 
 
 define('text!templates/contests.mustache',[],function () { return '<div class="contests">\n  <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>\n\n  <div class="row">\n    <div class="column-medium-70 inner-column-left contests-title-section">\n      <h2 class="contests-title {{#(lonlat != undefined)}}with-location{{/()}}">{{ (title) ? title : \'Contests\' }}</h2>\n\n      <p class="caption">\n        Found\n          {{#(models.length == 0 && !synced)}}\n            <i class="loading small"></i>\n          {{/())}}\n          {{#synced}}\n            {{ models.length }}\n          {{/synced}}\n        results.\n      </p>\n\n      {{#(lonlat != undefined)}}\n        <p class="caption">The map below shows the approximate location of your search. If the location is not correct, try <a href="#dashboard">searching for a more specific address</a>.</p>\n\n        <div id="location-map"></div>\n      {{/())}}\n    </div>\n\n    <div class="column-medium-30 inner-column-right"></div>\n  </div>\n\n  <div>\n    {{#(models.length == 0 && !synced)}}\n      {{>loading}}\n    {{/())}}\n\n    {{#(models.length == 0 && synced)}}\n      <p class="large">Unable to find any contests.</p>\n    {{/())}}\n  </div>\n\n  <div class="contest-list">\n    {{#models:i}}\n      {{>contest}}\n    {{/models}}\n  </div>\n</div>\n';});
@@ -46754,10 +46708,10 @@ define('views',[
       // Add parties
       this.set('parties', mpConfig.politicalParties);
 
-      // Make a map if boundary has been found
-      this.observe('boundarySets', function(newValue, oldValue) {
-        if (_.isObject(newValue)) {
-          this.makeMap('contest-map-' + this.get('id'), newValue);
+      // Make a map if boundary has been fetched
+      this.observe('fetchedBoundary', function(newValue, oldValue) {
+        if (newValue) {
+          this.makeMap('contest-map-' + this.get('id'), this.get('boundarySets'));
         }
       });
     }
@@ -46784,14 +46738,15 @@ define('views',[
 
       // React to boundary update.  For some reason, this is getting changed
       // more than once.
-      this.observe('models.*.boundarySets', function(newValue, oldValue, keypath) {
+      this.observe('models.*.fetchedBoundary', function(newValue, oldValue, keypath) {
+        //Keypath example models.0.fetchedBoundary
         var parts = keypath.split('.');
-        var m = this.get(parts[0] + '.' + parts[1]);
+        var m = this.get(parts[0] + '.' + parts[1]); // var m = this.get('models.0')
 
-        if (_.isArray(newValue) && _.isObject(newValue[0]) && _.isObject(m) &&
+        if (newValue && _.isArray(m.get('boundarySets')) && _.isObject(m.get('boundarySets')[0]) && _.isObject(m) &&
           !modelBoundarySet[m.get('id')]) {
           modelBoundarySet[m.get('id')] = true;
-          this.makeMap('contest-map-' + m.get('id'), newValue);
+          this.makeMap('contest-map-' + m.get('id'), m.get('boundarySets'));
         }
       });
 
@@ -47107,7 +47062,7 @@ define('routers',[
 });
 
 
-define('text!templates/dashboard-state-leg.mustache',[],function () { return '<div class="dashboard-state-leg">\n  <h3>{{#(chamber === "senate")}}MN Senate{{/()}}{{#(chamber === "house")}}MN House of Representatives{{/()}}</h3>\n\n  {{#(!contests.length)}}\n    {{>loading}}\n  {{/()}}\n\n  <div class="state-leg-boxes cf">\n    <div class="state-leg-boxes-left">\n      {{#contests:ci}}{{#(ci < contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n    <div class="state-leg-boxes-right">\n      {{#contests:ci}}{{#(ci >= contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n  </div>\n\n  <div class="state-leg-totals">\n    {{#counts:ci}}\n      <span class="color-political-{{ id.toLowerCase() }}" title="{{ party }}">{{ count }}</span>\n      {{#(ci < counts.length - 1)}} -&nbsp; {{/()}}\n    {{/counts}}\n  </div>\n\n  <div class="state-leg-legend">\n    <div class="legend-item">\n      <div class="legend-box unknown"></div> Not reporting yet\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box some"></div> Some reporting\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box solid"></div> Colored box is fully reported\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box party-shift"></div> District has changed parties\n    </div>\n  </div>\n\n  {{#(chamber === "house")}}\n    <div class="state-leg-rnet">\n      <div class="heading">\n        DFL net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n        <span class="color-political-dfl dflnet">\n          {{ (dflNet > 0) ? \'+\' : \'\' }}{{ dflNet }}\n        </span>\n      </div>\n      <div class="sub-heading">DFLers need a net gain of at least +11 to win control of the House.</div>\n    </div>\n  {{/()}}\n\n  {{#(chamber === "senate")}}\n    <div class="state-leg-rnet">\n      <div class="heading">\n        Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n        <span class="color-political-r rnet">\n          {{ (rNet > 0) ? \'+\' : \'\' }}{{ rNet }}\n        </span>\n      </div>\n      <div class="sub-heading">Republicans need a net gain of at least +6 to win control of the Senate.</div>\n    </div>\n  {{/()}}\n\n</div>\n\n<script>\n\n</script>\n';});
+define('text!templates/dashboard-state-leg.mustache',[],function () { return '<div class="dashboard-state-leg">\n  <h3>{{#(chamber === "senate")}}MN Senate{{/()}}{{#(chamber === "house")}}MN House of Representatives{{/()}}</h3>\n\n  {{#(!contests.length)}}\n    {{>loading}}\n  {{/()}}\n\n  <div class="state-leg-boxes cf">\n    <div class="state-leg-boxes-left">\n      {{#contests:ci}}{{#(ci < contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#tooclose}}too-close-to-call{{/tooclose}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n    <div class="state-leg-boxes-right">\n      {{#contests:ci}}{{#(ci >= contests.length / 2)}}\n        <a href="#/contest/{{ id }}" class="\n          {{#(!done && some)}}some{{/()}}\n          {{#done}}done bg-color-political-{{ partyWon.toLowerCase() }}{{/done}}\n          {{#tooclose}}too-close-to-call{{/tooclose}}\n          {{#partyShift}}party-shift{{/partyShift}}\n          state-leg-box" title="{{ title }}"></a>\n      {{/()}}{{/contests}}\n    </div>\n  </div>\n\n  <div class="state-leg-totals">\n    {{#counts:ci}}\n      <span class="color-political-{{ id.toLowerCase() }}  {{^party}}too-close-to-call{{/party}}" title="{{ party }}{{^party}}Too close to call{{/party}}">{{ count }}</span>\n      {{#(ci < counts.length - 1)}} -&nbsp; {{/()}}\n    {{/counts}}\n  </div>\n\n  <div class="state-leg-legend">\n    <div class="legend-item">\n      <div class="legend-box unknown"></div> Not reporting yet\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box some"></div> Some reporting\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box solid"></div> Colored box is fully reported\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box too-close-to-call"></div> Too close to call\n    </div>\n\n    <div class="legend-item">\n      <div class="legend-box party-shift"></div> District has changed parties\n    </div>\n  </div>\n\n  {{#(chamber === "house")}}\n    <div class="state-leg-rnet">\n      <div class="heading">\n        Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n        <span class="color-political-r rnet">\n          {{ (rNet > 0) ? \'+\' : \'\' }}{{ rNet }}\n        </span>\n      </div>\n      <div class="sub-heading">Republicans need a net gain of at least +9 to win control of the House.</div>\n    </div>\n  {{/()}}\n\n  {{#(chamber === "senate")}}\n    <div class="state-leg-rnet">\n      <div class="heading">\n        DFL net gain{{^allDone}}&nbsp;so far{{/allDone}}:\n        <span class="color-political-dfl rnet">\n          {{ (dflNet > 0) ? \'+\' : \'\' }}{{ dflNet }}\n        </span>\n      </div>\n      <div class="sub-heading">DFLers need a net gain of at least +2 to win control of the Senate.</div>\n    </div>\n  {{/()}}\n\n</div>\n\n<script>\n\n</script>\n';});
 
 /**
  * Main application file for: minnpost-elections-dashboard
@@ -47144,7 +47099,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         'wards-2012',
         'minnesota-state-2014',
         'school-districts-2018',
-        'minneapolis-parks-and-recreation-districts-2012',
+        'minneapolis-parks-and-recreation-districts-2014',
         'congressional-districts-2012',
         'state-senate-districts-2012',
         'state-house-districts-2012',
@@ -47160,78 +47115,310 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       originalTitle: document.title,
       dashboard: [
         {
-          title: 'CD5',
+          title: 'U.S. President',
           type: 'race',
-          id: 'id-MN---5-0108',
-          show_party: 'DFL',
-          rows: 3
+          id: 'id-MN----0101',
+          rows: 2
         },
         {
-          title: 'CD7',
+          title: 'U.S. Senate',
+          type: 'race',
+          id: 'id-MN----0102',
+          rows: 2
+        },
+        {
+          title: 'U.S. House — First District',
+          type: 'race',
+          id: 'id-MN---1-0104',
+          rows: 2
+        },
+        {
+          title: 'U.S. House — Second District',
+          type: 'race',
+          id: 'id-MN---2-0105',
+          rows: 2
+        },
+        {
+          title: 'U.S. House – Seventh District',
           type: 'race',
           id: 'id-MN---7-0110',
-          rows: 3,
-          show_party: 'R'
+          rows: 2
         },
         {
-          title: 'SD7',
-          type: 'race',
-          id: 'id-MN---7-0127',
-          rows: 2,
-          show_party: 'DFL'
+          type: 'custom',
+          id: 'state-sen',
+          template: tDStateLeg,
+          query: "SELECT r.id AS results_id, r.candidate, r.party_id, r.percentage, " +
+            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party, c.called " +
+            "FROM contests AS c LEFT JOIN results AS r " +
+            "ON c.id = r.contest_id WHERE title LIKE '%state senator%' " +
+            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 400",
+          parse: function(response, options) {
+            var parsed = {};
+            var tempContests = [];
+
+            parsed.chamber = "senate";
+
+            // Put contest info into friendly format
+            parsed.contests = {};
+            _.each(response, function(r, ri) {
+              parsed.contests[r.id] = parsed.contests[r.id] || {
+                id: r.id,
+                title: r.title,
+                precincts_reporting: r.precincts_reporting,
+                total_effected_precincts: r.total_effected_precincts,
+                incumbent_party: r.incumbent_party,
+                called: r.called,
+                toolcose: false,
+                results: []
+              };
+              parsed.contests[r.id].results.push({
+                id: r.results_id,
+                candidate: r.candidate,
+                party_id: r.party_id,
+                percentage: r.percentage
+              });
+            });
+
+            // Process contests
+            parsed.contests = _.map(parsed.contests, function(c, ci) {
+              c.done = (c.precincts_reporting === c.total_effected_precincts);
+              c.some = (c.precincts_reporting > 0);
+              c.partyWon = _.max(c.results, function(r, ri) {
+                return r.percentage;
+              }).party_id;
+
+              // Test data
+              /*
+              var t = Math.random();
+              if (t < 0.9) {
+                c.done = true;
+                c.partyWon = (Math.random() < 0.5) ? 'DFL' : 'R';
+              }
+              */
+
+              c.partyShift = (c.partyWon !== c.incumbent_party && c.done);
+              c.results = _.sortBy(c.results, 'candidate').reverse();
+              c.results = _.sortBy(c.results, 'percentage').reverse();
+
+              //Districts where the vote is within 3 percentage points are going to be considered
+              //too close to call due to late-arriving mail-in ballots in 2020
+              if (c.done && c.results[0].percentage - c.results[1].percentage < 3 && !c.called) {
+                c.partyWon = '';
+                c.partyShift = false;
+                c.tooclose = true;
+              }
+              
+              return c;
+            });
+
+            // Sort contests, this could get messey
+            parsed.contests = _.sortBy(parsed.contests, 'title');
+            parsed.contests = _.sortBy(parsed.contests, 'partyShift').reverse();
+            parsed.contests = _.sortBy(parsed.contests, function(c, ci) {
+              if (c.done) {
+                return (c.partyWon === 'DFL') ? 'AAAADFL' :
+                  (c.partyWon === 'R') ? 'ZZZZZR' : 'MMMMMM' + c.partyWon;
+              }
+              else {
+                return (c.some) ? 'MMMAAAAAA' : 'MMMMMM';
+              }
+            });
+
+            // Counts
+            parsed.counts = {};
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done) {
+                if (parsed.counts[c.partyWon]) {
+                  parsed.counts[c.partyWon].count += 1;
+                }
+                else {
+                  parsed.counts[c.partyWon] = {
+                    id: (c.tooclose) ? 'YYYYYYYtooclose' : c.partyWon,  //Special handling for 2020 too close to call votes
+                    count: 1,
+                    party: mpConfig.politicalParties[c.partyWon.toLowerCase()]
+                  };
+                }
+              }
+              else {
+                if (parsed.counts.unknown) {
+                  parsed.counts.unknown.count += 1;
+                }
+                else {
+                  parsed.counts.unknown = {
+                    id: 'MMMMMMMunknown',
+                    count: 1,
+                    party: 'Not fully reported yet'
+                  };
+                }
+              }
+            });
+            parsed.counts = _.sortBy(parsed.counts, 'id');
+
+            // dflNet net because senate is R controlled
+            parsed.dflNet = 0;
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done && c.partyShift && c.partyWon === 'DFL') {
+                parsed.dflNet += 1;
+              }
+              if (c.done && c.partyShift && c.incumbent_party === 'DFL') {
+                parsed.dflNet -= 1;
+              }
+            });
+
+            // Is everything done
+            parsed.allDone = (_.where(parsed.contests, { done: true }).length ===
+              parsed.contests.length);
+
+            return parsed;
+          }
         },
         {
-          title: 'SD47',
-          type: 'race',
-          id: 'id-MN---47-0167',
-          show_party: 'R'
+          type: 'custom',
+          id: 'state-leg',
+          template: tDStateLeg,
+          query: "SELECT r.id AS results_id, r.candidate, r.party_id, r.percentage, " +
+            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party, c.called " +
+            "FROM contests AS c LEFT JOIN results AS r " +
+            "ON c.id = r.contest_id WHERE title LIKE '%state representative%' " +
+            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 425",
+          parse: function(response, options) {
+            var parsed = {};
+            var tempContests = [];
+
+            parsed.chamber = "house";
+
+            // Put contest info into friendly format
+            parsed.contests = {};
+            _.each(response, function(r, ri) {
+              parsed.contests[r.id] = parsed.contests[r.id] || {
+                id: r.id,
+                title: r.title,
+                precincts_reporting: r.precincts_reporting,
+                total_effected_precincts: r.total_effected_precincts,
+                incumbent_party: r.incumbent_party,
+                called: r.called,
+                toolcose: false,
+                results: []
+              };
+              parsed.contests[r.id].results.push({
+                id: r.results_id,
+                candidate: r.candidate,
+                party_id: r.party_id,
+                percentage: r.percentage
+              });
+            });
+
+            // Process contests
+            parsed.contests = _.map(parsed.contests, function(c, ci) {
+              c.done = (c.precincts_reporting === c.total_effected_precincts);
+              c.some = (c.precincts_reporting > 0);
+              c.partyWon = _.max(c.results, function(r, ri) {
+                return r.percentage;
+              }).party_id;
+
+              // Test data
+              /*
+              var t = Math.random();
+              if (t < 0.9) {
+                c.done = true;
+                c.partyWon = (Math.random() < 0.5) ? 'DFL' : 'R';
+              }
+              */
+
+
+              c.partyShift = (c.partyWon !== c.incumbent_party && c.done);
+              c.results = _.sortBy(c.results, 'candidate').reverse();
+              c.results = _.sortBy(c.results, 'percentage').reverse();
+
+              //Districts where the vote is within 3 percentage points are going to be considered
+              //too close to call due to late-arriving mail-in ballots in 2020
+              if (c.done && c.results[0].percentage - c.results[1].percentage < 3 && !c.called) {
+                c.partyWon = '';
+                c.partyShift = false;
+                c.tooclose = true;
+              }
+              
+              return c;
+            });
+
+            // Sort contests, this could get messey
+            parsed.contests = _.sortBy(parsed.contests, 'title');
+            parsed.contests = _.sortBy(parsed.contests, 'partyShift').reverse();
+            parsed.contests = _.sortBy(parsed.contests, function(c, ci) {
+              if (c.done) {
+                return (c.partyWon === 'DFL') ? 'AAAADFL' :
+                  (c.partyWon === 'R') ? 'ZZZZZR' : 'MMMMMM' + c.partyWon;
+              }
+              else {
+                return (c.some) ? 'MMMAAAAAA' : 'MMMMMM';
+              }
+            });
+
+            // Counts
+            parsed.counts = {};
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done) {
+                if (parsed.counts[c.partyWon]) {
+                  parsed.counts[c.partyWon].count += 1;
+                }
+                else {
+                  parsed.counts[c.partyWon] = {
+                    id: (c.tooclose) ? 'YYYYYYYtooclose' : c.partyWon,  //Special handling for 2020 too close to call votes
+                    count: 1,
+                    party: mpConfig.politicalParties[c.partyWon.toLowerCase()]
+                  };
+                }
+              }
+              else {
+                if (parsed.counts.unknown) {
+                  parsed.counts.unknown.count += 1;
+                }
+                else {
+                  parsed.counts.unknown = {
+                    id: 'MMMMMMMunknown',
+                    count: 1,
+                    party: 'Not fully reported yet'
+                  };
+                }
+              }
+            });
+            parsed.counts = _.sortBy(parsed.counts, 'id');
+
+            // R net bc house is DFL controlled
+            parsed.rNet = 0;
+            _.each(parsed.contests, function(c, ci) {
+              if (c.done && c.partyShift && c.partyWon === 'R') {
+                parsed.rNet += 1;
+              }
+              if (c.done && c.partyShift && c.incumbent_party === 'R') {
+                parsed.rNet -= 1;
+              }
+            });
+            
+
+            // Is everything done
+            parsed.allDone = (_.where(parsed.contests, { done: true }).length ===
+              parsed.contests.length);
+
+            return parsed;
+          }
         },
         {
-          title: 'SD62',
+          title: 'Associate Justice of the Supreme Court',
           type: 'race',
-          id: 'id-MN---62-0182',
-          rows: 2,
-          show_party: 'DFL'
-        },
-        {
-          title: 'HD59B',
-          type: 'race',
-          id: 'id-MN---59B-0305',
-          rows: 3,
-          show_party: 'DFL'
-        },
-        {
-          title: 'HD66B',
-          type: 'race',
-          id: 'id-MN---66B-0319',
-          show_party: 'DFL'
-        },
-        {
-          title: 'Hennco commissioner',
-          type: 'race',
-          id: 'id-MN-27--06-0396',
-          rows: 3,
-        },
-        {
-          title: 'Mpls Ward 6',
-          type: 'race',
-          id: 'id-MN---43000-2151',
-          rows: 3,
-        },
-        {
-          title: 'Mpls School Board @large',
-          type: 'race',
-          id: 'id-MN---1-1-5000',
-          rows: 3,
+          id: 'id-MN----7005',
+          rows: 2
         },
         {
           type: 'links',
           itemClass: 'dashboard-links',
           links: [
-            { href: '#contest/id-MN----0102', text: 'U.S. Senate'},
             { href: '#search/u.s.+representative', text: 'All U.S. House races' },
-            { href: '#search/state+senator', text: 'All State Senate races' },
-            { href: '#search/state+representative', text: 'All State House Races'}
+            { href: '#search/hennepin+county+commissioner', text: 'Hennepin County commissioner races'},
+            { href: '#search/ramsey+county+commissioner', text: 'Ramsey County commissioner races'},
+            { href: '#contest/id-MN---1-1-5000', text: 'Minneapolis school board at-large'},
+            { href: '#search/question', text: 'All ballot questions' }
           ]
         }
 

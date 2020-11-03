@@ -3270,6 +3270,12 @@ html {
 .mp .bg-color-political-ip {
   background-color: #FF781F !important;
 }
+.mp .color-political-ia {
+  color: #FF781F !important;
+}
+.mp .bg-color-political-ia {
+  background-color: #FF781F !important;
+}
 .mp .color-political-lib {
   color: #7A7A7A !important;
 }
@@ -3313,10 +3319,10 @@ html {
   background-color: #41AB07 !important;
 }
 .mp .color-political-lmn {
-  color: #7A7A7A !important;
+  color: #286806 !important;
 }
 .mp .bg-color-political-lmn {
-  background-color: #7A7A7A !important;
+  background-color: #286806 !important;
 }
 .mp .color-political-mop {
   color: #7A7A7A !important;
@@ -3340,12 +3346,6 @@ html {
   color: #7A7A7A !important;
 }
 .mp .bg-color-political-sl {
-  background-color: #7A7A7A !important;
-}
-.mp .color-political-jp {
-  color: #7A7A7A !important;
-}
-.mp .bg-color-political-jp {
   background-color: #7A7A7A !important;
 }
 .mp .minnpost-page-container {
