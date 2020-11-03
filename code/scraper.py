@@ -716,10 +716,14 @@ class ElectionScraper:
         # County should be provide, but the results also have results for county
         # comissioner which are sub-county boundaries
         if parsed_row['scope'] == 'county':
-            comissioner_match = re.compile('.*Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
+            comissioner_match = re.compile('.*County Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
+            park_commissioner_match = re.compile('.*Park Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
             if comissioner_match is not None:
                 boundary = 'county-commissioner-districts-2012/%s-%02d-1' % (int(parsed_row['county_id']),    int(parsed_row['district_code']))
                 boundary_type = 'county-commissioner-districts-2012'
+            elif park_commissioner_match is not None:
+                boundary = "" #We don't currently have shapefiles for county park commissioner districts
+                boundary_type = "county-park-commissioner-district"
             else:
                 boundary = 'counties-2010/%s-1' % int(parsed_row['county_id'])
                 boundary_type = 'counties-2010'
