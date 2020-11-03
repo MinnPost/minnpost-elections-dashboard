@@ -160,12 +160,6 @@ define([
         parsed.final = true;
       }
 
-      //Due to delays in mail-in ballot counting in 2020, call some races too close to call
-      //according to an arbitrary threshold. 
-      if (parsed.results[0].percentage - parsed.results[1].percentage < 3) {
-        parsed.too_close_to_call = true;
-      }
-
       // Further formatting
       parsed.updated = moment.unix(parsed.updated);
       return parsed;
