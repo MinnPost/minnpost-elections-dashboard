@@ -348,10 +348,11 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           type: 'links',
           itemClass: 'dashboard-links',
           links: [
-            { href: '#contest/id-MN----0102', text: 'U.S. Senate'},
             { href: '#search/u.s.+representative', text: 'All U.S. House races' },
-            { href: '#search/state+senator', text: 'All State Senate races' },
-            { href: '#search/state+representative', text: 'All State House Races'}
+            { href: '#search/hennepin+county+commissioner', text: 'Hennepin County commissioner races'},
+            { href: '#search/ramsey+county+commissioner', text: 'Ramsey County commissioner races'},
+            { href: '#contest/id-MN---1-1-5000', text: 'Minneapolis school board at-large'},
+            { href: '#search/question', text: 'All ballot questions' }
           ]
         }
 
