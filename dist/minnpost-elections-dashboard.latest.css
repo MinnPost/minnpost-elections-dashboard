@@ -23,6 +23,15 @@
 /**
  * General variables
  */
+.mp .minnpost-page-container {
+  max-width: none;
+}
+
+.mp .minnpost-full-container {
+  font-size: 22px;
+  max-width: none;
+}
+
 .mp .minnpost-elections-dashboard-container {
   padding-top: 2em;
 }
@@ -294,6 +303,10 @@
   -webkit-box-shadow: 0 0 0px 1.5px #232323;
   box-shadow: 0 0 0px 1.5px #232323;
   border: 1px solid #FFFFFF;
+}
+.mp .minnpost-elections-dashboard-container .dashboard-state-leg h3 {
+  font-size: 1.55em;
+  margin-bottom: 0.25em;
 }
 .mp .minnpost-elections-dashboard-container .dashboard-state-leg .state-leg-totals {
   text-align: center;
