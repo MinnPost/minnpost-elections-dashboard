@@ -33,7 +33,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
         'wards-2012',
         'minnesota-state-2014',
         'school-districts-2018',
-        'minneapolis-parks-and-recreation-districts-2012',
+        'minneapolis-parks-and-recreation-districts-2014',
         'congressional-districts-2012',
         'state-senate-districts-2012',
         'state-house-districts-2012',
