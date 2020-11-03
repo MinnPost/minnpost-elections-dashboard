@@ -158,15 +158,9 @@ define([
           }, thisCollection.app.options)
           .done(function(response){
             m.set('boundarySets', [{'slug': slug, 'simple_shape': response}]);
+            m.set('fetchedBoundary', true);
           });
         });
-      });
-
-      // Since Ractive's backbone adaptor does not seem to
-      // react to properties that are not attributes of a model
-      // or a model in a collection
-      this.each(function(m) {
-        m.set('fetchedBoundary', true);
       });
 
       this.matchedBoundary = true;
