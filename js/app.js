@@ -22,7 +22,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
+      electionsAPI: '//localhost:5000/?q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
@@ -92,6 +92,8 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
             var tempContests = [];
 
             parsed.chamber = "senate";
+
+            parsed.note = "Solid colored boxes indicate the party that is leading with all precincts reporting. If the lead is within 3 percentage points, the race is instead marked too close to call. Vote totals may change as more ballots are counted after Election Day.";
 
             // Put contest info into friendly format
             parsed.contests = {};

@@ -1,6 +1,8 @@
 <div class="dashboard-state-leg">
   <h3>{{#(chamber === "senate")}}MN Senate{{/()}}{{#(chamber === "house")}}MN House of Representatives{{/()}}</h3>
 
+  {{#note}}<p class="small">{{ note }}</p>{{/note}}
+
   {{#(!contests.length)}}
     {{>loading}}
   {{/()}}
@@ -53,14 +55,14 @@
     </div>
 
     <div class="legend-item">
-      <div class="legend-box party-shift"></div> District has changed parties
+      <div class="legend-box party-shift"></div> District set to change parties
     </div>
   </div>
 
   {{#(chamber === "house")}}
     <div class="state-leg-rnet">
       <div class="heading">
-        Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:
+        Current Republican net gain:
         <span class="color-political-r rnet">
           {{ (rNet > 0) ? '+' : '' }}{{ rNet }}
         </span>
@@ -72,7 +74,7 @@
   {{#(chamber === "senate")}}
     <div class="state-leg-rnet">
       <div class="heading">
-        DFL net gain{{^allDone}}&nbsp;so far{{/allDone}}:
+        Current DFL net gain:
         <span class="color-political-dfl rnet">
           {{ (dflNet > 0) ? '+' : '' }}{{ dflNet }}
         </span>
