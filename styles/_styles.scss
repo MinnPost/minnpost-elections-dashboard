@@ -15,8 +15,18 @@ $color-light-gray: #7A7A7A;
 $color-medium-gray: #404040;
 $color-dark-gray: #282828;
 
+//Overriding some MP styles defaults to mesh better with new design. 
+//Should eventually revise MP styles to make this universal
+.mp .minnpost-page-container {
+  max-width: none;
+}
+.mp .minnpost-full-container {
+  font-size: 22px; 
+  max-width: none;
+}
 
 .mp .minnpost-elections-dashboard-container {
+
   padding-top: 2em;
 
   // Fullscreen
