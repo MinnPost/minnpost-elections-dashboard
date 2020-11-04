@@ -157,7 +157,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
                   (c.partyWon === 'R') ? 'ZZZZZR' : 'MMMMMM' + c.partyWon;
               }
               else {
-                return (c.some) ? 'MMMAAAAAA' : 'MMMMMM';
+                return (c.some) ? 'MMMAAAAAA' : 'MMMMMMZ';
               }
             });
 
@@ -170,7 +170,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
                 }
                 else {
                   parsed.counts[c.partyWon] = {
-                    id: (c.tooclose) ? 'YYYYYYYtooclose' : c.partyWon,  //Special handling for 2020 too close to call votes
+                    id: (c.tooclose) ? 'MMMMMMtooclose' : c.partyWon,  //Special handling for 2020 too close to call votes
                     count: 1,
                     party: mpConfig.politicalParties[c.partyWon.toLowerCase()]
                   };
