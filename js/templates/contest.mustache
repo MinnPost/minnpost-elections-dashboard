@@ -95,7 +95,7 @@
           <tbody>
             {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party && party_id == show_party)))}}
               <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? 'even' : 'odd' }} {{#primary}}{{ party_id.toLowerCase() }}{{/primary}}">
-                <td class="winner-column">{{#(winner && called === "TRUE")}}<span class="fa fa-check"></span>{{/())}}</td>
+                <td class="winner-column">{{#winner}}<span class="fa fa-check"></span>{{/winner}}</td>
 
                 <td class="candidate-column">{{ candidate }}</td>
 

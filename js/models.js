@@ -17,7 +17,7 @@ define([
     'office_id', 'precinct_id', 'precincts_reporting', 'question_body',
     'ranked_choice', 'results_group', 'seats', 'state', 'title', 'sub_title',
     'total_effected_precincts', 'total_votes_for_office', 'updated',
-    'question_body', 'question_help', 'primary', 'scope', 'partisan', 'incumbent_party', 'percent_needed', 'called'],
+    'question_body', 'question_help', 'primary', 'scope', 'partisan', 'incumbent_party', 'percent_needed'],
 
     // Non-Partisan parties
     npParties: ['NP', 'WI'],
