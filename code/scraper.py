@@ -131,7 +131,7 @@ class ElectionScraper:
             if index_method is not None and callable(index_method) and not self.index_created[table]:
                 index_method()
                 self.index_created[table] = True
-        except Exception, err:
+        except Exception as err:
             self.log.exception('[%s] Error thrown while saving to table: %s' % (table, data))
             raise
 
@@ -192,7 +192,7 @@ class ElectionScraper:
                         scraped = scraperwiki.scrape(s['url'])
                         # Ballot questions spreadsheet requires latin-1 encoding
                         rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='latin-1')
-                    except Exception, err:
+                    except Exception as err:
                         self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (s['type'], s['url']))
                         raise
 
@@ -253,7 +253,7 @@ class ElectionScraper:
             feed = client.GetWorksheetsFeed(s['spreadsheet_id'], visibility='public', projection='basic')
             worksheet_id = feed.entry[s['worksheet_id']].id.text.rsplit('/', 1)[1]
             rows = client.GetListFeed(key=s['spreadsheet_id'], wksht_id=worksheet_id, visibility='public', projection='values').entry
-        except Exception, err:
+        except Exception as err:
             rows = None
             self.log.exception('[%s] Unable to connecto supplemental source: %s' % ('supplement', s))
 
