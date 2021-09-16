@@ -378,7 +378,7 @@ class ElectionScraper:
 
         # SSD1 is Minneapolis and ISD1 is Aitkin, though they have the same
         # numbers and therefor make the same ID
-        mpls_ssd = re.compile('.*\(SSD #1\).*', re.IGNORECASE).match(row[4])
+        mpls_ssd = re.compile(r'.*\(SSD #1\).*', re.IGNORECASE).match(row[4])
         if mpls_ssd is not None:
             row[3] = '1-1'
 
@@ -418,7 +418,7 @@ class ElectionScraper:
 
         # SSD1 is Minneapolis and ISD1 is Aitkin, though they have the same
         # numbers and therefor make the same ID
-        mpls_ssd = re.compile('.*\(SSD #1\).*', re.IGNORECASE).match(row[4])
+        mpls_ssd = re.compile(r'.*\(SSD #1\).*', re.IGNORECASE).match(row[4])
         if mpls_ssd is not None:
             row[5] = '1-1'
 
@@ -439,14 +439,14 @@ class ElectionScraper:
         #
         # It seems that the office id is incremented by 1 starting at 1 so
         # we use the first
-        ranked_choice = re.compile('.*(first|second|third|\w*th) choice.*', re.IGNORECASE).match(row[4])
+        ranked_choice = re.compile(r'.*(first|second|third|\w*th) choice.*', re.IGNORECASE).match(row[4])
         if ranked_choice is not None:
             office_id = ''.join(row[3].split())[:-1] + '1'
             contest_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[5] + '-' + office_id
 
             # Determine which "choice" this is
             for c in ranked_choice_translations:
-                ranked_choice_choice = re.compile('.*%s.*' % c, re.IGNORECASE).match(row[4])
+                ranked_choice_choice = re.compile(r'.*%s.*' % c, re.IGNORECASE).match(row[4])
                 if ranked_choice_choice is not None:
                     ranked_choice_place = ranked_choice_translations[c]
 
@@ -496,14 +496,14 @@ class ElectionScraper:
         else:
             # The only way to know if there are multiple seats is look at the office
             # name which has "(Elect X)" in it.
-            re_seats = re.compile('.*\(elect ([0-9]+)\).*', re.IGNORECASE)
+            re_seats = re.compile(r'.*\(elect ([0-9]+)\).*', re.IGNORECASE)
             matched_seats = re_seats.match(row[4])
 
             # Primary is not designated in anyway, but we can make some initial
             # guesses.    All contests in an election are considered primary, but
             # non-partisan ones only mean there is more than one seat available.
             is_primary = self.election_meta['primary'] if 'primary' in self.election_meta else False
-            re_question = re.compile('.*\question.*', re.IGNORECASE)
+            re_question = re.compile(r'.*\question.*', re.IGNORECASE)
             matched_question = re_question.match(row[4])
             is_primary = False if matched_question is not None else is_primary
 
@@ -631,7 +631,7 @@ class ElectionScraper:
 
         # US House districts
         if parsed_row['scope'] == 'us_house':
-            us_house_match = re.compile('.*\U.S. Representative District ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
+            us_house_match = re.compile(r'.*\U.S. Representative District ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if us_house_match is not None:
                 boundary = 'congressional-districts-2012/' + us_house_match.group(1)
                 boundary_type = 'congressional-districts-2012'
@@ -644,7 +644,7 @@ class ElectionScraper:
 
         # State Senate districts
         if parsed_row['scope'] == 'state_senate':
-            state_senate_match = re.compile('.*\State Senator District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
+            state_senate_match = re.compile(r'.*\State Senator District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if state_senate_match is not None:
                 boundary = 'state-senate-districts-2012/' + "%02d" % (int(state_senate_match.group(1)),)
                 boundary_type = 'state-senate-districts-2012'
@@ -653,7 +653,7 @@ class ElectionScraper:
 
         # State House districts
         if parsed_row['scope'] == 'state_house':
-            state_house_match = re.compile('.*\State Representative District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
+            state_house_match = re.compile(r'.*\State Representative District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if state_house_match is not None:
                 district_number = "%02d" % (int(state_house_match.group(1)[0:-1]),)
                 district_letter = state_house_match.group(1)[-1].lower()
@@ -664,7 +664,7 @@ class ElectionScraper:
 
         # State court districts.    Judge - 7th District Court 27
         if parsed_row['scope'] == 'district_court':
-            court_match = re.compile('.*\Judge - ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
+            court_match = re.compile(r'.*\Judge - ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if court_match is not None:
                 boundary = 'district-courts-2012/' + court_match.group(1).lower() + '-1'
                 boundary_type = 'district-courts-2012'
@@ -681,10 +681,10 @@ class ElectionScraper:
         # like
 
         if parsed_row['scope'] == 'school':
-            isd_match = re.compile('.*\(ISD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
-            csd_match = re.compile('.*\( ?CSD +#([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
-            ssd_match = re.compile('.*\(SSD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
-            district_match = re.compile('.*district ([0-9]+) \(.*', re.IGNORECASE).match(parsed_row['office_name'])
+            isd_match = re.compile(r'.*\(ISD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
+            csd_match = re.compile(r'.*\( ?CSD +#([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
+            ssd_match = re.compile(r'.*\(SSD #([0-9]+)\).*', re.IGNORECASE).match(parsed_row['office_name'])
+            district_match = re.compile(r'.*district ([0-9]+) \(.*', re.IGNORECASE).match(parsed_row['office_name'])
 
             if isd_match is not None:
                 isd_match_value = isd_match.group(1)
@@ -716,8 +716,8 @@ class ElectionScraper:
         # County should be provide, but the results also have results for county
         # comissioner which are sub-county boundaries
         if parsed_row['scope'] == 'county':
-            comissioner_match = re.compile('.*County Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
-            park_commissioner_match = re.compile('.*Park Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
+            comissioner_match = re.compile(r'.*County Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
+            park_commissioner_match = re.compile(r'.*Park Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
             if comissioner_match is not None:
                 boundary = 'county-commissioner-districts-2012/%s-%02d-1' % (int(parsed_row['county_id']),    int(parsed_row['district_code']))
                 boundary_type = 'county-commissioner-districts-2012'
@@ -752,8 +752,8 @@ class ElectionScraper:
         # And there is also just wrong data occassionaly.
         if parsed_row['scope'] == 'municipal':
             # Checks
-            wards_matched = re.compile('.*(Council Member Ward|Council Member District) ([0-9]+).*\((((?!elect).)*)\).*', re.IGNORECASE).match(parsed_row['office_name'])
-            mpls_parks_matched = re.compile('.*Park and Recreation Commissioner District ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
+            wards_matched = re.compile(r'.*(Council Member Ward|Council Member District) ([0-9]+).*\((((?!elect).)*)\).*', re.IGNORECASE).match(parsed_row['office_name'])
+            mpls_parks_matched = re.compile(r'.*Park and Recreation Commissioner District ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
 
             # Check for sub municpal parts first
             if wards_matched is not None:
@@ -887,12 +887,12 @@ class ElectionScraper:
         for r in contests:
             # Title and search term
             r['title'] = r['office_name']
-            r['title'] = re.compile('(\(elect [0-9]+\))', re.IGNORECASE).sub('', r['title'])
-            r['title'] = re.compile('((first|second|third|\w*th) choice)', re.IGNORECASE).sub('', r['title'])
+            r['title'] = re.compile(r'(\(elect [0-9]+\))', re.IGNORECASE).sub('', r['title'])
+            r['title'] = re.compile(r'((first|second|third|\w*th) choice)', re.IGNORECASE).sub('', r['title'])
 
             # Look for non-ISD parenthesis which should be place names
-            re_place = re.compile('.*\(([^#]*)\).*', re.IGNORECASE).match(r['title'])
-            r['title'] = re.compile('(\([^#]*\))', re.IGNORECASE).sub('', r['title'])
+            re_place = re.compile(r'.*\(([^#]*)\).*', re.IGNORECASE).match(r['title'])
+            r['title'] = re.compile(r'(\([^#]*\))', re.IGNORECASE).sub('', r['title'])
             if re_place is not None:
                 r['title'] = re_place.group(1) + ' ' + r['title']
             r['title'] = r['title'].rstrip()
@@ -944,7 +944,7 @@ class ElectionScraper:
             # Unfortunately we can't determine this from the existing value
             # otherwise, it will just grow.
             if r['primary'] and not r['partisan']:
-                re_seats = re.compile('.*\(elect ([0-9]+)\).*', re.IGNORECASE)
+                re_seats = re.compile(r'.*\(elect ([0-9]+)\).*', re.IGNORECASE)
                 matched_seats = re_seats.match(r['office_name'])
                 seats = matched_seats.group(1) if matched_seats is not None else 1
                 r['seats'] = int(seats) * 2
