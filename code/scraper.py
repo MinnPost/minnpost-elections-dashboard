@@ -14,7 +14,7 @@ import logging
 import json
 import requests
 import lxml.html
-from gdata.spreadsheet.service import SpreadsheetsService
+#from gdata.spreadsheet.service import SpreadsheetsService
 
 
 # This is placeholder for scraperwiki embedding
