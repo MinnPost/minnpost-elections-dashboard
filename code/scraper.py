@@ -6,7 +6,8 @@ Main scraper.
 import sys
 import os
 import re
-import scraperwiki
+#import scraperwiki
+import psycopg2
 import unicodecsv
 import datetime
 import calendar
@@ -19,6 +20,8 @@ import lxml.html
 
 # This is placeholder for scraperwiki embedding
 scraper_sources_inline = None
+
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
 
 class ScraperLogger:
@@ -62,7 +65,7 @@ class ElectionScraper:
     nonpartisan_parties = ['NP', 'WI', 'N P']
     index_created = {}
     grouped_inserts = 1000
-    db_file = os.path.join(os.path.dirname(__file__), '../scraperwiki.sqlite')
+    #db_file = os.path.join(os.path.dirname(__file__), '../scraperwiki.sqlite')
 
 
     def __init__(self):
@@ -76,12 +79,16 @@ class ElectionScraper:
         # Scraperwiki's default db is relative to where the script
         # is running but be default the db is created at scraperwiki.sqlite
         # where you are, but this should be empty since we don't use it
-        scraperwiki.sql._connect(self.db_file)
+        #scraperwiki.sql._connect(self.db_file)
 
         # Make sure the DB is efficient.  Synchronous off means that power outage
         # or possible interruption can corrupt database
         #scraperwiki.sql.execute('PRAGMA SYNCHRONOUS = OFF')
-        scraperwiki.sql.execute('VACUUM')
+        #scraperwiki.sql.execute('VACUUM')
+
+        # connect to postgres
+        con = psycopg2.connect(DATABASE_URL)
+        cur = con.cursor()
 
         self.read_sources()
 
@@ -126,6 +133,11 @@ class ElectionScraper:
 
         try:
             scraperwiki.sql.save(unique_keys = ids, data = data, table_name = table)
+            # save a row into the database
+            # we need: table name column names, and data which is parsed json that goes into the keys
+
+
+
 
             # Create index if needed
             if index_method is not None and callable(index_method) and not self.index_created[table]:
