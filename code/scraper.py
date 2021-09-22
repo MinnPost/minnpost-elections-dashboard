@@ -7,8 +7,11 @@ import sys
 import os
 import re
 #import scraperwiki
+import csv
+import urllib.request
 import psycopg2
-import unicodecsv
+#import unicodecsv
+import numpy
 import datetime
 import calendar
 import logging
@@ -65,7 +68,6 @@ class ElectionScraper:
     nonpartisan_parties = ['NP', 'WI', 'N P']
     index_created = {}
     grouped_inserts = 1000
-    #db_file = os.path.join(os.path.dirname(__file__), '../scraperwiki.sqlite')
 
 
     def __init__(self):
@@ -76,15 +78,7 @@ class ElectionScraper:
         self.log = ScraperLogger('scraper_results').logger
         self.log.info('[scraper] Started.')
 
-        # Scraperwiki's default db is relative to where the script
-        # is running but be default the db is created at scraperwiki.sqlite
-        # where you are, but this should be empty since we don't use it
-        #scraperwiki.sql._connect(self.db_file)
-
-        # Make sure the DB is efficient.  Synchronous off means that power outage
-        # or possible interruption can corrupt database
-        #scraperwiki.sql.execute('PRAGMA SYNCHRONOUS = OFF')
-        #scraperwiki.sql.execute('VACUUM')
+        # this is where scraperwiki was creating and connecting to its database
 
         # connect to postgres
         con = psycopg2.connect(DATABASE_URL)
@@ -132,7 +126,8 @@ class ElectionScraper:
         """
 
         try:
-            scraperwiki.sql.save(unique_keys = ids, data = data, table_name = table)
+            #scraperwiki.sql.save(unique_keys = ids, data = data, table_name = table)
+            print(ids)
             # save a row into the database
             # we need: table name column names, and data which is parsed json that goes into the keys
 
@@ -201,9 +196,15 @@ class ElectionScraper:
 
                     # Get data from URL
                     try:
-                        scraped = scraperwiki.scrape(s['url'])
+                        #scraped = scraperwiki.scrape(s['url'])
                         # Ballot questions spreadsheet requires latin-1 encoding
-                        rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='latin-1')
+                        #rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='latin-1')
+                        #rows = numpy.genfromtxt(s['url'],delimiter=';', encoding='latin1')
+                        
+                        response = urllib.request.urlopen(s['url'])
+                        lines = [l.decode('latin-1') for l in response.readlines()]
+                        rows = csv.reader(lines)
+
                     except Exception as err:
                         self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (s['type'], s['url']))
                         raise
@@ -217,26 +218,26 @@ class ElectionScraper:
                     # Go through rows.
                     # Save every x
                     count = 0
-                    group = []
+                    #group = []
                     for row in rows:
-                        parsed = parser_method(row, i, s['table'], s)
-                        group.append(parsed)
-                        if len(group) % self.grouped_inserts == 0:
-                            self.save(['id'], group, s['table'], index_method)
-                            group = []
+                        #parsed = parser_method(row, i, s['table'], s)
+                        #group.append(parsed)
+                        #if len(group) % self.grouped_inserts == 0:
+                        #    self.save(['id'], group, s['table'], index_method)
+                        #    group = []
                         count = count + 1
 
-                    if len(group) > 0:
-                        self.save(['id'], group, s['table'], index_method)
+                    #if len(group) > 0:
+                    #    self.save(['id'], group, s['table'], index_method)
 
-                    """
-                    Non-grouped.
-                    count = 0
-                    for row in rows:
-                        parsed = parser_method(row, i, s['table'], s)
-                        self.save(['id'], parsed, s['table'], index_method)
-                        count = count + 1
-                    """
+                    #"""
+                    #Non-grouped.
+                    #count = 0
+                    #for row in rows:
+                    #    parsed = parser_method(row, i, s['table'], s)
+                    #    self.save(['id'], parsed, s['table'], index_method)
+                    #    count = count + 1
+                    #"""
 
 
                     # Log
