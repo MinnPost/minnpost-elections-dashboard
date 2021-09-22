@@ -131,7 +131,9 @@ class ElectionScraper:
             # we need: table name column names, and data which is parsed json that goes into the keys
 
             #self.log.info('Save into database table %s. Index method is %s' % (table, index_method))
-            self.log.info('Save ids %s' % (ids))
+            #self.log.info('Save ids %s' % (ids))
+
+            # ids is a subset of table column names to determine when to overwrite a record
 
 
 
