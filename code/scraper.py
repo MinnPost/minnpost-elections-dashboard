@@ -9,9 +9,8 @@ import re
 #import scraperwiki
 import csv
 import urllib.request
-import psycopg2
+from flask_sqlalchemy import SQLAlchemy
 #import unicodecsv
-import numpy
 import datetime
 import calendar
 import logging
