@@ -127,10 +127,11 @@ class ElectionScraper:
 
         try:
             #scraperwiki.sql.save(unique_keys = ids, data = data, table_name = table)
-            print(ids)
             # save a row into the database
             # we need: table name column names, and data which is parsed json that goes into the keys
 
+            #self.log.info('Save into database table %s. Index method is %s' % (table, index_method))
+            self.log.info('Save ids %s' % (ids))
 
 
 
@@ -203,7 +204,7 @@ class ElectionScraper:
                         
                         response = urllib.request.urlopen(s['url'])
                         lines = [l.decode('latin-1') for l in response.readlines()]
-                        rows = csv.reader(lines)
+                        rows = csv.reader(lines, delimiter=';')
 
                     except Exception as err:
                         self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (s['type'], s['url']))
@@ -218,26 +219,26 @@ class ElectionScraper:
                     # Go through rows.
                     # Save every x
                     count = 0
-                    #group = []
+                    group = []
                     for row in rows:
-                        #parsed = parser_method(row, i, s['table'], s)
-                        #group.append(parsed)
-                        #if len(group) % self.grouped_inserts == 0:
-                        #    self.save(['id'], group, s['table'], index_method)
-                        #    group = []
+                        parsed = parser_method(row, i, s['table'], s)
+                        group.append(parsed)
+                        if len(group) % self.grouped_inserts == 0:
+                            self.save(['id'], group, s['table'], index_method)
+                            group = []
                         count = count + 1
 
-                    #if len(group) > 0:
-                    #    self.save(['id'], group, s['table'], index_method)
+                    if len(group) > 0:
+                        self.save(['id'], group, s['table'], index_method)
 
-                    #"""
-                    #Non-grouped.
-                    #count = 0
-                    #for row in rows:
-                    #    parsed = parser_method(row, i, s['table'], s)
-                    #    self.save(['id'], parsed, s['table'], index_method)
-                    #    count = count + 1
-                    #"""
+                    """
+                    Non-grouped.
+                    count = 0
+                    for row in rows:
+                        parsed = parser_method(row, i, s['table'], s)
+                        self.save(['id'], parsed, s['table'], index_method)
+                        count = count + 1
+                    """
 
 
                     # Log
