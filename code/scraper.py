@@ -693,13 +693,13 @@ class ElectionScraper:
             else:
                 self.log.info('[%s] Could not find State District Court boundary for: %s' % ('results', parsed_row['office_name']))
 
-        # School district is in the office name.    Special school district for
+        # School district is in the office name. Special school district for
         # Minneapolis is "1-1". Unfortunately SSD1 and ISD1 are essentially the
         # same as far as the incoming data so we have to look at title.
         #
         # Minneapolis
         # sub-school districts are the same at the Minneapolis Park and Rec
-        # districts.    There are a number of sub-school districts it looks
+        # districts. There are a number of sub-school districts it looks
         # like
 
         if parsed_row['scope'] == 'school':
@@ -764,7 +764,7 @@ class ElectionScraper:
         # which is in multiple counties which means they have more than one
         # boundary.
         #
-        # For the sub-municipal results, we need wards.    Unfortunately the boundary
+        # For the sub-municipal results, we need wards. Unfortunately the boundary
         # id for wards is the actual name of the city and the ward number due to the
         # face that the original boundary data did not have mcd codes in it.
         #
