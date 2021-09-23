@@ -6,7 +6,6 @@ Main scraper.
 import sys
 import os
 import re
-#import scraperwiki
 import csv
 import urllib.request
 #import unicodecsv
@@ -22,7 +21,7 @@ import sql
 #from gdata.spreadsheet.service import SpreadsheetsService
 
 
-# This is placeholder for scraperwiki embedding
+# This is placeholder for scraper embedding
 scraper_sources_inline = None
 
 #DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -80,10 +79,7 @@ class ElectionScraper:
         self.log.info('[scraper] Started.')
 
         # this is where scraperwiki was creating and connecting to its database
-
-        # connect to postgres
-        #engine = sqlalchemy.create_engine(DATABASE_URL, echo=True, future=True)
-        #conn = engine.connect()
+        # we do this in the sql file instead
 
         self.read_sources()
 
@@ -201,15 +197,11 @@ class ElectionScraper:
 
                     # Get data from URL
                     try:
-                        #scraped = scraperwiki.scrape(s['url'])
                         # Ballot questions spreadsheet requires latin-1 encoding
                         #rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='latin-1')
-                        #rows = numpy.genfromtxt(s['url'],delimiter=';', encoding='latin1')
-                        
                         response = urllib.request.urlopen(s['url'])
                         lines = [l.decode('latin-1') for l in response.readlines()]
                         rows = csv.reader(lines, delimiter=';')
-
                     except Exception as err:
                         self.log.exception('[%s] Error when trying to read URL and parse CSV: %s' % (s['type'], s['url']))
                         raise
@@ -1026,5 +1018,3 @@ class ElectionScraper:
 if __name__ == "__main__":
     scraper = ElectionScraper()
     scraper.route()
-
-    # <Scraperwiki commands go here>
