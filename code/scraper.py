@@ -5,7 +5,7 @@ Main scraper.
 
 import sys
 import os
-import regex as re
+import re
 #import scraperwiki
 import csv
 import urllib.request
@@ -653,7 +653,7 @@ class ElectionScraper:
 
         # US House districts
         if parsed_row['scope'] == 'us_house':
-            us_house_match = re.compile(r'.*\U.S. Representative District ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
+            us_house_match = re.compile(r'.*U.S. Representative District ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if us_house_match is not None:
                 boundary = 'congressional-districts-2012/' + us_house_match.group(1)
                 boundary_type = 'congressional-districts-2012'
@@ -666,7 +666,7 @@ class ElectionScraper:
 
         # State Senate districts
         if parsed_row['scope'] == 'state_senate':
-            state_senate_match = re.compile(r'.*\State Senator District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
+            state_senate_match = re.compile(r'.*State Senator District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if state_senate_match is not None:
                 boundary = 'state-senate-districts-2012/' + "%02d" % (int(state_senate_match.group(1)),)
                 boundary_type = 'state-senate-districts-2012'
@@ -675,7 +675,7 @@ class ElectionScraper:
 
         # State House districts
         if parsed_row['scope'] == 'state_house':
-            state_house_match = re.compile(r'.*\State Representative District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
+            state_house_match = re.compile(r'.*State Representative District (\w+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if state_house_match is not None:
                 district_number = "%02d" % (int(state_house_match.group(1)[0:-1]),)
                 district_letter = state_house_match.group(1)[-1].lower()
@@ -686,7 +686,7 @@ class ElectionScraper:
 
         # State court districts.    Judge - 7th District Court 27
         if parsed_row['scope'] == 'district_court':
-            court_match = re.compile(r'.*\Judge - ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
+            court_match = re.compile(r'.*Judge - ([0-9]+).*', re.IGNORECASE).match(parsed_row['office_name'])
             if court_match is not None:
                 boundary = 'district-courts-2012/' + court_match.group(1).lower() + '-1'
                 boundary_type = 'district-courts-2012'
@@ -694,7 +694,7 @@ class ElectionScraper:
                 self.log.info('[%s] Could not find State District Court boundary for: %s' % ('results', parsed_row['office_name']))
 
         # School district is in the office name.    Special school district for
-        # Minneapolis is "1-1".  Unfotunralty SSD1 and ISD1 are essentially the
+        # Minneapolis is "1-1". Unfortunately SSD1 and ISD1 are essentially the
         # same as far as the incoming data so we have to look at title.
         #
         # Minneapolis
@@ -735,7 +735,7 @@ class ElectionScraper:
             else:
                 self.log.info('[%s] Could not find (I|S)SD boundary for: %s' % ('results', parsed_row['office_name']))
 
-        # County should be provide, but the results also have results for county
+        # County should be provided, but the results also have results for county
         # comissioner which are sub-county boundaries
         if parsed_row['scope'] == 'county':
             comissioner_match = re.compile(r'.*County Commissioner District.*', re.IGNORECASE).match(parsed_row['office_name'])
@@ -771,7 +771,7 @@ class ElectionScraper:
         # There are also minneapolis park and recs commissioner which is its own
         # thing.
         #
-        # And there is also just wrong data occassionaly.
+        # And there is also just wrong data occasionally.
         if parsed_row['scope'] == 'municipal':
             # Checks
             wards_matched = re.compile(r'.*(Council Member Ward|Council Member District) ([0-9]+).*\((((?!elect).)*)\).*', re.IGNORECASE).match(parsed_row['office_name'])
@@ -1016,7 +1016,7 @@ class ElectionScraper:
 
 
     def slugify(self, orig):
-        slug = orig.encode('ascii', 'ignore').lower()
+        slug = str(orig.encode('ascii', 'ignore').lower())
         slug = re.sub(r'[^a-z0-9]+', '-', slug).strip('-')
         slug = re.sub(r'[-]+', '-', slug)
         return slug
