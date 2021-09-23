@@ -5,25 +5,27 @@ Main scraper.
 
 import sys
 import os
-import re
+import regex as re
 #import scraperwiki
 import csv
 import urllib.request
-from flask_sqlalchemy import SQLAlchemy
 #import unicodecsv
+import numpy
 import datetime
 import calendar
 import logging
 import json
 import requests
 import lxml.html
+
+import sql
 #from gdata.spreadsheet.service import SpreadsheetsService
 
 
 # This is placeholder for scraperwiki embedding
 scraper_sources_inline = None
 
-DATABASE_URL = os.environ.get('DATABASE_URL')
+#DATABASE_URL = os.environ.get('DATABASE_URL')
 
 
 class ScraperLogger:
@@ -80,8 +82,8 @@ class ElectionScraper:
         # this is where scraperwiki was creating and connecting to its database
 
         # connect to postgres
-        con = psycopg2.connect(DATABASE_URL)
-        cur = con.cursor()
+        #engine = sqlalchemy.create_engine(DATABASE_URL, echo=True, future=True)
+        #conn = engine.connect()
 
         self.read_sources()
 
@@ -125,7 +127,6 @@ class ElectionScraper:
         """
 
         try:
-            #scraperwiki.sql.save(unique_keys = ids, data = data, table_name = table)
             # save a row into the database
             # we need: table name column names, and data which is parsed json that goes into the keys
 
@@ -133,7 +134,7 @@ class ElectionScraper:
             #self.log.info('Save ids %s' % (ids))
 
             # ids is a subset of table column names to determine when to overwrite a record
-
+            sql.save(unique_keys = ids, data = data, table_name = table)
 
 
             # Create index if needed
@@ -155,11 +156,13 @@ class ElectionScraper:
 
         # First determine if the table is already made, we need to be explicit
         # about column types
-        table_query = "name FROM sqlite_master WHERE type='table' AND name='meta'"
-        table_found = scraperwiki.sql.select(table_query)
+        #table_query = "name FROM sqlite_master WHERE type='table' AND name='meta'"
+        table_query = "table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'meta'"
+
+        table_found = sql.select(table_query)
         if table_query == []:
-            create_table = u"CREATE TABLE IF NOT EXISTS %s (`key` text PRIMARY KEY, `value_blob` blob, `type` text)" % quote(self.__vars_table)
-            scraperwiki.sql.execute(sql)
+            create_table = u"CREATE TABLE IF NOT EXISTS %s (key text PRIMARY KEY, value_blob bytea, type text)" % self.__vars_table
+            sql.execute(sql)
 
         # Then save the data we have
         self.save(['key'], {
@@ -469,14 +472,17 @@ class ElectionScraper:
         # current records as INSERT or UPDATE statements require all data.
         found_result = False
         found_contest = False
-        table_query = "name FROM sqlite_master WHERE type='table' AND name='%s'"
+        #table_query = "name FROM sqlite_master WHERE type='table' AND name='%s'"
+
+        table_query = "table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '%s'"
+
         row_query = "* FROM %s WHERE id = '%s'"
-        found_result_table = scraperwiki.sql.select(table_query % 'results')
-        found_contest_table = scraperwiki.sql.select(table_query % 'contests')
+        found_result_table = sql.select(table_query % 'results')
+        found_contest_table = sql.select(table_query % 'contests')
         if found_result_table != []:
-            found_results = scraperwiki.sql.select(row_query % ('results', row_id))
+            found_results = sql.select(row_query % ('results', row_id))
         if found_contest_table != []:
-            found_contests = scraperwiki.sql.select(row_query % ('contests', contest_id))
+            found_contests = sql.select(row_query % ('contests', contest_id))
 
         # Handle result
         if found_result_table != [] and found_results != []:
@@ -553,27 +559,27 @@ class ElectionScraper:
 
     def index_results(self):
         index_query = "CREATE INDEX IF NOT EXISTS %s ON results (%s)"
-        scraperwiki.sql.execute(index_query % ('office_name', 'office_name'))
-        scraperwiki.sql.execute(index_query % ('candidate', 'candidate'))
-        scraperwiki.sql.execute(index_query % ('contest_id', 'contest_id'))
+        sql.execute(index_query % ('office_name', 'office_name'))
+        sql.execute(index_query % ('candidate', 'candidate'))
+        sql.execute(index_query % ('contest_id', 'contest_id'))
         self.log.info('[%s] Creating indices for results table.' % ('results'))
 
 
     def index_contests(self):
         index_query = "CREATE INDEX IF NOT EXISTS %s ON contests (%s)"
-        scraperwiki.sql.execute(index_query % ('title', 'title'))
+        sql.execute(index_query % ('title', 'title'))
         self.log.info('[%s] Creating indices for contests table.' % ('contests'))
 
 
     def post_results(self):
         # Update some vars for easy retrieval
         self.save_meta('updated', int(calendar.timegm(datetime.datetime.utcnow().utctimetuple())))
-        contests = scraperwiki.sql.select("COUNT(DISTINCT contest_id) AS contest_count FROM results")
+        contests = sql.select("COUNT(DISTINCT contest_id) AS contest_count FROM results")
         if contests != []:
             self.save_meta('contests', int(contests[0]['contest_count']))
 
         # Use the first state level race to get general number of precincts reporting
-        state_contest = scraperwiki.sql.select("* FROM contests WHERE county_id = '88' LIMIT 1")
+        state_contest = sql.select("* FROM contests WHERE county_id = '88' LIMIT 1")
         if state_contest != []:
             self.save_meta('precincts_reporting', int(state_contest[0]['precincts_reporting']))
             self.save_meta('total_effected_precincts', int(state_contest[0]['total_effected_precincts']))
@@ -582,7 +588,8 @@ class ElectionScraper:
         supplement_update = 0
         supplement_insert = 0
         supplement_delete = 0
-        s_rows = self.supplement_connect('supplemental_results')
+        #s_rows = self.supplement_connect('supplemental_results')
+        s_rows = [] # temporary
         for s in s_rows:
             # Parse some values we know we will look at
             percentage = float(s['percentage']) if s['percentage'] is not None else None
@@ -592,7 +599,7 @@ class ElectionScraper:
             row_id = s['id']
 
             # Check for existing rows
-            results = scraperwiki.sql.select("* FROM results WHERE id = '%s'" % (row_id))
+            results = sql.select("* FROM results WHERE id = '%s'" % (row_id))
 
             # If valid data
             if row_id is not None and s['contest_id'] is not None and s['candidate_id'] is not None:
@@ -607,8 +614,8 @@ class ElectionScraper:
                     self.save(['id'], result, 'results')
                     supplement_update = supplement_update + 1
                 elif results != [] and not enabled and results[0]['results_group'] == 'supplemental_results':
-                    scraperwiki.sql.execute("DELETE FROM results WHERE id = '%s'" % (row_id))
-                    scraperwiki.sql.commit()
+                    sql.execute("DELETE FROM results WHERE id = '%s'" % (row_id))
+                    sql.commit()
                     supplement_delete = supplement_delete + 1
                 elif (votes_candidate >= 0) and enabled:
                     # Add new row, make sure to mark the row as supplemental
@@ -783,7 +790,7 @@ class ElectionScraper:
                     boundary_type = 'minor-civil-divisions-2010'
                 else:
                     boundary_type = 'minor-civil-divisions-2010'
-                    mcd = scraperwiki.sql.select("* FROM areas WHERE areas_group = 'municipalities' AND mcd_id = '%s'" % (parsed_row['district_code']))
+                    mcd = sql.select("* FROM areas WHERE areas_group = 'municipalities' AND mcd_id = '%s'" % (parsed_row['district_code']))
                     if mcd != []:
                         boundaries = []
                         for r in mcd:
@@ -808,7 +815,7 @@ class ElectionScraper:
             else:
                 # We need the county ID and it is not in results, so we have to look
                 # it up, and there could more than one
-                mcd = scraperwiki.sql.select("* FROM areas WHERE areas_group = 'municipalities' AND mcd_id = '%s'" % (parsed_row['district_code']))
+                mcd = sql.select("* FROM areas WHERE areas_group = 'municipalities' AND mcd_id = '%s'" % (parsed_row['district_code']))
                 if mcd != []:
                     for r in mcd:
                         # Find intersection
@@ -866,7 +873,7 @@ class ElectionScraper:
         processed = 0
         supplemented = 0
         index_created = False
-        contests = scraperwiki.sql.select("* FROM contests")
+        contests = sql.select("* FROM contests")
 
         # Usually we just want the newest election but allow for other situations
         election = election if election is not None and election != '' else self.newest_election
@@ -878,17 +885,18 @@ class ElectionScraper:
                 self.save_meta(m, self.sources[self.election]['meta'][m])
 
         # Get data from Google spreadsheet
-        s_rows = self.supplement_connect('supplemental_contests')
+        #s_rows = self.supplement_connect('supplemental_contests')
+        s_rows = [] # temporary
 
         # Get question data
         try:
-            questions = scraperwiki.sql.select('* FROM questions')
+            questions = sql.select('* FROM questions')
         except:
             questions = []
 
         # Get areas data
         try:
-            areas = scraperwiki.sql.select('* FROM areas')
+            areas = sql.select('* FROM areas')
         except:
             areas = []
 
@@ -951,7 +959,7 @@ class ElectionScraper:
 
             # Determine partisanship for contests for other processing.    We need to look
             # at all the candidates to know if the contest is nonpartisan or not.
-            results = scraperwiki.sql.select("* FROM results WHERE contest_id = '%s' AND party_id NOT IN ('%s')" % (r['id'], "', '".join(self.nonpartisan_parties)))
+            results = sql.select("* FROM results WHERE contest_id = '%s' AND party_id NOT IN ('%s')" % (r['id'], "', '".join(self.nonpartisan_parties)))
             r['partisan'] = True if results != [] else False
 
             # For non-partisan primaries, the general rule is that there are twice
@@ -989,7 +997,7 @@ class ElectionScraper:
         the API.    Can take a bit of time.
         """
         boundary_url = 'https://boundaries.minnpost.com/1.0/boundary/%s'
-        contests = scraperwiki.sql.select("* FROM contests")
+        contests = sql.select("* FROM contests")
         contests_count = 0
         boundaries_found = 0
 
