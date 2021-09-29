@@ -19,6 +19,7 @@ Base = declarative_base()
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
+# see https://help.heroku.com/ZKNTJQSK/why-is-sqlalchemy-1-4-x-not-connecting-to-heroku-postgres
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 

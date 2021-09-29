@@ -502,7 +502,7 @@ class ElectionScraper:
             # guesses.    All contests in an election are considered primary, but
             # non-partisan ones only mean there is more than one seat available.
             is_primary = self.election_meta['primary'] if 'primary' in self.election_meta else False
-            re_question = re.compile(r'.*\question.*', re.IGNORECASE)
+            re_question = re.compile(r'.*question.*', re.IGNORECASE)
             matched_question = re_question.match(row[4])
             is_primary = False if matched_question is not None else is_primary
 
