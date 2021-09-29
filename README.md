@@ -94,7 +94,8 @@ This documentation describes how to install Postgres with Homebrew.
 1. A free, Mac-based graphic manager for Postgres is [Postbird](https://www.electronjs.org/apps/postbird).
 1. Create a database. For this example, call it `election-scraper`.
 1. Installing with Homebrew creates a user with no password. The connection string will be `"postgresql://username:@localhost/election-scraper"`. Enter this connection string to the `DATABASE_URL` value of the `.env` file.
-1. Download the database from Heroku. With Postbird, you can import it using the File -> Import .sql file command.
+
+To get the data for the database, you can either [import it from Heroku](https://devcenter.heroku.com/articles/heroku-postgres-import-export) or run the SQL commands that are in this repository's `election-scraper-structure.sql` file. Running the commands in this file will result in a database with all of the required tables, but they'll all be empty. This file was created in Postgres version 13.4.
 
 ### Local authentication for Google Sheets
 
