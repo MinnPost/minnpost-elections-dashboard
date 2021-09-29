@@ -159,6 +159,11 @@ Run the scraper commands from the section below by following [Heroku's instructi
 1. (optional) For results that are in a Google Spreadsheet, use the supplement step: `python code/scraper.py supplement contests <ELECTION_DATE>`
 1. (optional) To check each boundary ID against the boundary service: `python code/scraper.py check_boundaries`
 
+
+
+# stuff we have to figure out and then rewrite
+
+
 ### Webserver
 
 1. [Dumptruck](https://github.com/scraperwiki/dumptruck-web) is a Python script to create an API on-top of an sqlite database.  It's built by ScraperWiki and also handles multiple user location.
