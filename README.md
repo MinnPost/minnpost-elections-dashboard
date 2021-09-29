@@ -1,6 +1,6 @@
 # MN Election Results
 
-Scraper for the Minnesota elections.  This tries to emulate the ScraperWiki environment as much as possible so that it can be run on ScraperWiki when elections are not in full force.
+Scraper for the Minnesota elections.
 
 ## Data
 
@@ -32,7 +32,7 @@ Add a new object keyed by the date of the election, like `YYYYMMDD`.  This shoul
   },
 ```
 
-In theory this should be it, assuming the scraper can reconcile everything.  There is a good chance, though, that formatting changes could break the scraper, or that the scraper does not know how to fully process some results.
+In theory this should be it, assuming the scraper can reconcile everything. There is a good chance, though, that formatting changes could break the scraper, or that the scraper does not know how to fully process some results.
 
 ### Manual data
 
@@ -40,9 +40,9 @@ Both manual results and contest question text can be managed in Google Spreadshe
 
 ## Scraping
 
-`<ELECTION_DATE>` is optional and the newest election will be used if not provided.  It should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
+`<ELECTION_DATE>` is optional and the newest election will be used if not provided. It should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
 
-1. (optional) Remove old data as the scraper is not built to manage more than one election: `rm scraperwiki.sqlite`
+1. (optional) Remove old data as the scraper is not built to manage more than one election: `find command to dump database`
 1. Scrape areas: `python code/scraper.py scrape areas <ELECTION_DATE>`
   * This is something that only really needs to be done once, at least close to the election, as there little change it will change the day of the election.
 1. Scrape questions: `python code/scraper.py scrape questions <ELECTION_DATE>`
@@ -52,35 +52,102 @@ Both manual results and contest question text can be managed in Google Spreadshe
 1. (optional) For results that are in a Google Spreadsheet, use the supplement step: `python code/scraper.py supplement contests <ELECTION_DATE>`
 1. (optional) To check each boundary ID against the boundary service: `python code/scraper.py check_boundaries`
 
+## Google Sheets data
+
+For both local and remote environments, you'll need to make sure the application has access to the Google Sheets data. In version 4 of the Sheets API, this happens through Service Accounts.
+
+### Creating a new authentication
+
+If you are authenticating with the Sheets API for the first time, you'll need to create a new Google Cloud project. Start by following [this guide from Google](https://developers.google.com/workspace/guides/create-project). When you've finished Google's steps, you should have a new project.
+
+Our specific Google Sheets integration uses the [Sheetfu library](https://github.com/socialpoint-labs/sheetfu), which has [an authentication guide](https://github.com/socialpoint-labs/sheetfu/blob/master/documentation/authentication.rst) to finish this process. The screenshots are not necessarily up to date with the names Google uses for things.
+
+Between these resources, you should follow these steps to create and access the authentication credentials:
+
+1. Create a new Google Cloud Platform project.
+1. Enable the Sheets and Drive APIs in the APIs & Services section of the Google Cloud Platform settings.
+1. Create a Service Account in the IAM & Admin section of the Google Cloud Platform settings.
+1. Download the new JSON-formatted key for that Service Account. Only use this key for one environment.
+
+### Accessing an existing authentication
+
+If the Service Account user already exists in the Google Cloud Platform, you can access it at https://console.cloud.google.com/home/dashboard?project=[application-name]. In MinnPost's case, this URL is [https://console.cloud.google.com/home/dashboard?project=minnpost-mn-election-results](https://console.cloud.google.com/home/dashboard?project=minnpost-mn-election-results).
+
+If it hasn't been, you'll need your Google account added. An Administrator can do that at the correct dashboard URL by clicking "Add People to this Project."
+
+Follow these steps to access the authentication credentials:
+
+1. Once you have access to the project's dashboard, click "Go to project settings" in the Project info box.
+1. Click Service Accounts in the IAM & Admin section of the Google Cloud Platform settings.
+1. If there is more than one service account, find the correct one.
+1. Click the Actions menu for that account and choose the Manage keys option.
+1. Click Add Key, choose Create new key, and choose JSON as the Key type. Click the Create button and download the key for that Service Account. Only use this key for one environment.
+
 ## Local setup and development
 
 1. Install `git`
 1. Get the code: `git clone https://github.com/MinnPost/minnpost-scraper-mn-election-results.git`
 1. Change the directory: `cd minnpost-scraper-mn-election-results`
-1. (optional) Make a `virtualenv`
-1. `pip install -r requirements.txt`
+1. `pipenv install`
 1. Run a scraper process (see above).
 1. Run basic API server; this should not be run on production; it is meant for local development: `python deploy/local_server.py`
-  * This create a basic endpoint server at http://localhost:5000/.
+  * This creates a basic endpoint server at http://localhost:5000/.
+1. Create a `.env` file based on the repository's `.env-example` file in the root of your project.
+
+### Local setup for Postgres
+
+This documentation describes how to install Postgres with Homebrew.
+
+1. Run `brew install postgresql` to install Postgres.
+1. Run `psql postgres` to start the server and log in to it.
+1. A free, Mac-based graphic manager for Postgres is [Postbird](https://www.electronjs.org/apps/postbird).
+1. Create a database. For this example, call it `election-scraper`.
+1. Installing with Homebrew creates a user with no password. The connection string will be `"postgresql://username:@localhost/election-scraper"`. Enter this connection string to the `DATABASE_URL` value of the `.env` file.
+1. Download the database from Heroku. With Postbird, you can import it using the File -> Import .sql file command.
+
+### Local authentication for Google Sheets
+
+Enter the configuration values from the JSON key downloaded above into the `.env` file's values for these fields:
+
+- `SHEETFU_CONFIG_TYPE`
+- `SHEETFU_CONFIG_PROJECT_ID`
+- `SHEETFU_CONFIG_PRIVATE_KEY_ID`
+- `SHEETFU_CONFIG_PRIVATE_KEY`
+- `SHEETFU_CONFIG_CLIENT_EMAIL`
+- `SHEETFU_CONFIG_CLIENT_ID`
+- `SHEETFU_CONFIG_AUTH_URI`
+- `SHEETFU_CONFIG_TOKEN_URI`
+- `SHEETFU_CONFIG_AUTH_PROVIDER_URL`
+- `SHEETFU_CONFIG_CLIENT_CERT_URL`
 
 ## Production setup and deployment
 
-As this is meant to emulate how ScraperWiki works, it uses Python, FastCGI and Nginx to create an API for the scraped data in the sqlite database.
-
-These instructions have been performed on an EC2 Ubuntu instance.
-
-**Note that for MinnPost's specific purpose, there is an AMI for this that has many of these steps already completed.  But it seems that the scraper/server seems to run slow when started back up, so it may make sense to re-build the server.**
-
 ### Code, Libraries and prerequisites
 
-Note that we use root freely
+This application should be deployed to Heroku. If you are creating a new Heroku application, clone this repository with `git clone https://github.com/MinnPost/minnpost-scraper-mn-election-results.git` and follow [Heroku's instructions](https://devcenter.heroku.com/articles/git#creating-a-heroku-remote) to create a Heroku remote.
 
-1. Make sure Ubuntu is up to date: `sudo aptitude update && sudo aptitude safe-upgrade`
-1. Install system and python base packages: `sudo aptitude install git-core git python-pip python-dev build-essential python-lxml sqlite3 nginx-full fcgiwrap`
-1. Install python base packages: `sudo pip install --upgrade pip && sudo pip install --upgrade virtualenv`
-1. Go to the home directory: `cd ~`
-1. Get the code: `git clone https://github.com/MinnPost/minnpost-scraper-mn-election-results.git && cd minnpost-scraper-mn-election-results`
-1. `sudo pip install -r requirements.txt`
+### Production setup for Postgres
+
+Add the Heroku Postgres add-on to the Heroku application. Heroku allows two applications to share the same database. They provide [instructions](https://devcenter.heroku.com/articles/managing-add-ons#using-the-command-line-interface-attaching-an-add-on-to-another-app) for this.
+
+### Production authentication for Google Sheets
+
+In the project's Heroku settings, enter the configuration values from the production-only JSON key downloaded above into the values for these fields:
+
+- `SHEETFU_CONFIG_TYPE`
+- `SHEETFU_CONFIG_PROJECT_ID`
+- `SHEETFU_CONFIG_PRIVATE_KEY_ID`
+- `SHEETFU_CONFIG_PRIVATE_KEY`
+- `SHEETFU_CONFIG_CLIENT_EMAIL`
+- `SHEETFU_CONFIG_CLIENT_ID`
+- `SHEETFU_CONFIG_AUTH_URI`
+- `SHEETFU_CONFIG_TOKEN_URI`
+- `SHEETFU_CONFIG_AUTH_PROVIDER_URL`
+- `SHEETFU_CONFIG_CLIENT_CERT_URL`
+
+### Scraping
+
+Run the scraper commands from the section above by following [Heroku's instructions](https://devcenter.heroku.com/articles/getting-started-with-python#start-a-console) for running Python commands.
 
 ### Webserver
 

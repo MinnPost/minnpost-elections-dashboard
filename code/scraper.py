@@ -18,14 +18,10 @@ import requests
 import lxml.html
 
 import sql
-#from gdata.spreadsheet.service import SpreadsheetsService
-
+from sheetfu import SpreadsheetApp
 
 # This is placeholder for scraper embedding
 scraper_sources_inline = None
-
-#DATABASE_URL = os.environ.get('DATABASE_URL')
-
 
 class ScraperLogger:
     """
@@ -79,7 +75,7 @@ class ElectionScraper:
         self.log.info('[scraper] Started.')
 
         # this is where scraperwiki was creating and connecting to its database
-        # we do this in the sql file instead
+        # we do this in the imported sql file instead
 
         self.read_sources()
 
@@ -124,14 +120,8 @@ class ElectionScraper:
 
         try:
             # save a row into the database
-            # we need: table name column names, and data which is parsed json that goes into the keys
-
-            #self.log.info('Save into database table %s. Index method is %s' % (table, index_method))
-            #self.log.info('Save ids %s' % (ids))
-
             # ids is a subset of table column names to determine when to overwrite a record
             sql.save(unique_keys = ids, data = data, table_name = table)
-
 
             # Create index if needed
             if index_method is not None and callable(index_method) and not self.index_created[table]:
@@ -150,9 +140,7 @@ class ElectionScraper:
         but faster than expexting to get changes pulled upstream.
         """
 
-        # First determine if the table is already made, we need to be explicit
-        # about column types
-        #table_query = "name FROM sqlite_master WHERE type='table' AND name='meta'"
+        # First determine if the table is already made, we need to be explicit about column types
         table_query = "table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'meta'"
 
         table_found = sql.select(table_query)
@@ -259,13 +247,15 @@ class ElectionScraper:
 
         try:
             s = self.sources[self.election][source]
-            client = SpreadsheetsService()
-            feed = client.GetWorksheetsFeed(s['spreadsheet_id'], visibility='public', projection='basic')
-            worksheet_id = feed.entry[s['worksheet_id']].id.text.rsplit('/', 1)[1]
-            rows = client.GetListFeed(key=s['spreadsheet_id'], wksht_id=worksheet_id, visibility='public', projection='values').entry
+            client = SpreadsheetApp(from_env=True)
+            spreadsheet = client.open_by_id(s['spreadsheet_id'])
+            sheets = spreadsheet.get_sheets()
+            sheet = sheets[s['worksheet_id']]
+            data_range = sheet.get_data_range()
+            rows = data_range.get_values()
         except Exception as err:
             rows = None
-            self.log.exception('[%s] Unable to connecto supplemental source: %s' % ('supplement', s))
+            self.log.exception('[%s] Unable to connect to supplemental source: %s' % ('supplement', s))
 
         # Process the rows into a more usable format.  And handle typing
         s_types = {
@@ -276,21 +266,19 @@ class ElectionScraper:
         }
         if rows:
             if len(rows) > 0:
-                p_rows = []
-                for r in rows:
-                    p_row = {}
-                    for f in r.custom:
-                        # Try typing
-                        c = f.replace('.', '_')
-                        if r.custom[f].text is not None and c in s_types:
-                            p_row[c] = s_types[c](r.custom[f].text)
-                        else:
-                            p_row[c] = r.custom[f].text
-
-                    p_rows.append(p_row)
-
-                return p_rows
-
+                headers = rows[0]
+                data_rows = []
+                for row_key, row in enumerate(rows):
+                    if row_key > 0:
+                        data_row = {}
+                        for field_key, field in enumerate(row):
+                            column = headers[field_key].replace('.', '_')
+                            if field is not None and column in s_types:
+                                data_row[column] = s_types[column](field)
+                            else:
+                                data_row[column] = field
+                        data_rows.append(data_row)
+                return data_rows
         return rows
 
 
@@ -460,11 +448,10 @@ class ElectionScraper:
                 if ranked_choice_choice is not None:
                     ranked_choice_place = ranked_choice_translations[c]
 
-        # Check if records already exists, but first if table exists yet.    Also get
+        # Check if records already exists, but first if table exists yet. Also get
         # current records as INSERT or UPDATE statements require all data.
         found_result = False
         found_contest = False
-        #table_query = "name FROM sqlite_master WHERE type='table' AND name='%s'"
 
         table_query = "table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '%s'"
 
@@ -580,8 +567,7 @@ class ElectionScraper:
         supplement_update = 0
         supplement_insert = 0
         supplement_delete = 0
-        #s_rows = self.supplement_connect('supplemental_results')
-        s_rows = [] # temporary
+        s_rows = self.supplement_connect('supplemental_results')
         for s in s_rows:
             # Parse some values we know we will look at
             percentage = float(s['percentage']) if s['percentage'] is not None else None
@@ -877,8 +863,7 @@ class ElectionScraper:
                 self.save_meta(m, self.sources[self.election]['meta'][m])
 
         # Get data from Google spreadsheet
-        #s_rows = self.supplement_connect('supplemental_contests')
-        s_rows = [] # temporary
+        s_rows = self.supplement_connect('supplemental_contests')
 
         # Get question data
         try:
