@@ -20,12 +20,8 @@ import lxml.html
 import sql
 from sheetfu import SpreadsheetApp
 
-
 # This is placeholder for scraper embedding
 scraper_sources_inline = None
-
-#DATABASE_URL = os.environ.get('DATABASE_URL')
-
 
 class ScraperLogger:
     """
@@ -79,7 +75,7 @@ class ElectionScraper:
         self.log.info('[scraper] Started.')
 
         # this is where scraperwiki was creating and connecting to its database
-        # we do this in the sql file instead
+        # we do this in the imported sql file instead
 
         self.read_sources()
 
@@ -124,14 +120,8 @@ class ElectionScraper:
 
         try:
             # save a row into the database
-            # we need: table name column names, and data which is parsed json that goes into the keys
-
-            #self.log.info('Save into database table %s. Index method is %s' % (table, index_method))
-            #self.log.info('Save ids %s' % (ids))
-
             # ids is a subset of table column names to determine when to overwrite a record
             sql.save(unique_keys = ids, data = data, table_name = table)
-
 
             # Create index if needed
             if index_method is not None and callable(index_method) and not self.index_created[table]:
@@ -150,9 +140,7 @@ class ElectionScraper:
         but faster than expexting to get changes pulled upstream.
         """
 
-        # First determine if the table is already made, we need to be explicit
-        # about column types
-        #table_query = "name FROM sqlite_master WHERE type='table' AND name='meta'"
+        # First determine if the table is already made, we need to be explicit about column types
         table_query = "table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'meta'"
 
         table_found = sql.select(table_query)
@@ -460,11 +448,10 @@ class ElectionScraper:
                 if ranked_choice_choice is not None:
                     ranked_choice_place = ranked_choice_translations[c]
 
-        # Check if records already exists, but first if table exists yet.    Also get
+        # Check if records already exists, but first if table exists yet. Also get
         # current records as INSERT or UPDATE statements require all data.
         found_result = False
         found_contest = False
-        #table_query = "name FROM sqlite_master WHERE type='table' AND name='%s'"
 
         table_query = "table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '%s'"
 
