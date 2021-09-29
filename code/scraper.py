@@ -9,7 +9,6 @@ import re
 import csv
 import urllib.request
 #import unicodecsv
-import numpy
 import datetime
 import calendar
 import logging

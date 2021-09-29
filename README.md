@@ -79,11 +79,11 @@ Follow these steps to access the authentication credentials:
 1. Install `git`
 1. Get the code: `git clone https://github.com/MinnPost/minnpost-scraper-mn-election-results.git`
 1. Change the directory: `cd minnpost-scraper-mn-election-results`
-1. `pipenv install`
-1. Run a scraper process (see above).
+1. Create a `.env` file based on the repository's `.env-example` file in the root of your project.
+1. `pipenv install` and `pipenv shell`
+1. Run a scraper process (see below section on Scraping data).
 1. Run basic API server; this should not be run on production; it is meant for local development: `python deploy/local_server.py`
   * This creates a basic endpoint server at http://localhost:5000/.
-1. Create a `.env` file based on the repository's `.env-example` file in the root of your project.
 
 ### Local setup for Postgres
 
@@ -95,7 +95,7 @@ This documentation describes how to install Postgres with Homebrew.
 1. Create a database. For this example, call it `election-scraper`.
 1. Installing with Homebrew creates a user with no password. The connection string will be `"postgresql://username:@localhost/election-scraper"`. Enter this connection string to the `DATABASE_URL` value of the `.env` file.
 
-To get the data for the database, you can either [import it from Heroku](https://devcenter.heroku.com/articles/heroku-postgres-import-export) or run the SQL commands that are in this repository's `election-scraper-structure.sql` file. Running the commands in this file will result in a database with all of the required tables, but they'll all be empty. This file was created in Postgres version 13.4.
+To get the data for the database, you can either [export it from Heroku](https://devcenter.heroku.com/articles/heroku-postgres-import-export) or run the SQL commands that are in this repository's `election-scraper-structure.sql` file. Running the commands in this file will result in a database with all of the required tables, but they'll all be empty. This file was created in Postgres version 13.4.
 
 ### Local authentication for Google Sheets
 
@@ -124,6 +124,10 @@ This application should be deployed to Heroku. If you are creating a new Heroku 
 
 Add the Heroku Postgres add-on to the Heroku application. Heroku allows two applications to share the same database. They provide [instructions](https://devcenter.heroku.com/articles/managing-add-ons#using-the-command-line-interface-attaching-an-add-on-to-another-app) for this.
 
+To get the data into the database, you can either [import it into Heroku](https://devcenter.heroku.com/articles/heroku-postgres-import-export), either from the included `election-scraper-structure.sql` file or from your database once it has data in it.
+
+If you want to create empty tables on Heroku, you can do that by running the `CREATE TABLE` and `CREATE INDEX` commands from the `election-scraper-structure.sql` files after you open a `heroku pg:psql` session. Then you can run the scraper to populate the database.
+
 ### Production authentication for Google Sheets
 
 In the project's Heroku settings, enter the configuration values from the production-only JSON key downloaded above into the values for these fields:
@@ -139,7 +143,7 @@ In the project's Heroku settings, enter the configuration values from the produc
 - `SHEETFU_CONFIG_AUTH_PROVIDER_URL`
 - `SHEETFU_CONFIG_CLIENT_CERT_URL`
 
-Run the scraper commands from the section below by following [Heroku's instructions](https://devcenter.heroku.com/articles/getting-started-with-python#start-a-console) for running Python commands.
+Run the scraper commands from the section below by following [Heroku's instructions](https://devcenter.heroku.com/articles/getting-started-with-python#start-a-console) for running Python commands. Generally, run commands on Heroku by adding `heroku run ` before the rest of the command listed below.
 
 ## Scraping data
 
