@@ -56,6 +56,10 @@ Between these resources, you should follow these steps to create and access the 
 1. Create a Service Account in the IAM & Admin section of the Google Cloud Platform settings.
 1. Download the new JSON-formatted key for that Service Account. Only use this key for one environment.
 
+This new Service account will have an automatically-created email address. For this application, that email address must have at least Viewer-level access on any Google Sheets that it needs to access. It's best to give it that level of access on the folder level.
+
+If this user is new or it is being given new access, it can take a few minutes for the changes to propogate.
+
 ### Accessing an existing authentication
 
 If the Service Account user already exists in the Google Cloud Platform, you can access it at https://console.cloud.google.com/home/dashboard?project=[application-name]. In MinnPost's case, this URL is [https://console.cloud.google.com/home/dashboard?project=minnpost-mn-election-results](https://console.cloud.google.com/home/dashboard?project=minnpost-mn-election-results).
