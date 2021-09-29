@@ -1,24 +1,25 @@
 # MN Election Results
 
-Scraper for the Minnesota elections.
+Scraper for Minnesota elections.
 
-## Data
+## Data structure
 
-* Minnesota Secretary of State.  The SoS does a pretty good job of providing
-data across the state for general elections.
-  * [Web election results](http://electionresults.sos.state.mn.us/).  Finding an upcoming election can be difficult and may require manual manipulation of URLs.
+### Data sources
+
+* The Minnesota Secretary of State does a pretty good job of providing data across the state for general elections.
+  * [Web election results](http://electionresults.sos.state.mn.us/). Finding an upcoming election can be difficult and may require manual manipulation of URLs.
   * http://electionresults.sos.state.mn.us/ENR/Select/Download/1
   * [FTP download results](ftp://media:results@ftp.sos.state.mn.us/).
-  * The format of results are text, csv-like files.  Unfortunately there is no header row and no metadata to know what fields are which.  See scraper to see what is assumed.
+  * The format of results are text, csv-like files. Unfortunately there is no header row and no metadata to know what fields are which. See `code/scraper.py` to see what is assumed.
 * Minneapolis (due to Ranked-Choice voting)
 
-## Adding an election
+### Adding an election
 
 Metadata about each election is managed in `scraper_sources.json`.  Though there are often similarly named files for each election, there are usually files for each group of races and some can be named inconsistently.
 
 Add a new object keyed by the date of the election, like `YYYYMMDD`.  This should contain objects for results and other supplemental tables.  There should be one entry per file needed to process.
 
-```
+```json
 "20140812": {
   "meta": {
     "files_url": "ftp://media:results@ftp.sos.state.mn.us/20140812/",
@@ -38,21 +39,7 @@ In theory this should be it, assuming the scraper can reconcile everything. Ther
 
 Both manual results and contest question text can be managed in Google Spreadsheets.
 
-## Scraping
-
-`<ELECTION_DATE>` is optional and the newest election will be used if not provided. It should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
-
-1. (optional) Remove old data as the scraper is not built to manage more than one election: `find command to dump database`
-1. Scrape areas: `python code/scraper.py scrape areas <ELECTION_DATE>`
-  * This is something that only really needs to be done once, at least close to the election, as there little change it will change the day of the election.
-1. Scrape questions: `python code/scraper.py scrape questions <ELECTION_DATE>`
-1. Scrape the results: `python code/scraper.py scrape results <ELECTION_DATE>`
-  * This is the core processing of the scraper will be run frequently.
-1. Match contests to boundary area: `python code/scraper.py match_contests <ELECTION_DATE>`
-1. (optional) For results that are in a Google Spreadsheet, use the supplement step: `python code/scraper.py supplement contests <ELECTION_DATE>`
-1. (optional) To check each boundary ID against the boundary service: `python code/scraper.py check_boundaries`
-
-## Google Sheets data
+## Google Sheets setup
 
 For both local and remote environments, you'll need to make sure the application has access to the Google Sheets data. In version 4 of the Sheets API, this happens through Service Accounts.
 
@@ -120,6 +107,8 @@ Enter the configuration values from the JSON key downloaded above into the `.env
 - `SHEETFU_CONFIG_AUTH_PROVIDER_URL`
 - `SHEETFU_CONFIG_CLIENT_CERT_URL`
 
+See the scraper section below for commands to run after local setup is finished.
+
 ## Production setup and deployment
 
 ### Code, Libraries and prerequisites
@@ -145,9 +134,21 @@ In the project's Heroku settings, enter the configuration values from the produc
 - `SHEETFU_CONFIG_AUTH_PROVIDER_URL`
 - `SHEETFU_CONFIG_CLIENT_CERT_URL`
 
-### Scraping
+Run the scraper commands from the section below by following [Heroku's instructions](https://devcenter.heroku.com/articles/getting-started-with-python#start-a-console) for running Python commands.
 
-Run the scraper commands from the section above by following [Heroku's instructions](https://devcenter.heroku.com/articles/getting-started-with-python#start-a-console) for running Python commands.
+## Scraping data
+
+`<ELECTION_DATE>` is optional and the newest election will be used if not provided. It should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
+
+1. (optional) Remove old data as the scraper is not built to manage more than one election: `find command to dump database` (let's find out if this is still necessary)
+1. Scrape areas: `python code/scraper.py scrape areas <ELECTION_DATE>`
+  * This is something that only really needs to be done once, at least close to the election, as there little change it will change the day of the election.
+1. Scrape questions: `python code/scraper.py scrape questions <ELECTION_DATE>`
+1. Scrape the results: `python code/scraper.py scrape results <ELECTION_DATE>`
+  * This is the core processing of the scraper will be run frequently.
+1. Match contests to boundary area: `python code/scraper.py match_contests <ELECTION_DATE>`
+1. (optional) For results that are in a Google Spreadsheet, use the supplement step: `python code/scraper.py supplement contests <ELECTION_DATE>`
+1. (optional) To check each boundary ID against the boundary service: `python code/scraper.py check_boundaries`
 
 ### Webserver
 
