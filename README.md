@@ -122,7 +122,7 @@ This application should be deployed to Heroku. If you are creating a new Heroku 
 
 ### Production setup for Postgres
 
-Add the Heroku Postgres add-on to the Heroku application. Heroku allows two applications to share the same database. They provide [instructions](https://devcenter.heroku.com/articles/managing-add-ons#using-the-command-line-interface-attaching-an-add-on-to-another-app) for this.
+Add the Heroku Postgres add-on to the Heroku application. The amount of data that this scraper uses will require at least the `Hobby Basic` plan. Heroku allows two applications to share the same database. They provide [instructions](https://devcenter.heroku.com/articles/managing-add-ons#using-the-command-line-interface-attaching-an-add-on-to-another-app) for this.
 
 To get the data into the database, you can either [import it into Heroku](https://devcenter.heroku.com/articles/heroku-postgres-import-export), either from the included `election-scraper-structure.sql` file or from your database once it has data in it.
 

@@ -144,6 +144,8 @@ class ElectionScraper:
 
         table_found = sql.select(table_query)
         if table_query == []:
+            # this seems to have issues running on heroku if the table wasn't created based on the demo sql because the column type doesn't get created correctly
+            # maybe we should just remove this part
             create_table = u"CREATE TABLE IF NOT EXISTS %s (key text PRIMARY KEY, value_blob bytea, type text)" % self.__vars_table
             sql.execute(sql)
 
