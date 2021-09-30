@@ -156,74 +156,39 @@ Run the scraper commands from the section below by following [Heroku's instructi
 1. Scrape the results: `python code/scraper.py scrape results <ELECTION_DATE>`
   * This is the core processing of the scraper will be run frequently.
 1. Match contests to boundary area: `python code/scraper.py match_contests <ELECTION_DATE>`
-1. (optional) For results that are in a Google Spreadsheet, use the supplement step: `python code/scraper.py supplement contests <ELECTION_DATE>`
 1. (optional) To check each boundary ID against the boundary service: `python code/scraper.py check_boundaries`
 
+# stuff we have to build, still
 
+## Scheduling
 
-# stuff we have to figure out and then rewrite
+We need to run the scraper commands at intervals that differ based on which command it is and whether we're in the result hour window on Election Day.
 
+Set the result hour window by adding a datetime value to `ELECTION_RESULT_DATETIME_START` and `ELECTION_RESULT_DATETIME_END`. If you're developing locally, add these values to your `.env` file; in production, add it to the Heroku settings for the application. The code will check to make sure these are both actual `datetime`s and that the window between them is a valid timespan; if it is not a valid time window it will act as it does normally.
 
-### Webserver
+To manually turn the result hour window on, regardless of the time window, set the `ELECTION_RESULT_DATETIME_OVERRIDDEN` setting to `True`.
 
-1. [Dumptruck](https://github.com/scraperwiki/dumptruck-web) is a Python script to create an API on-top of an sqlite database.  It's built by ScraperWiki and also handles multiple user location.
-    1. `sudo git clone https://github.com/scraperwiki/dumptruck-web.git /var/www/dumptruck-web && sudo chown -R www-data:www-data /var/www/dumptruck-web && sudo pip install -r /var/www/dumptruck-web/requirements.txt`
-    1. Link our database and metadata file for compliance with Dumptruck.
-        * `ln -s /home/ubuntu/minnpost-scraper-mn-election-results/scraperwiki.json ~/scraperwiki.json && ln -s /home/ubuntu/minnpost-scraper-mn-election-results/scraperwiki.sqlite ~/scraperwiki.sqlite`
-1. FCGIWrap is used to create an interface between the Dumptruck and Nginx.  We use a simple script to up the number of children to use.
-    1. `sudo cp deploy/fcgiwrap /etc/default/fcgiwrap`
-    1. Restart service (note that this can take a minute): `sudo service fcgiwrap restart`
-    1. The default is to run via socket, so there's no direct HTTP connection to this service.
-1. Nginx is used at the top level web server.  It allows for caching and other niceties.  This copies our config, enables it and removes the default.
-    1. `sudo cp deploy/nginx-scraper-api.conf /etc/nginx/sites-available/nginx-scraper-api.conf`
-    1. `sudo ln -s /etc/nginx/sites-available/nginx-scraper-api.conf /etc/nginx/sites-enabled/nginx-scraper-api.conf`
-    1. `sudo rm /etc/nginx/sites-enabled/default`
-    1. Restart service: `sudo service nginx restart`
-    1. Test with something like: http://ec2-XX-XX-XX.compute-1.amazonaws.com/?box=ubuntu&method=sql&q=SELECT%20*%20FROM%20results%20LIMIT%2010
+### Run daily, except during result hours on Election Day
 
-#### Cron
+- `python code/scraper.py scrape areas <ELECTION_DATE>`
+- `python code/scraper.py scrape questions <ELECTION_DATE>`
+- `python code/scraper.py scrape results <ELECTION_DATE>`
+- `python code/scraper.py match_contests <ELECTION_DATE>` 
 
-We use cron to get the results as often as possible through `deploy/scraper_runner.sh`.  Areas and contest matching just happens in the early morning.
+### Run in an infinite loop during result hours on Election Day
 
-    crontab deploy/crontab
+- `python code/scraper.py scrape results <ELECTION_DATE>`
 
-## Load testing
+### Don't run, currently
 
-There are many ways to do load testing, but here are some free-er options.
+- `python code/scraper.py check_boundaries`
 
-### [Bees with Machine Guns](https://github.com/newsapps/beeswithmachineguns)
+## Web-based API
 
-1. Install: `pip install beeswithmachineguns`
-1. Set environment variables.
-    * `export AWS_ACCESS_KEY_ID=xxxx`
-    * `export AWS_SECRET_ACCESS_KEY=xxxx`
-1. Copy your private AWS keypair file to something like: `~/.ssh/minnpost.pem`
-1. Set up an EC2 security group, specifically one that has SSH (port 22) access.  We name ours `SecuriBees`.
-1. Spin up bees (overall more bees will allow for more attacking): `bees up -s 4 -g SecuriBees -k minnpost`
-1. Send the bees to attack: `bees attack -n 10000 -c 1000 -u "http://50.19.100.197/?box=ubuntu&method=sql&q=SELECT%20*%20FROM%20results%20LIMIT%2010"`
-    * `n` is the number of requests, while `c` is the number of concurrent requests.  Play around with this to determine limits.  For some reference, on election night we could get up to 4,000 active users on the dashboard, each making around 10 calls to the API every minute.
-    * The initial time should be slower than subsequent requests because of the aggressive minute long caching.
-    * You may want to run `top` on the API server to see how the server is running against the load.
+The API needs to be a scalable, always-available resource we can post `key => value` queries to, and get `JSONP` data back from either the Postgres database or from the Redis cache in return.
 
-### [Locust.io](http://locust.io/)
+## Caching
 
-1. Install: `pip install locustio`
-1. `locustfile.py` is included.
-1. Run, but change host depending on where the API server is located at: `locust --host=http://50.19.100.197`
-1. Open up web interface to run tests: [http://localhost:8089/](http://localhost:8089/)
-1. Some more work should be done to use the distributed power of Locust, as a single machine is not a great load testing environment.
+When any of the scheduled tasks *finish* running, we should invalidate the Redis-based API cache.
 
-### Other tools
-
-* [loadimpact.com](http://loadimpact.com/) allows for a free, public test.
-
-## ScraperWiki
-
-The code and deployment methods have been designed so that on slower traffic times, these operations can happen on ScraperWiki and save resources.  You will have to SSH into the scraper and add the needed libraries, `pip install --user logging lxml datetime flask gdata`.
-
-Currently, the scraper is at [https://scraperwiki.com/dataset/ez47yoa/](https://scraperwiki.com/dataset/ez47yoa/).
-
-To update the scraper code, do the following:
-
-1. Run: `python deploy/scraperwiki.py`
-2. Copy the contents of `code/scraper-scraperwiki.py` into the ScraperWiki interface.
+When the API is about to send a `JSONP` dataset in response to a request, it should check for a valid Redis response for that request before running a query against the database. If there is a valid response, it should send it.
