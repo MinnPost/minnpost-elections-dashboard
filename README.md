@@ -191,4 +191,4 @@ The API needs to be a scalable, always-available resource we can post `key => va
 
 When any of the scheduled tasks *finish* running, we should invalidate the Redis-based API cache.
 
-When the API is about to send a `JSONP` dataset in response to a request, it should check for a valid Redis response for that request before running a query against the database. If there is a valid response, it should send it.
+When the API receives a request, it should check for a valid Redis response for that request before running a query against the database. If there is a valid response, it should send the cached `JSONP` data.
