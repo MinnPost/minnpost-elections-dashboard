@@ -1,4 +1,5 @@
 import os
+import logging
 
 from flask import Flask
 from flask_celeryext import FlaskCeleryExt
@@ -13,6 +14,11 @@ db = SQLAlchemy()
 migrate = Migrate(compare_type=True)
 ext_celery = FlaskCeleryExt(create_celery_app=make_celery)
 
+def configure_logging():
+    # register root logging
+    logging.basicConfig(level=logging.DEBUG)
+    logging.getLogger('werkzeug').setLevel(logging.INFO)
+
 def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get("FLASK_CONFIG", "development")
@@ -24,21 +30,24 @@ def create_app(config_name=None):
     app.config.from_object(config[config_name])
 
     # set up extensions
-    db.init_app(app)
-    migrate.init_app(app, db)
-    ext_celery.init_app(app)
+    with app.app_context():
+        db.init_app(app)
+        migrate.init_app(app, db)
+        ext_celery.init_app(app)
 
-    # register blueprints
-    from project.areas import areas_blueprint
-    app.register_blueprint(areas_blueprint)
-    from project.contests import contests_blueprint
-    app.register_blueprint(contests_blueprint)
-    from project.questions import questions_blueprint
-    app.register_blueprint(questions_blueprint)
-    from project.results import results_blueprint
-    app.register_blueprint(results_blueprint)
-    from project.meta import meta_blueprint
-    app.register_blueprint(meta_blueprint)
+        configure_logging()
+
+        # register blueprints
+        from project.areas import areas_blueprint
+        app.register_blueprint(areas_blueprint)
+        from project.contests import contests_blueprint
+        app.register_blueprint(contests_blueprint)
+        from project.questions import questions_blueprint
+        app.register_blueprint(questions_blueprint)
+        from project.results import results_blueprint
+        app.register_blueprint(results_blueprint)
+        from project.meta import meta_blueprint
+        app.register_blueprint(meta_blueprint)
 
     # shell context for flask cli
     @app.shell_context_processor
