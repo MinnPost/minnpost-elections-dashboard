@@ -49,6 +49,9 @@ def create_app(config_name=None):
         from project.meta import meta_blueprint
         app.register_blueprint(meta_blueprint)
 
+        from project.scraper import scraper_blueprint
+        app.register_blueprint(scraper_blueprint)
+
     # shell context for flask cli
     @app.shell_context_processor
     def ctx():
