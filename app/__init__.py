@@ -1,9 +1,12 @@
 import logging
 import os
 from flask import Flask, request, current_app
-from flask_sqlalchemy import SQLAlchemy
+from flask_celeryext import FlaskCeleryExt
 from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
+
 from config import Config
+
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -15,26 +18,21 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
 
-    app.task_queue = rq.Queue('microblog-tasks', connection=app.redis)
+    #app.task_queue = rq.Queue('microblog-tasks', connection=app.redis)
 
-    from app.errors import bp as errors_bp
-    app.register_blueprint(errors_bp)
+    #from app.errors import bp as errors_bp
+    #app.register_blueprint(errors_bp)
 
-    from app.auth import bp as auth_bp
-    app.register_blueprint(auth_bp, url_prefix='/auth')
+    from app.scraper import bp as scraper_bp
+    app.register_blueprint(scraper_bp, url_prefix='/scraper')
 
-    from app.main import bp as main_bp
-    app.register_blueprint(main_bp)
+    #from app.main import bp as main_bp
+    #app.register_blueprint(main_bp)
 
-    from app.api import bp as api_bp
-    app.register_blueprint(api_bp, url_prefix='/api')
+    #from app.api import bp as api_bp
+    #app.register_blueprint(api_bp, url_prefix='/api')
 
     return app
-
-
-@babel.localeselector
-def get_locale():
-    return request.accept_languages.best_match(current_app.config['LANGUAGES'])
 
 
 from app import models

@@ -69,5 +69,61 @@ class ScraperModel(db.Model):
             raise
 
 
+    def scrape(self, group_type):
+        """
+        Main scraper handler.
+        """
+
+        sources = self.read_sources()
+        election = self.set_election()
+
+        if election not in sources:
+            return
+
+        # Get metadata about election
+        election_meta = sources[election]['meta'] if 'meta' in sources[election] else {}
+
+        for i in sources[election]:
+            source = sources[election][i]
+
+            if 'type' in source and source['type'] == group_type:
+
+                # Ensure we have a valid parser for this type
+                parser_method = getattr(self, "parser", None)
+                if callable(parser_method):
+                    # Check if election has base_url
+                    source['url'] = election_meta['base_url'] + source['url'] if 'base_url' in election_meta else source['url']
+
+                    # Get data from URL
+                    try:
+                        # Ballot questions spreadsheet requires latin-1 encoding
+                        #rows = unicodecsv.reader(scraped.splitlines(), delimiter=';', quotechar='|', encoding='latin-1')
+                        response = urllib.request.urlopen(source['url'])
+                        lines = [l.decode('latin-1') for l in response.readlines()]
+                        rows = csv.reader(lines, delimiter=';')
+                    except Exception as err:
+                        LOG.exception('[%s] Error when trying to read URL and parse CSV: %s' % (source['type'], source['url']))
+                        raise
+
+                    # Go through rows.
+                    # Save every x
+                    count = 0
+                    group = []
+                    for row in rows:
+                        parsed = parser_method(row, i)
+                        group.append(parsed)
+                        # this divides the number of items in the group by the grouped inserts value
+                        # and if there is no remainder, it goes on
+                        if len(group) % self.grouped_inserts == 0:
+                            #self.save(['id'], group, s['table'], index_method)
+                            #item = self(group)
+                            #db.session.add(item)
+                            #db.session.commit()
+                            #print(self.__tablename__)
+                            group = []
+                        #count = count + 1
+
+            # then run the post actions if they are callable
+
     def scrape_election(rows):
         return rows
