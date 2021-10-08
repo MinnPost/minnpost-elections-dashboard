@@ -37,30 +37,16 @@ def scrape_areas():
             # Go through rows.
             # Save every x
             count = 0
-            group = []
-
 
             for row in rows:
                 parsed = area.parser(row, i)
-                group.append(parsed)
 
-                #area = Area()
-                #area.from_dict(parsed, new=True)
+                area = Area()
+                area.from_dict(parsed, new=True)
 
-                #stmt = insert(Area.__table__).values(parsed)
-                #stmt = stmt.on_conflict_do_update(
-                    # Let's use the constraint name which was visible in the original posts error msg
-                #    constraint="['area_id']",
-
-                    # The columns that should be updated on conflict
-                #    set_={
-                #        parsed
-                #    }
-                #)
-                #db.session.execute(stmt)
-
-                #count = count + 1
-
-            area.upsert(db.session, Area, group)
+                db.session.add(area)
+                db.session.commit()
+                #print(area)
+                count = count + 1
 
     return str(count)

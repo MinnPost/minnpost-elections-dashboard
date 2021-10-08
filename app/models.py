@@ -10,9 +10,8 @@ import datetime
 from flask import current_app
 from app import db
 
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.inspection import inspect
-from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.expression import Insert
 
 LOG = logging.getLogger(__name__)
 scraper_sources_inline = None
@@ -30,6 +29,27 @@ class ScraperModel(object):
         # we do this in the imported sql file instead
 
         self.read_sources()
+
+
+    @compiles(Insert)
+    def compile_upsert(insert_stmt, compiler, **kwargs):
+        """
+        converts every SQL insert to an upsert  i.e;
+        INSERT INTO test (foo, bar) VALUES (1, 'a')
+        becomes:
+        INSERT INTO test (foo, bar) VALUES (1, 'a') ON CONFLICT(foo) DO UPDATE SET (bar = EXCLUDED.bar)
+        (assuming foo is a primary key)
+        :param insert_stmt: Original insert statement
+        :param compiler: SQL Compiler
+        :param kwargs: optional arguments
+        :return: upsert statement
+        """
+        pk = insert_stmt.table.primary_key
+        insert = compiler.visit_insert(insert_stmt, **kwargs)
+        ondup = f'ON CONFLICT ({",".join(c.name for c in pk)}) DO UPDATE SET'
+        updates = ', '.join(f"{c.name}=EXCLUDED.{c.name}" for c in insert_stmt.table.columns)
+        upsert = ' '.join((insert, ondup, updates))
+        return upsert
 
 
     def read_sources(self):
@@ -86,48 +106,11 @@ class ScraperModel(object):
             setattr(self, field, data[field])
 
 
-    def upsert(self, session, model, rows):
-        table = model.__table__
-        stmt = insert(table)
-        primary_keys = [key.name for key in inspect(table).primary_key]
-        update_dict = {c.name: c for c in stmt.excluded if not c.primary_key}
-
-        if not update_dict:
-            raise ValueError("insert_or_update resulted in an empty update_dict")
-
-        stmt = stmt.on_conflict_do_update(
-            #index_elements=['areas_area_id_key'],
-            constraint='areas_area_id_key',
-            set_=update_dict
-        )
-
-        seen = set()
-        foreign_keys = {col.name: list(col.foreign_keys)[0].column for col in table.columns if col.foreign_keys}
-        unique_constraints = [c for c in table.constraints if isinstance(c, UniqueConstraint)]
-        def handle_foreignkeys_constraints(row):
-            for c_name, c_value in foreign_keys.items():
-                foreign_obj = row.pop(c_value.table.name, None)
-                row[c_name] = getattr(foreign_obj, c_value.name) if foreign_obj else None
-
-            for const in unique_constraints:
-                unique = tuple([const,] + [row[col.name] for col in const.columns])
-                if unique in seen:
-                    return None
-                seen.add(unique)
-            
-            return row
-
-        rows = list(filter(None, (handle_foreignkeys_constraints(row) for row in rows)))
-        result = session.execute(stmt, rows)
-        return result
-
-
 class Area(ScraperModel, db.Model):
 
     __tablename__ = "areas"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    area_id = db.Column(db.String(255), unique=True, nullable=False)
+    area_id = db.Column(db.String(255), primary_key=True, autoincrement=False, nullable=False)
     areas_group = db.Column(db.String(255))
     county_id = db.Column(db.String(255))
     county_name = db.Column(db.String(255))
@@ -210,8 +193,7 @@ class Contest(ScraperModel, db.Model):
 
     __tablename__ = "contests"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    contest_id = db.Column(db.String(255), unique=True, nullable=False)
+    contest_id = db.Column(db.String(255), primary_key=True, autoincrement=False, nullable=False)
     office_id = db.Column(db.String(255))
     results_group = db.Column(db.String(255))
     office_name = db.Column(db.String(255))
@@ -242,8 +224,7 @@ class Meta(ScraperModel, db.Model):
 
     __tablename__ = "meta"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    key = db.Column(db.String(255), unique=True, nullable=False)
+    key = db.Column(db.String(255), primary_key=True, autoincrement=False, nullable=False)
     value = db.Column(db.Text)
     type = db.Column(db.String(255))
     updated = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
@@ -256,8 +237,7 @@ class Question(ScraperModel, db.Model):
 
     __tablename__ = "questions"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    question_id = db.Column(db.String(255), unique=True, nullable=False)
+    question_id = db.Column(db.String(255), primary_key=True, autoincrement=False, nullable=False)
     contest_id = db.Column(db.String(255))
     title = db.Column(db.String(255))
     sub_title = db.Column(db.String(255))
@@ -272,8 +252,7 @@ class Result(ScraperModel, db.Model):
 
     __tablename__ = "results"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    result_id = db.Column(db.String(255), unique=True, nullable=False)
+    result_id = db.Column(db.String(255), primary_key=True, autoincrement=False, nullable=False)
     contest_id = db.Column(db.String(255))
     results_group = db.Column(db.String(255))
     office_name = db.Column(db.String(255))
