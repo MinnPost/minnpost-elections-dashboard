@@ -312,6 +312,18 @@ class Meta(ScraperModel, db.Model):
     def __repr__(self):
         return '<Meta {}>'.format(self.key)
 
+    def parser(self, key, row):
+        """
+        Parser for meta scraping.
+        """
+
+        parsed = {
+            'key': key,
+            'value': row,
+            'type': type(row).__name__
+        }
+        return parsed
+
 
 class Question(ScraperModel, db.Model):
 

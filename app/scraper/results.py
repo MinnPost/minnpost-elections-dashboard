@@ -7,8 +7,6 @@ from app.scraper import bp
 #from app.api.auth import token_auth
 #from app.api.errors import bad_request
 
-from sqlalchemy.dialects.postgresql import insert
-
 LOG = logging.getLogger(__name__)
 
 newest_election = None
