@@ -7,8 +7,6 @@ from app.scraper import bp
 #from app.api.auth import token_auth
 #from app.api.errors import bad_request
 
-from sqlalchemy.dialects.postgresql import insert
-
 LOG = logging.getLogger(__name__)
 
 newest_election = None
@@ -24,18 +22,18 @@ def scrape_areas():
         return
 
     # Get metadata about election
-    election_meta = sources[election]['meta'] if 'meta' in sources[election] else {}
+    election_meta = area.set_election_metadata()
+    count = 0
 
-    for i in sources[election]:
-        source = sources[election][i]
+    for group in sources[election]:
+        source = sources[election][group]
 
         if 'type' in source and source['type'] == 'areas':
 
             rows = area.parse_election(source, election_meta)
-            count = 0
 
             for row in rows:
-                parsed = area.parser(row, i)
+                parsed = area.parser(row, group)
 
                 area = Area()
                 area.from_dict(parsed, new=True)
@@ -44,5 +42,5 @@ def scrape_areas():
                 db.session.commit()
                 #print(area)
                 count = count + 1
-
+            
     return str(count)

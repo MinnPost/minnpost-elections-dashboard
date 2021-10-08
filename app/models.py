@@ -80,6 +80,18 @@ class ScraperModel(object):
         return election
 
 
+    def set_election_metadata(self):
+        sources = self.read_sources()
+        election = self.set_election()
+
+        if election not in sources:
+            return
+
+        # Get metadata about election
+        election_meta = sources[election]['meta'] if 'meta' in sources[election] else {}
+        return election_meta
+
+
     def parse_election(self, source, election_meta = {}):
 
         # Ensure we have a valid parser for this type
@@ -246,6 +258,63 @@ class Question(ScraperModel, db.Model):
 
     def __repr__(self):
         return '<Question {}>'.format(self.question_id)
+
+    def parser(self, row, group):
+
+        """
+        Parser for ballot questions data.  Note that for whatever reason there
+        are duplicates in the MN SoS data source.
+
+        County ID
+        Office Code
+        MCD code, if applicable (using FIPS statewide unique codes, not county MCDs)
+        School District Numbe, if applicable
+        Ballot Question Number
+        Question Title
+        Question Body
+        """
+        combined_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[3]
+
+        # We have to do some hackery to get the right contest ID
+        # County
+        # 0 - - - 1
+        # id-MN-38---0421
+
+        # City question
+        # ^0 - - 2 - 1
+        #id-MN---43000-1131
+
+        # School
+        # ^0 - - 3 - 1
+        # id-MN---110-5031
+
+        # SSD1 is Minneapolis and ISD1 is Aitkin, though they have the same
+        # numbers and therefor make the same ID
+        mpls_ssd = re.compile(r'.*\(SSD #1\).*', re.IGNORECASE).match(row[4])
+        if mpls_ssd is not None:
+            row[3] = '1-1'
+
+        contest_id = 'id-MN-' + row[0] + '-' + row[3] + '-' + row[2] + '-' + row[1]
+        if row[2] is not None and row[2] != '':
+            contest_id = 'id-MN---' + row[2] + '-' + row[1]
+        if row[3] is not None and row[3] != '':
+            contest_id = 'id-MN---' + row[3] + '-' + row[1]
+
+        #Clean random formatting problems in question text
+        question_body = row[6].replace("^", "").strip()
+        question_body = question_body.replace("&ldquo",'"')
+        question_body = question_body.replace("&ldquo",'"')
+
+        # Make row
+        parsed = {
+            'question_id': combined_id,
+            'contest_id': contest_id,
+            'title': row[4],
+            'sub_title': row[5].title(),
+            'question_body': question_body
+        }
+
+        return parsed
 
 
 class Result(ScraperModel, db.Model):

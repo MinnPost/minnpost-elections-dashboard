@@ -7,8 +7,6 @@ from app.scraper import bp
 #from app.api.auth import token_auth
 #from app.api.errors import bad_request
 
-from sqlalchemy.dialects.postgresql import insert
-
 LOG = logging.getLogger(__name__)
 
 newest_election = None
@@ -24,18 +22,18 @@ def scrape_questions():
         return
 
     # Get metadata about election
-    election_meta = sources[election]['meta'] if 'meta' in sources[election] else {}
+    election_meta = question.set_election_metadata()
+    count = 0
 
-    for i in sources[election]:
-        source = sources[election][i]
+    for group in sources[election]:
+        source = sources[election][group]
 
         if 'type' in source and source['type'] == 'questions':
 
             rows = question.parse_election(source, election_meta)
-            count = 0
 
             for row in rows:
-                parsed = question.parser(row, i)
+                parsed = question.parser(row, group)
 
                 question = Question()
                 question.from_dict(parsed, new=True)
