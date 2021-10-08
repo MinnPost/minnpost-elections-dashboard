@@ -32,10 +32,6 @@ def scrape_areas():
         if 'type' in source and source['type'] == 'areas':
 
             rows = area.parse_election(source, election_meta)
-
-            #rows = area.scrape('areas')
-            # Go through rows.
-            # Save every x
             count = 0
 
             for row in rows:
