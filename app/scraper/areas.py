@@ -7,6 +7,8 @@ from app.scraper import bp
 #from app.api.auth import token_auth
 #from app.api.errors import bad_request
 
+from sqlalchemy.dialects.postgresql import insert
+
 LOG = logging.getLogger(__name__)
 
 newest_election = None
@@ -40,14 +42,25 @@ def scrape_areas():
 
             for row in rows:
                 parsed = area.parser(row, i)
+                group.append(parsed)
 
-                area = Area()
-                area.from_dict(parsed, new=True)
+                #area = Area()
+                #area.from_dict(parsed, new=True)
 
-                print(area)
+                #stmt = insert(Area.__table__).values(parsed)
+                #stmt = stmt.on_conflict_do_update(
+                    # Let's use the constraint name which was visible in the original posts error msg
+                #    constraint="['area_id']",
 
-                db.session.add(area)
-                db.session.commit()
-                count = count + 1
-            
-    return count
+                    # The columns that should be updated on conflict
+                #    set_={
+                #        parsed
+                #    }
+                #)
+                #db.session.execute(stmt)
+
+                #count = count + 1
+
+            area.upsert(db.session, Area, group)
+
+    return str(count)
