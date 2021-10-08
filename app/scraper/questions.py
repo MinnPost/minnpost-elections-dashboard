@@ -38,7 +38,7 @@ def scrape_questions():
                 question = Question()
                 question.from_dict(parsed, new=True)
 
-                db.session.add(question)
+                db.session.merge(question)
                 db.session.commit()
                 #print(question)
                 count = count + 1

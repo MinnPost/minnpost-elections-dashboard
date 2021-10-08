@@ -31,25 +31,25 @@ class ScraperModel(object):
         self.read_sources()
 
 
-    @compiles(Insert)
-    def compile_upsert(insert_stmt, compiler, **kwargs):
-        """
-        converts every SQL insert to an upsert  i.e;
-        INSERT INTO test (foo, bar) VALUES (1, 'a')
-        becomes:
-        INSERT INTO test (foo, bar) VALUES (1, 'a') ON CONFLICT(foo) DO UPDATE SET (bar = EXCLUDED.bar)
-        (assuming foo is a primary key)
-        :param insert_stmt: Original insert statement
-        :param compiler: SQL Compiler
-        :param kwargs: optional arguments
-        :return: upsert statement
-        """
-        pk = insert_stmt.table.primary_key
-        insert = compiler.visit_insert(insert_stmt, **kwargs)
-        ondup = f'ON CONFLICT ({",".join(c.name for c in pk)}) DO UPDATE SET'
-        updates = ', '.join(f"{c.name}=EXCLUDED.{c.name}" for c in insert_stmt.table.columns)
-        upsert = ' '.join((insert, ondup, updates))
-        return upsert
+    #@compiles(Insert)
+    #def compile_upsert(insert_stmt, compiler, **kwargs):
+    #    """
+    #    converts every SQL insert to an upsert  i.e;
+    #    INSERT INTO test (foo, bar) VALUES (1, 'a')
+    #    becomes:
+    #    INSERT INTO test (foo, bar) VALUES (1, 'a') ON CONFLICT(foo) DO UPDATE SET (bar = EXCLUDED.bar)
+    #    (assuming foo is a primary key)
+    #    :param insert_stmt: Original insert statement
+    #    :param compiler: SQL Compiler
+    #    :param kwargs: optional arguments
+    #    :return: upsert statement
+    #    """
+    #    pk = insert_stmt.table.primary_key
+    #    insert = compiler.visit_insert(insert_stmt, **kwargs)
+    #    ondup = f'ON CONFLICT ({",".join(c.name for c in pk)}) DO UPDATE SET'
+    #    updates = ', '.join(f"{c.name}=EXCLUDED.{c.name}" for c in insert_stmt.table.columns)
+    #    upsert = ' '.join((insert, ondup, updates))
+    #    return upsert
 
 
     def read_sources(self):
@@ -217,20 +217,88 @@ class Contest(ScraperModel, db.Model):
     total_effected_precincts = db.Column(db.BigInteger())
     total_votes_for_office = db.Column(db.BigInteger())
     seats = db.Column(db.BigInteger())
-    ranked_choice = db.Column(db.Boolean)
-    primary = db.Column(db.Boolean)
+    ranked_choice = db.Column(db.Boolean())
+    primary = db.Column(db.Boolean())
     scope = db.Column(db.String(255))
     title = db.Column(db.String(255))
     boundary = db.Column(db.String(255))
-    partisan = db.Column(db.Boolean)
+    partisan = db.Column(db.Boolean())
     question_body = db.Column(db.Text)
     sub_title = db.Column(db.String(255))
     incumbent_party = db.Column(db.String(255))
-    called = db.Column(db.Boolean)
+    called = db.Column(db.Boolean())
     updated = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
     def __repr__(self):
         return '<Contest {}>'.format(self.contest_id)
+
+    def parser(self, row, group, source):
+        """
+        Parser for contest scraping.
+        """
+
+        election_meta = self.set_election_metadata()
+
+        # SSD1 is Minneapolis and ISD1 is Aitkin, though they have the same
+        # numbers and therefor make the same ID
+        mpls_ssd = re.compile(r'.*\(SSD #1\).*', re.IGNORECASE).match(row[4])
+        if mpls_ssd is not None:
+            row[5] = '1-1'
+
+        # Create ids.
+        # id-State-County-Precinct-District-Office
+        base_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[5] + '-' + row[3]
+
+        # Office refers to office name and office id as assigned by SoS, but
+        # contest ID is a more specific id as office id's are not unique across
+        # all results
+        contest_id = base_id
+        office_id = row[3]
+
+        # For ranked choice voting, we want to a consistent contest id, as the
+        # office_id is different for each set of choices.
+        #
+        # It seems that the office id is incremented by 1 starting at 1 so
+        # we use the first
+        ranked_choice = re.compile(r'.*(first|second|third|\w*th) choice.*', re.IGNORECASE).match(row[4])
+        if ranked_choice is not None:
+            office_id = ''.join(row[3].split())[:-1] + '1'
+            contest_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[5] + '-' + office_id
+
+        # The only way to know if there are multiple seats is look at the office
+        # name which has "(Elect X)" in it.
+        re_seats = re.compile(r'.*\(elect ([0-9]+)\).*', re.IGNORECASE)
+        matched_seats = re_seats.match(row[4])
+
+        # Primary is not designated in any way, but we can make some initial
+        # guesses. All contests in an election are considered primary, but
+        # non-partisan ones only mean there is more than one seat available.
+        primary = election_meta['primary'] if 'primary' in election_meta else False
+
+        re_question = re.compile(r'.*question.*', re.IGNORECASE)
+        matched_question = re_question.match(row[4])
+        primary = False if matched_question is not None else primary
+
+        parsed = {
+            'contest_id': contest_id,
+            'office_id': office_id,
+            'results_group': group,
+            'office_name': row[4],
+            'district_code': row[5],
+            'state': row[0],
+            'county_id': row[1],
+            'precinct_id': row[2],
+            'precincts_reporting': int(row[11]),
+            'total_effected_precincts': int(row[12]),
+            'total_votes_for_office': int(row[15]),
+            'seats': int(matched_seats.group(1)) if matched_seats is not None else 1,
+            'ranked_choice': ranked_choice is not None,
+            'primary': primary,
+            'scope': source['contest_scope'] if 'contest_scope' in source else None
+        }
+
+        # Return contest record
+        return parsed
 
 class Meta(ScraperModel, db.Model):
 

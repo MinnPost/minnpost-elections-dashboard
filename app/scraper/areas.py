@@ -38,7 +38,7 @@ def scrape_areas():
                 area = Area()
                 area.from_dict(parsed, new=True)
 
-                db.session.add(area)
+                db.session.merge(area)
                 db.session.commit()
                 #print(area)
                 count = count + 1
