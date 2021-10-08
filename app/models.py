@@ -405,3 +405,62 @@ class Result(ScraperModel, db.Model):
 
     def __repr__(self):
         return '<Result {}>'.format(self.result_id)
+
+    def parser(self, row, group):
+        """
+        Parser for results type scraping.
+        """
+        ranked_choice_translations = { 'first': 1, 'second': 2, 'third': 3, 'fourth': 4, 'fifth': 5, 'sixth': 6, 'seventh': 7, 'eighth': 8, 'nineth': 9, 'tenth': 10, 'final': 100 }
+        ranked_choice_place = None
+
+        # SSD1 is Minneapolis and ISD1 is Aitkin, though they have the same
+        # numbers and therefor make the same ID
+        mpls_ssd = re.compile(r'.*\(SSD #1\).*', re.IGNORECASE).match(row[4])
+        if mpls_ssd is not None:
+            row[5] = '1-1'
+
+        # Create ids.
+        # id-State-County-Precinct-District-Office
+        base_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[5] + '-' + row[3]
+        # id-BASE-Candidate
+        row_id = base_id + '-' + row[6]
+
+        # Office refers to office name and office id as assigned by SoS, but
+        # contest ID is a more specific id as office id's are not unique across
+        # all results
+        contest_id = base_id
+        office_id = row[3]
+
+        # For ranked choice voting, we want to a consistent contest id, as the
+        # office_id is different for each set of choices.
+        #
+        # It seems that the office id is incremented by 1 starting at 1 so
+        # we use the first
+        ranked_choice = re.compile(r'.*(first|second|third|\w*th) choice.*', re.IGNORECASE).match(row[4])
+        if ranked_choice is not None:
+            office_id = ''.join(row[3].split())[:-1] + '1'
+            contest_id = 'id-' + row[0] + '-' + row[1] + '-' + row[2] + '-' + row[5] + '-' + office_id
+
+            # Determine which "choice" this is
+            for c in ranked_choice_translations:
+                ranked_choice_choice = re.compile(r'.*%s.*' % c, re.IGNORECASE).match(row[4])
+                if ranked_choice_choice is not None:
+                    ranked_choice_place = ranked_choice_translations[c]
+
+        parsed = {
+            'result_id': row_id,
+            'results_group': group,
+            'office_name': row[4],
+            'candidate_id': row[6],
+            'candidate': row[7].replace('WRITE-IN**', 'WRITE-IN'),
+            'suffix': row[8],
+            'incumbent_code': row[9],
+            'party_id': row[10],
+            'votes_candidate': int(row[13]),
+            'percentage': float(row[14]),
+            'ranked_choice_place': int(ranked_choice_place) if ranked_choice_place is not None else 0,
+            'contest_id': contest_id
+        }
+
+        # Return results record for the database
+        return parsed
