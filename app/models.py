@@ -4,14 +4,18 @@ import json
 import re
 import csv
 import urllib.request
-
+import requests
+#import unicodecsv
 import calendar
 import datetime
+import lxml.html
 from flask import current_app
 from app import db
 
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.expression import Insert
+
+from sheetfu import SpreadsheetApp
 
 LOG = logging.getLogger(__name__)
 scraper_sources_inline = None
@@ -118,6 +122,99 @@ class ScraperModel(object):
             setattr(self, field, data[field])
 
 
+    def post_processing(self, source):
+        type = source['type']
+        # Update some vars for easy retrieval
+        # these meta inserts don't work yet, but also don't seem super necessary
+
+        #parsed_updated = {'updated': db.func.current_timestamp()}
+        #meta_updated = Meta()
+        #meta_updated.from_dict(parsed_updated, new=True)
+
+        #db.session.merge(meta_updated)
+        #db.session.commit()
+
+        #contest_count = db.session.execute('select COUNT(DISTINCT contest_id) as contest_count from results').scalar()
+        #contest_count_parsed = {'contests': int(contest_count)}
+        #contest_count_meta = Meta()
+        #contest_count_meta.from_dict(contest_count_parsed, new=True)
+
+        #db.session.merge(contest_count_updated)
+        #db.session.commit()
+
+        # Use the first state level race to get general number of precincts reporting
+        #first_state_contest = Contest.query.filter_by(county_id='88').limit(1).all()
+        #if first_state_contest is not None:
+        #    precincts_updated = {
+        #        'precincts_reporting': int(first_state_contest.precincts_reporting),
+        #        'total_effected_precincts': int(first_state_contest.total_effected_precincts)
+        #    }
+        #    meta_updated = Meta()
+        #    meta_updated.from_dict(precincts_updated, new=True)
+
+        # Handle any supplemental data
+        spreadsheet_rows = self.supplement_connect('supplemental_' + type)
+        supplemented_rows = []
+
+        if spreadsheet_rows is None:
+            return supplemented_rows
+
+        # for each row in the spreadsheet
+        for spreadsheet_row in spreadsheet_rows:
+            supplement_row = self.supplement_row(spreadsheet_row)
+            if supplement_row != {} and supplement_row not in supplemented_rows:
+                supplemented_rows.append(supplement_row)
+
+        return supplemented_rows
+
+
+    def supplement_connect(self, source):
+        """
+        Connect to supplemental source (Google spreadsheets) given set.
+        """
+        sources = self.read_sources()
+        election = self.set_election()
+
+        if election not in sources:
+            return
+
+        try:
+            s = sources[election][source]
+            client = SpreadsheetApp(from_env=True)
+            spreadsheet = client.open_by_id(s['spreadsheet_id'])
+            sheets = spreadsheet.get_sheets()
+            sheet = sheets[s['worksheet_id']]
+            data_range = sheet.get_data_range()
+            rows = data_range.get_values()
+        except Exception as err:
+            rows = None
+            LOG.exception('[%s] Unable to connect to supplemental source: %s' % ('supplement', s))
+
+        # Process the rows into a more usable format.  And handle typing
+        s_types = {
+            'percentage': float,
+            'votes_candidate': int,
+            'ranked_choice_place': int,
+            'percent_needed': float
+        }
+        if rows:
+            if len(rows) > 0:
+                headers = rows[0]
+                data_rows = []
+                for row_key, row in enumerate(rows):
+                    if row_key > 0:
+                        data_row = {}
+                        for field_key, field in enumerate(row):
+                            column = headers[field_key].replace('.', '_')
+                            if field is not None and column in s_types:
+                                data_row[column] = s_types[column](field)
+                            else:
+                                data_row[column] = field
+                        data_rows.append(data_row)
+                return data_rows
+        return rows
+
+
 class Area(ScraperModel, db.Model):
 
     __tablename__ = "areas"
@@ -141,6 +238,9 @@ class Area(ScraperModel, db.Model):
     name = db.Column(db.String(255))
     updated = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
+    def __init__(self, **kwargs):
+        super(Area, self).__init__(**kwargs)
+    
     def __repr__(self):
         return '<Area {}>'.format(self.area_id)
 
@@ -229,6 +329,9 @@ class Contest(ScraperModel, db.Model):
     called = db.Column(db.Boolean())
     updated = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
+    def __init__(self, **kwargs):
+        super(Contest, self).__init__(**kwargs)
+    
     def __repr__(self):
         return '<Contest {}>'.format(self.contest_id)
 
@@ -309,6 +412,9 @@ class Meta(ScraperModel, db.Model):
     type = db.Column(db.String(255))
     updated = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
+    def __init__(self, **kwargs):
+        super(Meta, self).__init__(**kwargs)
+    
     def __repr__(self):
         return '<Meta {}>'.format(self.key)
 
@@ -336,6 +442,9 @@ class Question(ScraperModel, db.Model):
     question_body = db.Column(db.Text)
     updated = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
+    def __init__(self, **kwargs):
+        super(Question, self).__init__(**kwargs)
+    
     def __repr__(self):
         return '<Question {}>'.format(self.question_id)
 
@@ -415,6 +524,20 @@ class Result(ScraperModel, db.Model):
     ranked_choice_place = db.Column(db.BigInteger())
     updated = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
+    def __init__(self, **kwargs):
+        self.result_id = kwargs.get('result_id')
+        self.contest_id = kwargs.get('contest_id')
+        self.results_group = kwargs.get('results_group')
+        self.office_name = kwargs.get('office_name')
+        self.candidate_id = kwargs.get('candidate_id')
+        self.candidate = kwargs.get('candidate')
+        self.suffix = kwargs.get('suffix')
+        self.incumbent_code = kwargs.get('incumbent_code')
+        self.party_id = kwargs.get('party_id')
+        self.votes_candidate = kwargs.get('votes_candidate')
+        self.percentage = kwargs.get('percentage')
+        self.ranked_choice_place = kwargs.get('ranked_choice_place')
+    
     def __repr__(self):
         return '<Result {}>'.format(self.result_id)
 
@@ -476,3 +599,70 @@ class Result(ScraperModel, db.Model):
 
         # Return results record for the database
         return parsed
+
+    def supplement_row(self, spreadsheet_row):
+        supplemented_row = {}
+        # Parse some values we know we will look at
+        percentage = float(spreadsheet_row['percentage']) if spreadsheet_row['percentage'] is not None else None
+        votes_candidate = int(spreadsheet_row['votes_candidate']) if spreadsheet_row['votes_candidate'] is not None else None
+        ranked_choice_place = int(spreadsheet_row['ranked_choice_place']) if spreadsheet_row['ranked_choice_place'] is not None else None
+        enabled = bool(spreadsheet_row['enabled']) if spreadsheet_row['enabled'] is not None else False
+        row_id = str(spreadsheet_row['id'])
+
+        # Check for existing result rows
+        results = Result.query.filter_by(result_id=row_id).all()
+
+        # If valid data
+        if row_id is not None and spreadsheet_row['contest_id'] is not None and spreadsheet_row['candidate_id'] is not None:
+            # there are rows in the database to update or delete
+            if results != None and results != []:
+                # these rows can be updated
+                if (votes_candidate >= 0) and enabled is True:
+                    update_results = []
+                    # for each matching row in the database to that spreadsheet row
+                    for matching_result in results:
+                        matching_result.percentage = percentage
+                        matching_result.votes_candidate = votes_candidate
+                        matching_result.ranked_choice_place = ranked_choice_place
+                        if matching_result not in update_results:
+                            update_results.append(matching_result)
+                    row_result = {
+                        'action': 'update',
+                        'rows': update_results
+                    }
+                    #supplemented_rows.append(row_result)
+                    supplemented_row = row_result
+                elif enabled is False and results[0].results_group:
+                    # these rows can be deleted
+                    delete_result = {
+                        'action': 'delete',
+                        'rows': results
+                    }
+                    #supplemented_rows.append(delete_result)
+                    supplemented_row = delete_result
+            elif (votes_candidate >= 0) and enabled is True:
+                # make rows to insert
+                insert_rows = []
+                # Add new row, make sure to mark the row as supplemental
+                insert_result = {
+                    'result_id': row_id,
+                    'percentage': percentage,
+                    'votes_candidate': votes_candidate,
+                    'ranked_choice_place': ranked_choice_place,
+                    'candidate': spreadsheet_row['candidate'],
+                    'office_name': spreadsheet_row['office_name'],
+                    'contest_id': spreadsheet_row['contest_id'],
+                    'candidate_id': spreadsheet_row['candidate_id'],
+                    'results_group': 'supplemental_results'
+                }
+                result_model = Result(**insert_result)
+                if result_model not in insert_rows:
+                    insert_rows.append(result_model)
+                row_result = {
+                    'action': 'insert',
+                    'rows': insert_rows
+                }
+                #supplemented_rows.append(row_result)
+                supplemented_row = row_result
+        
+        return supplemented_row
