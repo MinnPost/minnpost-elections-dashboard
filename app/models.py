@@ -122,35 +122,7 @@ class ScraperModel(object):
             setattr(self, field, data[field])
 
 
-    def post_processing(self, source):
-        type = source['type']
-        # Update some vars for easy retrieval
-        # these meta inserts don't work yet, but also don't seem super necessary
-
-        #parsed_updated = {'updated': db.func.current_timestamp()}
-        #meta_updated = Meta()
-        #meta_updated.from_dict(parsed_updated, new=True)
-
-        #db.session.merge(meta_updated)
-        #db.session.commit()
-
-        #contest_count = db.session.execute('select COUNT(DISTINCT contest_id) as contest_count from results').scalar()
-        #contest_count_parsed = {'contests': int(contest_count)}
-        #contest_count_meta = Meta()
-        #contest_count_meta.from_dict(contest_count_parsed, new=True)
-
-        #db.session.merge(contest_count_updated)
-        #db.session.commit()
-
-        # Use the first state level race to get general number of precincts reporting
-        #first_state_contest = Contest.query.filter_by(county_id='88').limit(1).all()
-        #if first_state_contest is not None:
-        #    precincts_updated = {
-        #        'precincts_reporting': int(first_state_contest.precincts_reporting),
-        #        'total_effected_precincts': int(first_state_contest.total_effected_precincts)
-        #    }
-        #    meta_updated = Meta()
-        #    meta_updated.from_dict(precincts_updated, new=True)
+    def post_processing(self, type):
 
         # Handle any supplemental data
         spreadsheet_rows = self.supplement_connect('supplemental_' + type)
@@ -330,7 +302,29 @@ class Contest(ScraperModel, db.Model):
     updated = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
     def __init__(self, **kwargs):
-        super(Contest, self).__init__(**kwargs)
+        self.result_id = kwargs.get('result_id')
+        self.contest_id = kwargs.get('contest_id')
+        self.office_id = kwargs.get('office_id')
+        self.results_group = kwargs.get('results_group')
+        self.office_name = kwargs.get('office_name')
+        self.district_code = kwargs.get('district_code')
+        self.state = kwargs.get('state')
+        self.county_id = kwargs.get('county_id')
+        self.precinct_id = kwargs.get('precinct_id')
+        self.precincts_reporting = kwargs.get('precincts_reporting')
+        self.total_effected_precincts = kwargs.get('total_effected_precincts')
+        self.total_votes_for_office = kwargs.get('total_votes_for_office')
+        self.seats = kwargs.get('seats')
+        self.ranked_choice = kwargs.get('ranked_choice')
+        self.primary = kwargs.get('primary')
+        self.scope = kwargs.get('scope')
+        self.title = kwargs.get('title')
+        self.boundary = kwargs.get('boundary')
+        self.partisan = kwargs.get('partisan')
+        self.question_body = kwargs.get('question_body')
+        self.sub_title = kwargs.get('sub_title')
+        self.incumbent_party = kwargs.get('incumbent_party')
+        self.called = kwargs.get('called')
     
     def __repr__(self):
         return '<Contest {}>'.format(self.contest_id)
@@ -402,6 +396,52 @@ class Contest(ScraperModel, db.Model):
 
         # Return contest record
         return parsed
+
+    def supplement_row(self, spreadsheet_row):
+        supplemented_row = {}
+
+        # Check for existing result rows
+        row_id = str(spreadsheet_row['id'])
+        results = Contest.query.filter_by(contest_id=row_id).all()
+
+        # If valid data
+        if row_id is not None:
+            # there are rows in the database to update or delete
+            if results != None and results != []:
+                update_results = []
+                # for each matching row in the database to that spreadsheet row
+                for matching_result in results:
+                    for field in spreadsheet_row:
+                        if spreadsheet_row[field] is not None and spreadsheet_row[field] != '':
+                            matching_result.field = spreadsheet_row[field]
+                    if matching_result not in update_results:
+                        update_results.append(matching_result)
+                row_result = {
+                    'action': 'update',
+                    'rows': update_results
+                }
+                supplemented_row = row_result
+            else:
+                # make rows to insert
+                insert_rows = []
+                # Add new row, make sure to mark the row as supplemental
+                new_contest = {}
+                for field in spreadsheet_row:
+                    if field == 'id':
+                        new_contest['contest_id'] = spreadsheet_row[field]
+                    elif spreadsheet_row[field] is not None and spreadsheet_row[field] != '':
+                        new_contest[field] = spreadsheet_row[field]
+                new_contest['results_group'] = 'supplemental_results'
+                print(new_contest)
+                contest_model = Contest(**new_contest)
+                if contest_model not in insert_rows:
+                    insert_rows.append(contest_model)
+                row_result = {
+                    'action': 'insert',
+                    'rows': insert_rows
+                }
+                supplemented_row = row_result
+        return supplemented_row
 
 class Meta(ScraperModel, db.Model):
 
@@ -630,7 +670,6 @@ class Result(ScraperModel, db.Model):
                         'action': 'update',
                         'rows': update_results
                     }
-                    #supplemented_rows.append(row_result)
                     supplemented_row = row_result
                 elif enabled is False and results[0].results_group:
                     # these rows can be deleted
@@ -638,7 +677,6 @@ class Result(ScraperModel, db.Model):
                         'action': 'delete',
                         'rows': results
                     }
-                    #supplemented_rows.append(delete_result)
                     supplemented_row = delete_result
             elif (votes_candidate >= 0) and enabled is True:
                 # make rows to insert
@@ -662,7 +700,6 @@ class Result(ScraperModel, db.Model):
                     'action': 'insert',
                     'rows': insert_rows
                 }
-                #supplemented_rows.append(row_result)
                 supplemented_row = row_result
         
         return supplemented_row

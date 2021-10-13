@@ -23,15 +23,18 @@ def scrape_contests():
 
     # Get metadata about election
     election_meta = contest.set_election_metadata()
-    count = 0
+    inserted_count = 0
+    updated_count = 0
+    deleted_count = 0
+    parsed_count = 0
+    supplemented_count = 0
 
     for group in sources[election]:
         source = sources[election][group]
 
         if 'type' in source and source['type'] == 'results':
-
+            # handle parsed contests
             rows = contest.parse_election(source, election_meta)
-
             for row in rows:
                 parsed = contest.parser(row, group, source)
 
@@ -39,7 +42,30 @@ def scrape_contests():
                 contest.from_dict(parsed, new=True)
 
                 db.session.merge(contest)
-                db.session.commit()
-                count = count + 1
+                inserted_count = inserted_count + 1
+                parsed_count = parsed_count + 1
+            # commit parsed rows
+            db.session.commit()
+            
+            # Handle post processing actions
+            supplemental = contest.post_processing('contests')
+            for supplemental_contest in supplemental:
+                rows = supplemental_contest['rows']
+                action = supplemental_contest['action']
+                if action is not None:
+                    if action == 'insert' or action == 'update':
+                        for row in rows:
+                            db.session.merge(row)
+                            if action == 'insert':
+                                inserted_count = inserted_count + 1
+                            elif action == 'update':
+                                updated_count = updated_count + 1
+                    elif action == 'delete':
+                        for row in rows:
+                            db.session.delete(row)
+                            deleted_count = deleted_count + 1
+                    supplemented_count = supplemented_count + 1
+            # commit supplemental rows
+            db.session.commit()
 
-    return str(count)
+    return "Rows inserted: %s; Rows updated: %s; Rows deleted: %s. Parsed rows: %s Supplemental rows: %s" % (str(inserted_count), str(updated_count), str(deleted_count), str(parsed_count), str(supplemented_count))

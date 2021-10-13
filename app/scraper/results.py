@@ -33,9 +33,8 @@ def scrape_results():
         source = sources[election][group]
 
         if 'type' in source and source['type'] == 'results':
-
+            # handle parsed results
             rows = result.parse_election(source, election_meta)
-
             for row in rows:
                 parsed = result.parser(row, group)
 
@@ -43,13 +42,13 @@ def scrape_results():
                 result.from_dict(parsed, new=True)
 
                 db.session.merge(result)
-                #db.session.commit()
-                #print(result)
                 inserted_count = inserted_count + 1
                 parsed_count = parsed_count + 1
+            # commit parsed rows
+            db.session.commit()
 
             # Handle post processing actions
-            supplemental = result.post_processing(source)
+            supplemental = result.post_processing('results')
             for supplemental_result in supplemental:
                 #print(supplemental_result)
                 rows = supplemental_result['rows']
@@ -67,18 +66,7 @@ def scrape_results():
                             db.session.delete(row)
                             deleted_count = deleted_count + 1
                     supplemented_count = supplemented_count + 1
+            # commit supplemental rows
             db.session.commit()
-
-                #print(supplemental_result)
-
-            #    spreadsheet_parsed = result.parser(spreadsheet_row, group)
-
-            #    spreadsheet_result = Result()
-            #    spreadsheet_result.from_dict(spreadsheet_parsed, new=True)
-
-                #db.session.merge(supplemental_result)
-                #db.session.commit()
-                #print(supplemental_result)
-                
 
     return "Rows inserted: %s; Rows updated: %s; Rows deleted: %s. Parsed rows: %s Supplemental rows: %s" % (str(inserted_count), str(updated_count), str(deleted_count), str(parsed_count), str(supplemented_count))
