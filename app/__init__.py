@@ -1,9 +1,11 @@
 import logging
 import os
-from flask import Flask, request, current_app
+from flask import Flask, jsonify, request, current_app
 from flask_celeryext import FlaskCeleryExt
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+
+from app.cache import cache
 
 from config import Config
 
@@ -17,6 +19,7 @@ def create_app(config_class=Config):
 
     db.init_app(app)
     migrate.init_app(app, db)
+    cache.init_app(app)
 
     #app.task_queue = rq.Queue('microblog-tasks', connection=app.redis)
 
