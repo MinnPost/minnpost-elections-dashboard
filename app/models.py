@@ -35,27 +35,6 @@ class ScraperModel(object):
         self.read_sources()
 
 
-    #@compiles(Insert)
-    #def compile_upsert(insert_stmt, compiler, **kwargs):
-    #    """
-    #    converts every SQL insert to an upsert  i.e;
-    #    INSERT INTO test (foo, bar) VALUES (1, 'a')
-    #    becomes:
-    #    INSERT INTO test (foo, bar) VALUES (1, 'a') ON CONFLICT(foo) DO UPDATE SET (bar = EXCLUDED.bar)
-    #    (assuming foo is a primary key)
-    #    :param insert_stmt: Original insert statement
-    #    :param compiler: SQL Compiler
-    #    :param kwargs: optional arguments
-    #    :return: upsert statement
-    #    """
-    #    pk = insert_stmt.table.primary_key
-    #    insert = compiler.visit_insert(insert_stmt, **kwargs)
-    #    ondup = f'ON CONFLICT ({",".join(c.name for c in pk)}) DO UPDATE SET'
-    #    updates = ', '.join(f"{c.name}=EXCLUDED.{c.name}" for c in insert_stmt.table.columns)
-    #    upsert = ' '.join((insert, ondup, updates))
-    #    return upsert
-
-
     def read_sources(self):
         """
         Read the scraper_sources.json file.
@@ -127,6 +106,9 @@ class ScraperModel(object):
         # Handle any supplemental data
         spreadsheet_rows = self.supplement_connect('supplemental_' + type)
         supplemented_rows = []
+        insert_rows = {'action': 'insert', 'rows': []}
+        update_rows = {'action': 'update', 'rows': []}
+        delete_rows = {'action': 'delete', 'rows': []}
 
         if spreadsheet_rows is None:
             return supplemented_rows
@@ -134,9 +116,23 @@ class ScraperModel(object):
         # for each row in the spreadsheet
         for spreadsheet_row in spreadsheet_rows:
             supplement_row = self.supplement_row(spreadsheet_row)
-            if supplement_row != {} and supplement_row not in supplemented_rows:
-                supplemented_rows.append(supplement_row)
-
+            if 'rows' in supplement_row:
+                #supplemented_rows.append(supplement_row)
+                if supplement_row['action'] == 'insert' and supplement_row['rows'] not in insert_rows['rows']:
+                    #insert_rows['rows'] = [*insert_rows['rows'], *supplement_row['rows']]
+                    insert_rows['rows'] = list(set(insert_rows['rows'] + supplement_row['rows']))
+                elif supplement_row['action'] == 'update' and supplement_row['rows'] not in update_rows['rows']:
+                    #update_rows['rows'] = [*update_rows['rows'], *supplement_row['rows']]
+                    update_rows['rows'] = list(set(update_rows['rows'] + supplement_row['rows']))
+                elif supplement_row['action'] == 'delete' and supplement_row['rows'] not in delete_rows['rows']:
+                    #delete_rows['rows'] = [*delete_rows['rows'], *supplement_row['rows']]
+                    delete_rows['rows'] = list(set(insert_rows['rows'] + supplement_row['rows']))
+        if insert_rows not in supplemented_rows:
+            supplemented_rows.append(insert_rows)
+        if update_rows not in supplemented_rows:
+            supplemented_rows.append(update_rows)
+        if delete_rows not in supplemented_rows:
+            supplemented_rows.append(delete_rows)
         return supplemented_rows
 
 
@@ -432,7 +428,6 @@ class Contest(ScraperModel, db.Model):
                     elif spreadsheet_row[field] is not None and spreadsheet_row[field] != '':
                         new_contest[field] = spreadsheet_row[field]
                 new_contest['results_group'] = 'supplemental_results'
-                print(new_contest)
                 contest_model = Contest(**new_contest)
                 if contest_model not in insert_rows:
                     insert_rows.append(contest_model)
