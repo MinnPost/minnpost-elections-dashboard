@@ -23,10 +23,13 @@ def scrape_meta():
 
     # Get metadata about election
     election_meta = meta.set_election_metadata()
-    count = 0
+    inserted_count = 0
+    parsed_count = 0
+    group_count = 0
 
     for group in sources[election]:
         source = sources[election][group]
+        group_count = group_count + 1
         
         if 'meta' in sources[election]:
             rows = sources[election]['meta']
@@ -38,8 +41,9 @@ def scrape_meta():
                 meta.from_dict(parsed, new=True)
 
                 db.session.merge(meta)
-                db.session.commit()
-                #print(meta)
-                count = count + 1
+                inserted_count = inserted_count + 1
+                parsed_count = parsed_count + 1
+            # commit parsed rows
+            db.session.commit()
 
-    return str(count)
+    return "Elections scanned: %s. Rows inserted: %s. Parsed rows: %s" % (str(group_count), str(inserted_count), str(parsed_count))

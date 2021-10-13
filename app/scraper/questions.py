@@ -23,10 +23,13 @@ def scrape_questions():
 
     # Get metadata about election
     election_meta = question.set_election_metadata()
-    count = 0
+    inserted_count = 0
+    parsed_count = 0
+    group_count = 0
 
     for group in sources[election]:
         source = sources[election][group]
+        group_count = group_count + 1
 
         if 'type' in source and source['type'] == 'questions':
 
@@ -39,8 +42,9 @@ def scrape_questions():
                 question.from_dict(parsed, new=True)
 
                 db.session.merge(question)
-                db.session.commit()
-                #print(question)
-                count = count + 1
+                inserted_count = inserted_count + 1
+                parsed_count = parsed_count + 1
+            # commit parsed rows
+            db.session.commit()
 
-    return str(count)
+    return "Elections scanned: %s. Rows inserted: %s. Parsed rows: %s" % (str(group_count), str(inserted_count), str(parsed_count))
