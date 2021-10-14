@@ -10,7 +10,7 @@ import calendar
 import datetime
 import lxml.html
 from flask import current_app
-from app import db
+from app import cache, db
 
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.expression import Insert
@@ -136,6 +136,7 @@ class ScraperModel(object):
         return supplemented_rows
 
 
+    @cache.cached(timeout=30, query_string=True)
     def supplement_connect(self, source):
         """
         Connect to supplemental source (Google spreadsheets) given set.
