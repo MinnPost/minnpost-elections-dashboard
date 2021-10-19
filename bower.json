@@ -22,7 +22,6 @@
     "leaflet": "0.7.3",
     "momentjs": "~2.8.1",
     "typeahead.js": "~0.10.4",
-    "Placeholders.js": "~3.0.0",
     "ractive-backbone": "~0.1.1",
     "moment-timezone": "~0.2.1",
     "screenfull": "~1.2.1"
@@ -107,13 +106,6 @@
         "moment-timezone/builds/moment-timezone-with-data"
       ],
       "returns": "momentTimezone"
-    },
-    "Placeholders.js": {
-      "rname": "placeholders-js",
-      "js": [
-        "Placeholders.js/build/placeholders.jquery"
-      ],
-      "returns": "placeholders"
     },
     "typeahead.js": {
       "rname": "typeahead-js",

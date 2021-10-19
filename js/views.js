@@ -5,14 +5,14 @@
 define([
   'jquery', 'underscore', 'backbone', 'ractive', 'ractive-events-tap',
   'ractive-backbone', 'leaflet', 'models', 'collections',
-  'bloodhound', 'typeahead-js', 'placeholders-js', 'mpConfig', 'mpFormatters',
+  'bloodhound', 'typeahead-js', 'mpConfig', 'mpFormatters',
   'text!templates/application.mustache', 'text!templates/footnote.mustache',
   'text!templates/contest.mustache', 'text!templates/contests.mustache',
   'text!templates/dashboard.mustache', 'text!templates/loading.mustache',
   'text!templates/elections-search-form.mustache'
 ], function(
   $, _, Backbone, Ractive, RactiveETap, RactiveBackbone, L, models,
-  collections, Bloodhound, typeahead, placeholders, mpConfig, mpFormatters,
+  collections, Bloodhound, typeahead, mpConfig, mpFormatters,
   tApplication, tFootnote, tContest,
   tContests, tDashboard, tLoading, tElectionsSearch
   ) {

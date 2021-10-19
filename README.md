@@ -31,7 +31,6 @@ Get the code for this project and install the necessary dependency libraries and
 1. Go into the template directory: `cd minnpost-elections-dashboard`
 1. Install NodeJS packages: `npm install`
 1. Install Bower components: `bower install`
-1. Because Placeholders.js comes unbuilt, we need to build it: `cd bower_components/Placeholders.js/ && npm install && grunt; cd -;`
 
 ### Running locally
 
