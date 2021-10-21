@@ -104,7 +104,11 @@ define([
       });
       map.addControl(new L.Control.Zoom({ position: 'topright' }));
       map.attributionControl.setPrefix(false);
-      map.addLayer(new L.tileLayer('//{s}.tiles.mapbox.com/v3/minnpost.map-wi88b700/{z}/{x}/{y}.png'));
+      map.addLayer(new L.tileLayer('//api.mapbox.com/styles/v1/mapbox/light-v10/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWlubnBvc3QiLCJhIjoicUlOUkpvWSJ9.djE93rNktev9eWRJVav6xA'),
+      {
+        tileSize: 512,
+        zoomOffset: -1
+      });
 
       // Make GeoJSON layer from shapes
       featureGroup = new L.featureGroup();
@@ -293,7 +297,11 @@ define([
             dragging: false
           });
           map.attributionControl.setPrefix(false);
-          map.addLayer(new L.tileLayer('//{s}.tiles.mapbox.com/v3/minnpost.map-wi88b700/{z}/{x}/{y}.png'));
+          map.addLayer(new L.tileLayer('//api.mapbox.com/styles/v1/mapbox/light-v10/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWlubnBvc3QiLCJhIjoicUlOUkpvWSJ9.djE93rNktev9eWRJVav6xA'),
+          {
+            tileSize: 512,
+            zoomOffset: -1
+          });
 
           circle = new L.circleMarker([ll[1], ll[0]], 10);
           circle.setStyle(this.defaultMapStyle);
