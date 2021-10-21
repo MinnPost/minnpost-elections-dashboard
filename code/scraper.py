@@ -974,8 +974,8 @@ class ElectionScraper:
         Checks that boundary sets match to an actual boundary set from
         the API.    Can take a bit of time.
         """
-        boundary_url = 'https://boundaries.minnpost.com/1.0/boundary/%s'
-        contests = sql.select("* FROM contests")
+        boundary_url = 'https://represent-minnesota.herokuapp.com/boundaries/%s';
+        contests = sql.select("boundary, title from contests where boundary is not null and boundary != ''")
         contests_count = 0
         boundaries_found = 0
 
