@@ -799,12 +799,14 @@ class ElectionScraper:
                     for r in mcd:
                         # Find intersection
                         mcd_boundary_id = self.boundary_make_mcd(r['county_id'], parsed_row['district_code'])
-                        boundary_url = 'https://represent-minnesota.herokuapp.com/boundary-sets/?intersects=%s&sets=%s';
+                        boundary_url    = 'https://represent-minnesota.herokuapp.com/boundaries/?sets=%s,%s'
                         request = requests.get(boundary_url % (mcd_boundary_id, 'hospital-districts-2012'), verify = False)
 
                         if request.status_code == 200:
                             r = request.json()
                             boundary = r['objects'][0]['url']
+                            boundary = boundary.lstrip('/boundaries/') # remove if this is present
+                            boundary = boundary.rstrip('/')
                             break
 
                     if boundary == '':
