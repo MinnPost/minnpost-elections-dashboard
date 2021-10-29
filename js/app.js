@@ -22,7 +22,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//localhost:5000/?q=',
+      electionsAPI: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
@@ -82,10 +82,9 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           type: 'links',
           itemClass: 'dashboard-links',
           links: [
-            { href: '#search/u.s.+representative', text: 'All U.S. House races' },
-            { href: '#search/hennepin+county+commissioner', text: 'Hennepin County commissioner races'},
-            { href: '#search/ramsey+county+commissioner', text: 'Ramsey County commissioner races'},
-            { href: '#contest/id-MN---1-1-5000', text: 'Minneapolis school board at-large'},
+            { href: '#search/school+board+member', text: 'All school board races' },
+            { href: '#search/minneapolis+council+member', text: 'All Minneapolis city council races'},
+            { href: '#contest/id-MN---58000-2001', text: 'St. Paul Mayor'},
             { href: '#search/question', text: 'All ballot questions' }
           ]
         }
