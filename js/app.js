@@ -104,7 +104,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           itemClass: 'dashboard-links',
           links: [
             { href: '#search/school+board+member', text: 'All school board races' },
-            { href: '#search/minneapolis+council+member', text: 'All Minneapolis city council races'},
+            { href: '#search/minneapolis+council+member', text: 'All Minneapolis City Council races'},
             { href: '#contest/id-MN---58000-2001', text: 'St. Paul Mayor'},
             { href: '#search/question', text: 'All ballot questions' },
             { href: '#search/minneapolis park and recreation commissioner', text: 'Minneapolis Park Board'}
