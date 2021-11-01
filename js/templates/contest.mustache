@@ -22,7 +22,7 @@
     </h3>
 
     {{#sub_title}}
-      <h5>{{ sub_title }}</h5>
+      <h4>{{ sub_title }}</h4>
     {{/sub_title}}
 
     {{^isDashboard}}
@@ -38,7 +38,7 @@
 
 
     {{#percent_needed}}
-      <p><em>This contest requires {{ formatters.number(percent_needed, 1) }}% or more "yes" votes for the measure to pass.</em></p>
+      <p class="small"><em>This contest requires {{ formatters.number(percent_needed, 1) }}% or more "yes" votes for the measure to pass.</em></p>
     {{/percent_needed}}
   {{/()}}
 
