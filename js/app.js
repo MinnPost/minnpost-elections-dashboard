@@ -73,10 +73,31 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           rows: 2
         },
         {
+          type: 'spacer'
+        },
+        {
           title: 'St. Paul Question 1',
           type: 'race',
           id: 'id-MN---58000-1131',
           rows: 2
+        },
+        {
+          title: 'Minneapolis Council Member — Ward 3',
+          type: 'race',
+          id: 'id-MN---43000-2121',
+          rows: 3
+        },
+        {
+          title: 'Minneapolis Council Member — Ward 9',
+          type: 'race',
+          id: 'id-MN---43000-2181',
+          rows: 3
+        },
+        {
+          title: 'Minneapolis Council Member — Ward 10',
+          type: 'race',
+          id: 'id-MN---43000-2191',
+          rows: 3
         },
         {
           type: 'links',
@@ -85,7 +106,8 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
             { href: '#search/school+board+member', text: 'All school board races' },
             { href: '#search/minneapolis+council+member', text: 'All Minneapolis city council races'},
             { href: '#contest/id-MN---58000-2001', text: 'St. Paul Mayor'},
-            { href: '#search/question', text: 'All ballot questions' }
+            { href: '#search/question', text: 'All ballot questions' },
+            { href: '#search/minneapolis park and recreation commissioner', text: 'Minneapolis Park Board'}
           ]
         }
 
