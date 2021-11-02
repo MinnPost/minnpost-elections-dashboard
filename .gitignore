@@ -3,3 +3,4 @@ scraperwiki.sqlite
 venv/
 .env
 testsecret.json
+celerybeat-schedule
