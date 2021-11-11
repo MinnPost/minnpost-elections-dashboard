@@ -22,7 +22,7 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//localhost:5000/?q=',
+      electionsAPI: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
@@ -73,20 +73,41 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
           rows: 2
         },
         {
+          type: 'spacer'
+        },
+        {
           title: 'St. Paul Question 1',
           type: 'race',
           id: 'id-MN---58000-1131',
           rows: 2
         },
         {
+          title: 'Minneapolis Council Member — Ward 3',
+          type: 'race',
+          id: 'id-MN---43000-2121',
+          rows: 3
+        },
+        {
+          title: 'Minneapolis Council Member — Ward 9',
+          type: 'race',
+          id: 'id-MN---43000-2181',
+          rows: 3
+        },
+        {
+          title: 'Minneapolis Council Member — Ward 10',
+          type: 'race',
+          id: 'id-MN---43000-2191',
+          rows: 3
+        },
+        {
           type: 'links',
           itemClass: 'dashboard-links',
           links: [
-            { href: '#search/u.s.+representative', text: 'All U.S. House races' },
-            { href: '#search/hennepin+county+commissioner', text: 'Hennepin County commissioner races'},
-            { href: '#search/ramsey+county+commissioner', text: 'Ramsey County commissioner races'},
-            { href: '#contest/id-MN---1-1-5000', text: 'Minneapolis school board at-large'},
-            { href: '#search/question', text: 'All ballot questions' }
+            { href: '#search/school+board+member', text: 'All school board races' },
+            { href: '#search/minneapolis+council+member', text: 'All Minneapolis City Council races'},
+            { href: '#contest/id-MN---58000-2001', text: 'St. Paul Mayor'},
+            { href: '#search/question', text: 'All ballot questions' },
+            { href: '#search/minneapolis park and recreation commissioner', text: 'Minneapolis Park Board'}
           ]
         }
 
