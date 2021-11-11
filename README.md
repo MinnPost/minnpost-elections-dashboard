@@ -80,10 +80,11 @@ Follow these steps to access the authentication credentials:
 1. Get the code: `git clone https://github.com/MinnPost/minnpost-scraper-mn-election-results.git`
 1. Change the directory: `cd minnpost-scraper-mn-election-results`
 1. Create a `.env` file based on the repository's `.env-example` file in the root of your project.
-1. `pipenv install` and `pipenv shell`
-1. Run a scraper process (see below section on Scraping data).
-1. Run basic API server; this should not be run on production; it is meant for local development: `python deploy/local_server.py`
-  * This creates a basic endpoint server at http://localhost:5000/.
+1. Run `pipenv install`.
+1. Open up three command line tabs if you need to run the scheduled scraping tasks as well as the API. In each tab, run `pipenv shell`. See below section on Scraping data.
+1. To process scrape tasks, either manually or on schedule, run `celery -A src.worker:celery worker --loglevel=INFO` in a tab.
+1. To run the scheduled scraper, run `celery -A src.worker:celery beat --loglevel=INFO` in a tab.
+1. In the tab where you want to run the Flask-based API, run `flask run --host=0.0.0.0`. This creates a basic endpoint server at http://0.0.0.0:5000.
 
 ### Local setup for Postgres
 
