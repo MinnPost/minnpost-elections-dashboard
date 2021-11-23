@@ -4,3 +4,4 @@ venv/
 .env
 testsecret.json
 celerybeat-schedule
+redbeat.RedBeatScheduler
