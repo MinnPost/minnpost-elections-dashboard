@@ -39,40 +39,25 @@ In theory this should be it, assuming the scraper can reconcile everything. Ther
 
 Both manual results and contest question text can be managed in Google Spreadsheets.
 
-## Google Sheets setup
+## Google Sheets to JSON API setup
 
-For both local and remote environments, you'll need to make sure the application has access to the Google Sheets data. In version 4 of the Sheets API, this happens through Service Accounts.
+For both local and remote environments, you'll need to have access to an instance of the [Google Sheets to JSON API](https://github.com/MinnPost/google-sheet-to-json-api) that itself has access to the Google Sheet(s) that you want to process. If you don't already have access to a working instance of that API, set it up and ensure it's working first.
 
-### Creating a new authentication
+### Credentials
 
-If you are authenticating with the Sheets API for the first time, you'll need to create a new Google Cloud project. Start by following [this guide from Google](https://developers.google.com/workspace/guides/create-project). When you've finished Google's steps, you should have a new project.
+To access the Google Sheets to JSON API you'll need to have two configuration values in your `.env` or in your Heroku settings.
 
-Our specific Google Sheets integration uses the [Sheetfu library](https://github.com/socialpoint-labs/sheetfu), which has [an authentication guide](https://github.com/socialpoint-labs/sheetfu/blob/master/documentation/authentication.rst) to finish this process. The screenshots are not necessarily up to date with the names Google uses for things.
+- `AUTHORIZE_API_URL = "http://0.0.0.0:5000/authorize/"` (wherever the API is running, it uses an `authorize` endpoint)
+- `API_KEY = ""` (a valid API key that is accepted by the installation of the API that you're accessing)
 
-Between these resources, you should follow these steps to create and access the authentication credentials:
+### Configuration
 
-1. Create a new Google Cloud Platform project.
-1. Enable the Sheets and Drive APIs in the APIs & Services section of the Google Cloud Platform settings.
-1. Create a Service Account in the IAM & Admin section of the Google Cloud Platform settings.
-1. Download the new JSON-formatted key for that Service Account. Only use this key for one environment.
+Use the following additional fields in your `.env` or in your Heroku settings.
 
-This new Service account will have an automatically-created email address. For this application, that email address must have at least Viewer-level access on any Google Sheets that it needs to access. It's best to give it that level of access on the folder level.
-
-If this user is new or it is being given new access, it can take a few minutes for the changes to propogate.
-
-### Accessing an existing authentication
-
-If the Service Account user already exists in the Google Cloud Platform, you can access it at https://console.cloud.google.com/home/dashboard?project=[application-name]. In MinnPost's case, this URL is [https://console.cloud.google.com/home/dashboard?project=minnpost-mn-election-results](https://console.cloud.google.com/home/dashboard?project=minnpost-mn-election-results).
-
-If it hasn't been, you'll need your Google account added. An Administrator can do that at the correct dashboard URL by clicking "Add People to this Project."
-
-Follow these steps to access the authentication credentials:
-
-1. Once you have access to the project's dashboard, click "Go to project settings" in the Project info box.
-1. Click Service Accounts in the IAM & Admin section of the Google Cloud Platform settings.
-1. If there is more than one service account, find the correct one.
-1. Click the Actions menu for that account and choose the Manage keys option.
-1. Click Add Key, choose Create new key, and choose JSON as the Key type. Click the Create button and download the key for that Service Account. Only use this key for one environment.
+- `PARSER_API_URL = "http://0.0.0.0:5000/parser/"` (wherever the API is running, it uses a `parser` endpoint)
+- `OVERWRITE_API_URL = "http://0.0.0.0:5000/parser/custom-overwrite/"` (wherever the API is running, it uses a `parser/custom-overwrite` endpoint)
+- `API_CACHE_TIMEOUT = "500"` (this value is how many seconds the customized cache should last. `0` means it won't expire.)
+- `STORE_IN_S3` (provide a "true" or "false" value to set whether the API should send the JSON to S3. If you leave this blank, it will follow the API's settings.)
 
 ## Local setup and development
 
@@ -80,10 +65,11 @@ Follow these steps to access the authentication credentials:
 1. Get the code: `git clone https://github.com/MinnPost/minnpost-scraper-mn-election-results.git`
 1. Change the directory: `cd minnpost-scraper-mn-election-results`
 1. Create a `.env` file based on the repository's `.env-example` file in the root of your project.
-1. `pipenv install` and `pipenv shell`
-1. Run a scraper process (see below section on Scraping data).
-1. Run basic API server; this should not be run on production; it is meant for local development: `python deploy/local_server.py`
-  * This creates a basic endpoint server at http://localhost:5000/.
+1. Run `pipenv install`.
+1. Open up three command line tabs if you need to run the scheduled scraping tasks as well as the API. In each tab, run `pipenv shell`. See below section on Scraping data.
+1. To process scrape tasks, either manually or on schedule, run `celery -A src.worker:celery worker -S redbeat.RedBeatScheduler --loglevel=INFO` in a tab.
+1. To run the scheduled scraper, run `celery -A src.worker:celery beat -S redbeat.RedBeatScheduler --loglevel=INFO` in a tab.
+1. In the tab where you want to run the Flask-based API, run `flask run --host=0.0.0.0`. This creates a basic endpoint server at http://0.0.0.0:5000.
 
 ### Local setup for Postgres
 
@@ -94,23 +80,11 @@ This documentation describes how to install Postgres with Homebrew.
 1. A free, Mac-based graphic manager for Postgres is [Postbird](https://www.electronjs.org/apps/postbird).
 1. Create a database. For this example, call it `election-scraper`.
 1. Installing with Homebrew creates a user with no password. The connection string will be `"postgresql://username:@localhost/election-scraper"`. Enter this connection string to the `DATABASE_URL` value of the `.env` file.
+1. To set up the database tables and columns without any data, run `flask db upgrade` in a command line.
 
-To get the data for the database, you can either [export it from Heroku](https://devcenter.heroku.com/articles/heroku-postgres-import-export) or run the SQL commands that are in this repository's `election-scraper-structure.sql` file. Running the commands in this file will result in a database with all of the required tables, but they'll all be empty. This file was created in Postgres version 13.4.
+To get the data for the database, you can also [export it from Heroku](https://devcenter.heroku.com/articles/heroku-postgres-import-export).
 
-### Local authentication for Google Sheets
-
-Enter the configuration values from the JSON key downloaded above into the `.env` file's values for these fields:
-
-- `SHEETFU_CONFIG_TYPE`
-- `SHEETFU_CONFIG_PROJECT_ID`
-- `SHEETFU_CONFIG_PRIVATE_KEY_ID`
-- `SHEETFU_CONFIG_PRIVATE_KEY`
-- `SHEETFU_CONFIG_CLIENT_EMAIL`
-- `SHEETFU_CONFIG_CLIENT_ID`
-- `SHEETFU_CONFIG_AUTH_URI`
-- `SHEETFU_CONFIG_TOKEN_URI`
-- `SHEETFU_CONFIG_AUTH_PROVIDER_URL`
-- `SHEETFU_CONFIG_CLIENT_CERT_URL`
+**Note**: when the SQL structure changes, run `flask db migrate` and add any changes to the `migrations` folder to the Git repository.
 
 See the scraper section below for commands to run after local setup is finished.
 
@@ -128,21 +102,6 @@ To get the data into the database, you can either [import it into Heroku](https:
 
 If you want to create empty tables on Heroku, you can do that by running the `CREATE TABLE` and `CREATE INDEX` commands from the `election-scraper-structure.sql` files after you open a `heroku pg:psql` session. Then you can run the scraper to populate the database.
 
-### Production authentication for Google Sheets
-
-In the project's Heroku settings, enter the configuration values from the production-only JSON key downloaded above into the values for these fields:
-
-- `SHEETFU_CONFIG_TYPE`
-- `SHEETFU_CONFIG_PROJECT_ID`
-- `SHEETFU_CONFIG_PRIVATE_KEY_ID`
-- `SHEETFU_CONFIG_PRIVATE_KEY`
-- `SHEETFU_CONFIG_CLIENT_EMAIL`
-- `SHEETFU_CONFIG_CLIENT_ID`
-- `SHEETFU_CONFIG_AUTH_URI`
-- `SHEETFU_CONFIG_TOKEN_URI`
-- `SHEETFU_CONFIG_AUTH_PROVIDER_URL`
-- `SHEETFU_CONFIG_CLIENT_CERT_URL`
-
 Run the scraper commands from the section below by following [Heroku's instructions](https://devcenter.heroku.com/articles/getting-started-with-python#start-a-console) for running Python commands. Generally, run commands on Heroku by adding `heroku run ` before the rest of the command listed below.
 
 ## Scraping data
@@ -156,74 +115,43 @@ Run the scraper commands from the section below by following [Heroku's instructi
 1. Scrape the results: `python code/scraper.py scrape results <ELECTION_DATE>`
   * This is the core processing of the scraper will be run frequently.
 1. Match contests to boundary area: `python code/scraper.py match_contests <ELECTION_DATE>`
-1. (optional) For results that are in a Google Spreadsheet, use the supplement step: `python code/scraper.py supplement contests <ELECTION_DATE>`
 1. (optional) To check each boundary ID against the boundary service: `python code/scraper.py check_boundaries`
 
+## Endpoints
 
 
-# stuff we have to figure out and then rewrite
 
+# stuff we have to build, still
 
-### Webserver
+## Scheduling
 
-1. [Dumptruck](https://github.com/scraperwiki/dumptruck-web) is a Python script to create an API on-top of an sqlite database.  It's built by ScraperWiki and also handles multiple user location.
-    1. `sudo git clone https://github.com/scraperwiki/dumptruck-web.git /var/www/dumptruck-web && sudo chown -R www-data:www-data /var/www/dumptruck-web && sudo pip install -r /var/www/dumptruck-web/requirements.txt`
-    1. Link our database and metadata file for compliance with Dumptruck.
-        * `ln -s /home/ubuntu/minnpost-scraper-mn-election-results/scraperwiki.json ~/scraperwiki.json && ln -s /home/ubuntu/minnpost-scraper-mn-election-results/scraperwiki.sqlite ~/scraperwiki.sqlite`
-1. FCGIWrap is used to create an interface between the Dumptruck and Nginx.  We use a simple script to up the number of children to use.
-    1. `sudo cp deploy/fcgiwrap /etc/default/fcgiwrap`
-    1. Restart service (note that this can take a minute): `sudo service fcgiwrap restart`
-    1. The default is to run via socket, so there's no direct HTTP connection to this service.
-1. Nginx is used at the top level web server.  It allows for caching and other niceties.  This copies our config, enables it and removes the default.
-    1. `sudo cp deploy/nginx-scraper-api.conf /etc/nginx/sites-available/nginx-scraper-api.conf`
-    1. `sudo ln -s /etc/nginx/sites-available/nginx-scraper-api.conf /etc/nginx/sites-enabled/nginx-scraper-api.conf`
-    1. `sudo rm /etc/nginx/sites-enabled/default`
-    1. Restart service: `sudo service nginx restart`
-    1. Test with something like: http://ec2-XX-XX-XX.compute-1.amazonaws.com/?box=ubuntu&method=sql&q=SELECT%20*%20FROM%20results%20LIMIT%2010
+We need to run the scraper commands at intervals that differ based on which command it is and whether we're in the result hour window on Election Day.
 
-#### Cron
+Set the result hour window by adding a datetime value to `ELECTION_RESULT_DATETIME_START` and `ELECTION_RESULT_DATETIME_END`. If you're developing locally, add these values to your `.env` file; in production, add it to the Heroku settings for the application. The code will check to make sure these are both actual `datetime`s and that the window between them is a valid timespan; if it is not a valid time window it will act as it does normally.
 
-We use cron to get the results as often as possible through `deploy/scraper_runner.sh`.  Areas and contest matching just happens in the early morning.
+To manually turn the result hour window on, regardless of the time window, set the `ELECTION_RESULT_DATETIME_OVERRIDDEN` setting to `True`.
 
-    crontab deploy/crontab
+### Run daily, except during result hours on Election Day
 
-## Load testing
+- `python code/scraper.py scrape areas <ELECTION_DATE>`
+- `python code/scraper.py scrape questions <ELECTION_DATE>`
+- `python code/scraper.py scrape results <ELECTION_DATE>`
+- `python code/scraper.py match_contests <ELECTION_DATE>` 
 
-There are many ways to do load testing, but here are some free-er options.
+### Run in an infinite loop during result hours on Election Day
 
-### [Bees with Machine Guns](https://github.com/newsapps/beeswithmachineguns)
+- `python code/scraper.py scrape results <ELECTION_DATE>`
 
-1. Install: `pip install beeswithmachineguns`
-1. Set environment variables.
-    * `export AWS_ACCESS_KEY_ID=xxxx`
-    * `export AWS_SECRET_ACCESS_KEY=xxxx`
-1. Copy your private AWS keypair file to something like: `~/.ssh/minnpost.pem`
-1. Set up an EC2 security group, specifically one that has SSH (port 22) access.  We name ours `SecuriBees`.
-1. Spin up bees (overall more bees will allow for more attacking): `bees up -s 4 -g SecuriBees -k minnpost`
-1. Send the bees to attack: `bees attack -n 10000 -c 1000 -u "http://50.19.100.197/?box=ubuntu&method=sql&q=SELECT%20*%20FROM%20results%20LIMIT%2010"`
-    * `n` is the number of requests, while `c` is the number of concurrent requests.  Play around with this to determine limits.  For some reference, on election night we could get up to 4,000 active users on the dashboard, each making around 10 calls to the API every minute.
-    * The initial time should be slower than subsequent requests because of the aggressive minute long caching.
-    * You may want to run `top` on the API server to see how the server is running against the load.
+### Don't run, currently
 
-### [Locust.io](http://locust.io/)
+- `python code/scraper.py check_boundaries`
 
-1. Install: `pip install locustio`
-1. `locustfile.py` is included.
-1. Run, but change host depending on where the API server is located at: `locust --host=http://50.19.100.197`
-1. Open up web interface to run tests: [http://localhost:8089/](http://localhost:8089/)
-1. Some more work should be done to use the distributed power of Locust, as a single machine is not a great load testing environment.
+## Web-based API
 
-### Other tools
+The API needs to be a scalable, always-available resource we can post `key => value` queries to, and get `JSONP` data back from either the Postgres database or from the Redis cache in return.
 
-* [loadimpact.com](http://loadimpact.com/) allows for a free, public test.
+## Caching
 
-## ScraperWiki
+When any of the scheduled tasks *finish* running, we should invalidate the Redis-based API cache.
 
-The code and deployment methods have been designed so that on slower traffic times, these operations can happen on ScraperWiki and save resources.  You will have to SSH into the scraper and add the needed libraries, `pip install --user logging lxml datetime flask gdata`.
-
-Currently, the scraper is at [https://scraperwiki.com/dataset/ez47yoa/](https://scraperwiki.com/dataset/ez47yoa/).
-
-To update the scraper code, do the following:
-
-1. Run: `python deploy/scraperwiki.py`
-2. Copy the contents of `code/scraper-scraperwiki.py` into the ScraperWiki interface.
+When the API receives a request, it should check for a valid Redis response for that request before running a query against the database. If there is a valid response, it should send the cached `JSONP` data.
