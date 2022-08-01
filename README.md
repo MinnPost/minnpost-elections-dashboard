@@ -1,6 +1,6 @@
 # MN Election Results
 
-Scraper for Minnesota elections.
+Flask-based scraper for Minnesota elections with an API that returns JSON data for display on our election result dashboard. Structurally, this application is based on [this example](https://github.com/nebularazer/flask-celery-example), which itself is a restructuring of [this example](https://github.com/miguelgrinberg/flask-celery-example) and its [accompanying article](https://blog.miguelgrinberg.com/post/using-celery-with-flask).
 
 ## Data structure
 
@@ -148,10 +148,10 @@ To manually turn the result hour window on, regardless of the time window, set t
 
 ## Web-based API
 
-The API needs to be a scalable, always-available resource we can post `key => value` queries to, and get `JSONP` data back from either the Postgres database or from the Redis cache in return.
+The API needs to be a scalable, always-available resource we can post `key => value` queries to, and get `JSON` data back from either the Postgres database or from the Redis cache in return.
 
 ## Caching
 
 When any of the scheduled tasks *finish* running, we should invalidate the Redis-based API cache.
 
-When the API receives a request, it should check for a valid Redis response for that request before running a query against the database. If there is a valid response, it should send the cached `JSONP` data.
+When the API receives a request, it should check for a valid Redis response for that request before running a query against the database. If there is a valid response, it should send the cached `JSON` data.
