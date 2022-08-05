@@ -1,6 +1,9 @@
 <script>
 	import { Match } from 'svelte-store-router'
-	import { route } from './stores.js';
+	import { route, contests } from './stores.js';
+	import Results from "./Results.svelte";
+
+
 </script>
 
 <div class="election-results">
@@ -15,17 +18,17 @@
 		</ol>
 	</div>
 
-	<button on:click={() => $route.path = '/'}>home page</button>
-	<button on:click={() => $route.path = '/users'}>user list</button>
+	<button on:click={() => $route.path = '/'}>dashboard</button>
+	<button on:click={() => $route.path = '/search'}>search for a contest</button>
 
 	<Match route={$route} pattern="/">
-		base
+		<Results promise="{contests.init()}" contests="$contests"/>
 	</Match>
-	<Match route={$route} pattern="/users">
-		User list
+	<Match route={$route} pattern="/search">
+		<Results promise="{contests.update()}" contests="$contests"/>
 	</Match>
-	<Match route={$route} pattern="/users/:id" let:params={{ id }}>
-		User {id} profile
+	<Match route={$route} pattern="/contests/:id" let:params={{ id }}>
+		Contest {id} profile
 	</Match>
 
 	<ol>
