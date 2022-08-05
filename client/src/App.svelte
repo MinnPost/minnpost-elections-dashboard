@@ -1,5 +1,6 @@
 <script>
-
+	import { Match } from 'svelte-store-router'
+	import { route } from './stores.js';
 </script>
 
 <div class="election-results">
@@ -13,6 +14,19 @@
 			<li>suggested searches</li>
 		</ol>
 	</div>
+
+	<button on:click={() => $route.path = '/'}>home page</button>
+	<button on:click={() => $route.path = '/users'}>user list</button>
+
+	<Match route={$route} pattern="/">
+		base
+	</Match>
+	<Match route={$route} pattern="/users">
+		User list
+	</Match>
+	<Match route={$route} pattern="/users/:id" let:params={{ id }}>
+		User {id} profile
+	</Match>
 
 	<ol>
 		<li>show results
