@@ -1,17 +1,22 @@
-import { createRouteStore } from 'svelte-store-router';
-import { writable } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 import { dashboard } from './dashboard.js';
 import { fetchContests } from "./api.js";
+import { path, query, pattern } from 'svelte-pathfinder';
 
 let delay = 150;
+let apiRoot = "http://0.0.0.0:5000/api/";
 
 // routing
-export const route = createRouteStore({
-    base: '/elections/2022/08/2022-election-result-dashboard/',
-    delay: 0,
-    queryClean: true,
-    fragmentClean: true
-})
+// with regular derived store
+export const contestStore = derived(pattern, ($pattern, set) => {
+    if ($pattern('/search/')) {
+        fetch( `${apiRoot}contests/?title=governor` )
+            .then(res => res.json())
+            .then(set);
+    } else {
+        set(dashboard);
+    }
+}, []);
 
 // contests
 export const contests = createContestsStore();

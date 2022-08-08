@@ -1,13 +1,13 @@
 <script>
     export let promise;
-    import { contests } from './stores.js';
+    import { contestStore } from './stores.js';
 </script>
 
 {#await promise}
 	<p>Loading contests</p>
 {:then}
     <ul>
-        {#each $contests as contest}
+        {#each $contestStore as contest}
             <li>
                 {contest.id}: {contest.title}
             </li>

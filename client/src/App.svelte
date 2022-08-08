@@ -1,10 +1,14 @@
 <script>
-	import { Match } from 'svelte-store-router'
-	import { route, contests } from './stores.js';
+	import { click, prefs, path, query, fragment, submit, state, pattern } from 'svelte-pathfinder';
+	//import { contestStore } from './stores.js';
 	import Results from "./Results.svelte";
+
+	prefs.hashbang = true;
 
 
 </script>
+
+<svelte:window on:click={click} />
 
 <div class="election-results">
 	<header class="m-dashboard-header">
@@ -15,21 +19,22 @@
 		<ol>
 			<li>search form</li>
 			<li>suggested searches</li>
+			<li><a href="/" on:click={e => $path = '/'}>return to dashboard</a></li>
 		</ol>
 	</div>
 
-	<button on:click={() => $route.path = '/'}>dashboard</button>
-	<button on:click={() => $route.path = '/search'}>search for a contest</button>
+	<nav>
+		<ul>
+			
+			<li><a href="/search" on:click={e => $path = '/search/'}>Search</a></li>
+		</ul>
+	</nav>
 
-	<Match route={$route} pattern="/">
-		<Results promise="{contests.init()}" contests="$contests"/>
-	</Match>
-	<Match route={$route} pattern="/search">
-		<Results promise="{contests.update()}" contests="$contests"/>
-	</Match>
-	<Match route={$route} pattern="/contests/:id" let:params={{ id }}>
-		Contest {id} profile
-	</Match>
+	{#if $pattern('/contests/:id')} <!-- eg. /products/1 -->
+		contest id {$path.params.id}
+	{:else}
+		<Results/>
+	{/if}
 
 	<ol>
 		<li>show results
