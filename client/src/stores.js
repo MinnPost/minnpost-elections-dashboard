@@ -7,7 +7,7 @@ let delay = 300;
 
 // routing
 export const resultStore = derived([pattern, query], ([$pattern, $query], set) => {
-    if ($pattern('/search/')) {
+    if ($pattern('/search/') && $query.params.q) {
         new Promise((resolve) => {
             setTimeout(() => {
                 fetchContests('title', $query.params.q)
