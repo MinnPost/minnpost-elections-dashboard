@@ -3,16 +3,20 @@ import { dashboard } from './dashboard.js';
 import { fetchContests } from "./api.js";
 import { path, query, pattern } from 'svelte-pathfinder';
 
-let delay = 150;
+let delay = 300;
 let apiRoot = "http://0.0.0.0:5000/api/";
 
 // routing
-// with regular derived store
-export const contestStore = derived(pattern, ($pattern, set) => {
+export const resultStore = derived(pattern, ($pattern, set) => {
     if ($pattern('/search/')) {
-        fetch( `${apiRoot}contests/?title=governor` )
-            .then(res => res.json())
-            .then(set);
+        new Promise((resolve) => {
+            setTimeout(() => {
+                fetch( `${apiRoot}contests/?title=governor` )
+                    .then(res => res.json())
+                    .then(set);
+                resolve()
+            }, delay)
+        })
     } else {
         set(dashboard);
     }

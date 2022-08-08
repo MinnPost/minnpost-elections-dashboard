@@ -25,7 +25,6 @@
 
 	<nav>
 		<ul>
-			
 			<li><a href="/search" on:click={e => $path = '/search/'}>Search</a></li>
 		</ul>
 	</nav>
