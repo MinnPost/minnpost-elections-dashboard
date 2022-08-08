@@ -1,33 +1,22 @@
 <script>
 	import { click, prefs, path, query, fragment, submit, state, pattern } from 'svelte-pathfinder';
-	//import { contestStore } from './stores.js';
-	import Results from "./Results.svelte";
-
+	// pathfinder preferences
 	prefs.hashbang = true;
 
+	// layout components
+	import Header from "./Header.svelte";
+	import Search from './Search.svelte';
+	import Results from "./Results.svelte";
 
 </script>
 
 <svelte:window on:click={click} />
 
 <div class="election-results">
-	<header class="m-dashboard-header">
-		<h2 class="a-election-status">election date primary or general election results. Last updated on when it was updated</h2>
-	</header>
 
-	<div>
-		<ol>
-			<li>search form</li>
-			<li>suggested searches</li>
-			<li><a href="/" on:click={e => $path = '/'}>return to dashboard</a></li>
-		</ol>
-	</div>
+	<Header/>
 
-	<nav>
-		<ul>
-			<li><a href="/search" on:click={e => $path = '/search/'}>Search</a></li>
-		</ul>
-	</nav>
+	<Search />
 
 	{#if $pattern('/contests/:id')} <!-- eg. /products/1 -->
 		contest id {$path.params.id}
