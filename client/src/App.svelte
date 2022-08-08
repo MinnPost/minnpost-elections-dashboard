@@ -4,9 +4,9 @@
 	prefs.hashbang = true;
 
 	// layout components
-	import Header from "./Header.svelte";
-	import Search from './Search.svelte';
-	import Results from "./Results.svelte";
+	import Header from "./components/Header.svelte";
+	import Search from './components/Search.svelte';
+	import Results from "./components/Results.svelte";
 
 </script>
 
@@ -16,7 +16,7 @@
 
 	<Header/>
 
-	<Search />
+	<Search/>
 
 	{#if $pattern('/contests/:id')} <!-- eg. /products/1 -->
 		contest id {$path.params.id}

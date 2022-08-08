@@ -1,6 +1,6 @@
 import { writable, derived } from 'svelte/store';
-import { dashboard } from './dashboard.js';
-import { fetchMetadata, fetchContests } from "./api.js";
+import { dashboard } from './data/dashboard.js';
+import { fetchMetadata, fetchContests } from "./data/api.js";
 import { path, query, pattern } from 'svelte-pathfinder';
 
 let delay = 300;
@@ -16,7 +16,9 @@ export const resultStore = derived([pattern, query], ([$pattern, $query], set) =
             }, delay)
         })
     } else {
-        set(dashboard);
+        setTimeout(() => {
+            set(dashboard);
+        }, delay)
     }
 }, []);
 
