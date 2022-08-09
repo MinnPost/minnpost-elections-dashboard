@@ -1,8 +1,9 @@
 <script>
-	import { path, query, submit } from 'svelte-pathfinder';
+    // svelte-pathfinder stuff
+	import { path, submit } from 'svelte-pathfinder';
 
+    // form behavior
     let searchTerm = "";
-
     function suggestedSearchClick() {
         $path = '/';
         searchTerm = "";

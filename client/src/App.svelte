@@ -1,4 +1,5 @@
 <script>
+	// svelte-pathfinder stuff
 	import { click, prefs, path, query, fragment, submit, state, pattern } from 'svelte-pathfinder';
 	// pathfinder preferences
 	prefs.hashbang = true;

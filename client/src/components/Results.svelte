@@ -1,6 +1,10 @@
 <script>
+    // data
     export let promise;
-    import { resultStore } from './stores.js';
+    import { resultStore } from './../stores.js';
+
+    // layout components
+	import Contest from "./Contest.svelte";
 </script>
 
 {#await promise}
@@ -8,9 +12,7 @@
 {:then}
     <ul>
         {#each $resultStore as contest}
-            <li>
-                {contest.id}: {contest.title}
-            </li>
+            <Contest contest="{contest}"/>
         {/each}
     </ul>
 {:catch error}

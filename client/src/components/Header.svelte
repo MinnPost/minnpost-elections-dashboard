@@ -1,5 +1,8 @@
 <script>
-	import { electionMeta } from './stores.js';
+    // data
+	import { electionMeta } from './../stores.js';
+
+    // svelte behavior
     import { onMount } from "svelte";
     onMount(async () => {
 		electionMeta.fetchAll()
