@@ -1,4 +1,5 @@
-export let dashboard = [
+// set the races
+let dashboardRaces = [
     {
         title: 'Minneapolis Mayor',
         type: 'race',
@@ -48,3 +49,6 @@ export let dashboard = [
         rows: 3
     }
 ];
+
+// only use the ids. this might be unnecessary if we restructure.
+export let dashboard = dashboardRaces.map(function (el) { return el.id; });
