@@ -67,7 +67,7 @@ Use the following additional fields in your `.env` or in your Heroku settings.
 1. Create a `.env` file based on the repository's `.env-example` file in the root of your project.
 1. Run `pipenv install`.
 1. Open up three command line tabs if you need to run the scheduled scraping tasks as well as the API. In each tab, run `pipenv shell`. See below section on Scraping data.
-1. To process scrape tasks, either manually or on schedule, run `celery -A src.worker:celery worker -S redbeat.RedBeatScheduler --loglevel=INFO` in a tab.
+1. To process scrape tasks, either manually or on schedule, run `celery -A src.worker:celery worker -S redbeat.RedBeatScheduler --loglevel=INFO` in a tab. Include the `-E` flag to monitor task events that the worker receives.
 1. To run the scheduled scraper, run `celery -A src.worker:celery beat -S redbeat.RedBeatScheduler --loglevel=INFO` in a tab.
 1. In the tab where you want to run the Flask-based API, run `flask run --host=0.0.0.0`. This creates a basic endpoint server at http://0.0.0.0:5000.
 
