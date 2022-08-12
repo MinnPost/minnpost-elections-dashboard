@@ -104,6 +104,10 @@ If you want to create empty tables on Heroku, you can do that by running the `CR
 
 Run the scraper commands from the section below by following [Heroku's instructions](https://devcenter.heroku.com/articles/getting-started-with-python#start-a-console) for running Python commands. Generally, run commands on Heroku by adding `heroku run ` before the rest of the command listed below.
 
+### Production setup for Celery
+
+Once the application is deployed to Heroku, Celery will be ready to run. To enable it, run the command `heroku ps:scale worker=1`. See Heroku's [Celery deployment](https://devcenter.heroku.com/articles/celery-heroku#deploying-on-heroku).
+
 ## Scraping data
 
 `<ELECTION_DATE>` is optional and the newest election will be used if not provided. It should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
@@ -119,7 +123,29 @@ Run the scraper commands from the section below by following [Heroku's instructi
 
 ## Endpoints
 
+### Scraper
 
+To run the scraper in the browser, use the following URLs:
+
+- [areas](https://minnpost-mn-election-results.herokuapp.com/scraper/areas)
+- [contests](https://minnpost-mn-election-results.herokuapp.com/scraper/contests)
+- [meta](https://minnpost-mn-election-results.herokuapp.com/scraper/meta)
+- [questions](https://minnpost-mn-election-results.herokuapp.com/scraper/questions)
+- [results](https://minnpost-mn-election-results.herokuapp.com/scraper/results)
+
+### API
+
+To access the scraper's content in JSON format, use the following URLs. These URLs will return all of the contents of the respective models:
+
+- [areas](https://minnpost-mn-election-results.herokuapp.com/api/areas)
+- [contests](https://minnpost-mn-election-results.herokuapp.com/api/contests)
+- [meta](https://minnpost-mn-election-results.herokuapp.com/api/meta)
+- [questions](https://minnpost-mn-election-results.herokuapp.com/api/questions)
+- [results](https://minnpost-mn-election-results.herokuapp.com/api/results)
+
+By supplying parameters, you can limit what is returned by the various endpoints:
+
+- [areas](https://minnpost-mn-election-results.herokuapp.com/api/areas?area_id=[supply-valid-area-id])
 
 # stuff we have to build, still
 
