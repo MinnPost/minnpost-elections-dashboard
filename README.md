@@ -179,7 +179,7 @@ When any of the scheduled tasks *finish* running, we should invalidate the Redis
 
 When the API receives a request, it should check for a valid Redis response for that request before running a query against the database. If there is a valid response, it should send the cached `JSON` data.
 
-Need to look more into this.
+Need to look more into this. One way to do it might be to put some cache data into the JSON response.
 
 ## Metadata structure
 
