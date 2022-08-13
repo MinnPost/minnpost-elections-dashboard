@@ -48,7 +48,7 @@ For both local and remote environments, you'll need to have access to an instanc
 To access the Google Sheets to JSON API you'll need to have two configuration values in your `.env` or in your Heroku settings.
 
 - `AUTHORIZE_API_URL = "http://0.0.0.0:5000/authorize/"` (wherever the API is running, it uses an `authorize` endpoint)
-- `API_KEY = ""` (a valid API key that is accepted by the installation of the API that you're accessing)
+- `PARSER_API_KEY = ""` (a valid API key that is accepted by the installation of the API that you're accessing)
 
 ### Configuration
 
@@ -56,8 +56,8 @@ Use the following additional fields in your `.env` or in your Heroku settings.
 
 - `PARSER_API_URL = "http://0.0.0.0:5000/parser/"` (wherever the API is running, it uses a `parser` endpoint)
 - `OVERWRITE_API_URL = "http://0.0.0.0:5000/parser/custom-overwrite/"` (wherever the API is running, it uses a `parser/custom-overwrite` endpoint)
-- `API_CACHE_TIMEOUT = "500"` (this value is how many seconds the customized cache should last. `0` means it won't expire.)
-- `STORE_IN_S3` (provide a "true" or "false" value to set whether the API should send the JSON to S3. If you leave this blank, it will follow the API's settings.)
+- `PARSER_API_CACHE_TIMEOUT = "500"` (this value is how many seconds the customized cache should last. `0` means it won't expire.)
+- `PARSER_STORE_IN_S3` (provide a "true" or "false" value to set whether the API should send the JSON to S3. If you leave this blank, it will follow the API's settings.)
 
 ## Local setup and development
 
@@ -175,11 +175,10 @@ I think this is part working well, but needs to be documented above.
 
 ## Caching
 
-When any of the scheduled tasks *finish* running, we should invalidate the Redis-based API cache.
+- I think the scraper should never return a cache. It should always return new data from the secretary of state or the spreadsheet API or wherever.
+- The API should return a cache based on its configuration.
+- The scraper should invalidate the API cache when it finishes running, if there is one.
 
-When the API receives a request, it should check for a valid Redis response for that request before running a query against the database. If there is a valid response, it should send the cached `JSON` data.
-
-Need to look more into this. One way to do it might be to put some cache data into the JSON response.
 
 ## Metadata structure
 
