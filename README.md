@@ -48,7 +48,7 @@ For both local and remote environments, you'll need to have access to an instanc
 To access the Google Sheets to JSON API you'll need to have two configuration values in your `.env` or in your Heroku settings.
 
 - `AUTHORIZE_API_URL = "http://0.0.0.0:5000/authorize/"` (wherever the API is running, it uses an `authorize` endpoint)
-- `API_KEY = ""` (a valid API key that is accepted by the installation of the API that you're accessing)
+- `PARSER_API_KEY = ""` (a valid API key that is accepted by the installation of the API that you're accessing)
 
 ### Configuration
 
@@ -56,8 +56,8 @@ Use the following additional fields in your `.env` or in your Heroku settings.
 
 - `PARSER_API_URL = "http://0.0.0.0:5000/parser/"` (wherever the API is running, it uses a `parser` endpoint)
 - `OVERWRITE_API_URL = "http://0.0.0.0:5000/parser/custom-overwrite/"` (wherever the API is running, it uses a `parser/custom-overwrite` endpoint)
-- `API_CACHE_TIMEOUT = "500"` (this value is how many seconds the customized cache should last. `0` means it won't expire.)
-- `STORE_IN_S3` (provide a "true" or "false" value to set whether the API should send the JSON to S3. If you leave this blank, it will follow the API's settings.)
+- `PARSER_API_CACHE_TIMEOUT = "500"` (this value is how many seconds the customized cache should last. `0` means it won't expire.)
+- `PARSER_STORE_IN_S3` (provide a "true" or "false" value to set whether the API should send the JSON to S3. If you leave this blank, it will follow the API's settings.)
 
 ## Local setup and development
 
@@ -67,7 +67,7 @@ Use the following additional fields in your `.env` or in your Heroku settings.
 1. Create a `.env` file based on the repository's `.env-example` file in the root of your project.
 1. Run `pipenv install`.
 1. Open up three command line tabs if you need to run the scheduled scraping tasks as well as the API. In each tab, run `pipenv shell`. See below section on Scraping data.
-1. To process scrape tasks, either manually or on schedule, run `celery -A src.worker:celery worker -S redbeat.RedBeatScheduler --loglevel=INFO` in a tab.
+1. To process scrape tasks, either manually or on schedule, run `celery -A src.worker:celery worker -S redbeat.RedBeatScheduler --loglevel=INFO` in a tab. Include the `-E` flag to monitor task events that the worker receives.
 1. To run the scheduled scraper, run `celery -A src.worker:celery beat -S redbeat.RedBeatScheduler --loglevel=INFO` in a tab.
 1. In the tab where you want to run the Flask-based API, run `flask run --host=0.0.0.0`. This creates a basic endpoint server at http://0.0.0.0:5000.
 
@@ -104,6 +104,10 @@ If you want to create empty tables on Heroku, you can do that by running the `CR
 
 Run the scraper commands from the section below by following [Heroku's instructions](https://devcenter.heroku.com/articles/getting-started-with-python#start-a-console) for running Python commands. Generally, run commands on Heroku by adding `heroku run ` before the rest of the command listed below.
 
+### Production setup for Celery
+
+Once the application is deployed to Heroku, Celery will be ready to run. To enable it, run the command `heroku ps:scale worker=1`. See Heroku's [Celery deployment](https://devcenter.heroku.com/articles/celery-heroku#deploying-on-heroku).
+
 ## Scraping data
 
 `<ELECTION_DATE>` is optional and the newest election will be used if not provided. It should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
@@ -119,17 +123,41 @@ Run the scraper commands from the section below by following [Heroku's instructi
 
 ## Endpoints
 
+### Scraper
 
+To run the scraper in the browser, use the following URLs:
+
+- [areas](https://minnpost-mn-election-results.herokuapp.com/scraper/areas)
+- [contests](https://minnpost-mn-election-results.herokuapp.com/scraper/contests)
+- [meta](https://minnpost-mn-election-results.herokuapp.com/scraper/meta)
+- [questions](https://minnpost-mn-election-results.herokuapp.com/scraper/questions)
+- [results](https://minnpost-mn-election-results.herokuapp.com/scraper/results)
+
+### API
+
+To access the scraper's content in JSON format, use the following URLs. These URLs will return all of the contents of the respective models:
+
+- [areas](https://minnpost-mn-election-results.herokuapp.com/api/areas)
+- [contests](https://minnpost-mn-election-results.herokuapp.com/api/contests)
+- [meta](https://minnpost-mn-election-results.herokuapp.com/api/meta)
+- [questions](https://minnpost-mn-election-results.herokuapp.com/api/questions)
+- [results](https://minnpost-mn-election-results.herokuapp.com/api/results)
+
+By supplying parameters, you can limit what is returned by the various endpoints:
+
+- [areas](https://minnpost-mn-election-results.herokuapp.com/api/areas?area_id=[supply-valid-area-id])
 
 # stuff we have to build, still
 
 ## Scheduling
 
-We need to run the scraper commands at intervals that differ based on which command it is and whether we're in the result hour window on Election Day.
+We need to run the scraper commands at intervals that differ based on which command it is and whether we're in the result hour window on Election Day. I think this is working well, but needs to be documented.
 
 Set the result hour window by adding a datetime value to `ELECTION_RESULT_DATETIME_START` and `ELECTION_RESULT_DATETIME_END`. If you're developing locally, add these values to your `.env` file; in production, add it to the Heroku settings for the application. The code will check to make sure these are both actual `datetime`s and that the window between them is a valid timespan; if it is not a valid time window it will act as it does normally.
 
 To manually turn the result hour window on, regardless of the time window, set the `ELECTION_RESULT_DATETIME_OVERRIDDEN` setting to `True`.
+
+I think this is part working well, but needs to be documented above.
 
 ### Run daily, except during result hours on Election Day
 
@@ -138,20 +166,22 @@ To manually turn the result hour window on, regardless of the time window, set t
 - `python code/scraper.py scrape results <ELECTION_DATE>`
 - `python code/scraper.py match_contests <ELECTION_DATE>` 
 
-### Run in an infinite loop during result hours on Election Day
-
-- `python code/scraper.py scrape results <ELECTION_DATE>`
+I think this is part working well, but needs to be documented above.
 
 ### Don't run, currently
 
 - `python code/scraper.py check_boundaries`
 
-## Web-based API
-
-The API needs to be a scalable, always-available resource we can post `key => value` queries to, and get `JSON` data back from either the Postgres database or from the Redis cache in return.
 
 ## Caching
 
-When any of the scheduled tasks *finish* running, we should invalidate the Redis-based API cache.
+- I think the scraper should never return a cache. It should always return new data from the secretary of state or the spreadsheet API or wherever.
+- The API should return a cache based on its configuration.
+- The scraper should invalidate the API cache when it finishes running, if there is one.
 
-When the API receives a request, it should check for a valid Redis response for that request before running a query against the database. If there is a valid response, it should send the cached `JSON` data.
+
+## Metadata structure
+
+Once we have the new dashboard fully ready, we should change the metadata structure so each election has its own row, rather than the whole database only having one set of election metadata.
+
+This will change the scraper, the API response, and anything that is consuming it.
