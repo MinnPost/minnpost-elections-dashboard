@@ -10,7 +10,7 @@ export async function fetchContests(key, value) {
 	}
 	const json = await res.json();
 	if (res.ok) {
-		return json;
+		return json.data;
 	} else {
 		throw new Error(json);
 	}
@@ -20,7 +20,7 @@ export async function fetchMetadata() {
 	const res = await fetch(`${apiRoot}meta/`);
 	const json = await res.json();
 	if (res.ok) {
-		return json;
+		return json.data;
 	} else {
 		throw new Error(json);
 	}
