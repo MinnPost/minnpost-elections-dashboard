@@ -1,4 +1,4 @@
-/*! MinnPost Elections Dashboard - LATEST VERSION - 2022-08-15
+/*! MinnPost Elections Dashboard - v0.1.9 - 2022-08-15
 * https://github.com/MinnPost/minnpost-elections-dashboard
 * Copyright (c) 2022 MinnPost; Licensed MIT */
 
