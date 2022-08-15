@@ -11,9 +11,6 @@ require.config({
     'highcharts': {
       exports: 'Highcharts'
     },
-    'placeholders-js': {
-      deps: ['jquery']
-    },
     'typeahead-js': {
       deps: ['jquery']
     },
@@ -43,7 +40,6 @@ require.config({
     'leaflet': '../bower_components/leaflet/dist/leaflet-src',
     'moment': '../bower_components/momentjs/moment',
     'moment-timezone': '../bower_components/moment-timezone/builds/moment-timezone-with-data',
-    'placeholders-js': '../bower_components/Placeholders.js/build/placeholders.jquery',
     'typeahead-js': '../bower_components/typeahead.js/dist/typeahead.jquery',
     'bloodhound': '../bower_components/typeahead.js/dist/bloodhound',
     'screenfull': '../bower_components/screenfull/dist/screenfull',
