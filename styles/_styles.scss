@@ -15,8 +15,18 @@ $color-light-gray: #7A7A7A;
 $color-medium-gray: #404040;
 $color-dark-gray: #282828;
 
+//Overriding some MP styles defaults to mesh better with new design. 
+//Should eventually revise MP styles to make this universal
+.mp .minnpost-page-container {
+  max-width: none;
+}
+.mp .minnpost-full-container {
+  font-size: 22px; 
+  max-width: none;
+}
 
 .mp .minnpost-elections-dashboard-container {
+
   padding-top: 2em;
 
   // Fullscreen
@@ -159,6 +169,10 @@ $color-dark-gray: #282828;
     padding: 0.1em 0.35em;
     color: #FFFFFF;
     @include border-radius(2px);
+  }
+
+  td .party-label {
+    display: inline-block;
   }
 
   // General table
@@ -348,6 +362,10 @@ $color-dark-gray: #282828;
           background-color: #676767;
         }
 
+        &.too-close-to-call {
+          background-color: #55307E;
+        }
+
         &.party-shift {
           @include box-shadow(0 0 0px 1.5px #232323);
           border: 1px solid #FFFFFF;
@@ -355,10 +373,19 @@ $color-dark-gray: #282828;
       }
     }
 
+    h3 {
+      font-size: 1.55em;
+      margin-bottom: 0.25em;
+    }
+
     .state-leg-totals {
       text-align: center;
       font-size: 2em;
       margin-bottom: 0.5em;
+    }
+
+    .too-close-to-call {
+      color: #55307E;
     }
 
     .why-133 {
@@ -394,6 +421,11 @@ $color-dark-gray: #282828;
       .some {
         border: 2px solid #FFFFFF;
         background-color: #676767;
+      }
+
+      .too-close-to-call {
+        border: 2px solid #FFFFFF;
+        background-color: #55307E;
       }
 
       .solid {
@@ -453,7 +485,7 @@ $color-dark-gray: #282828;
 
 
   // Smaller screens
-  @media screen and (max-width: 640px) {
+  @media screen and (max-width: 1040px) {
 
     table thead .small-table-label {
       display: inline;

@@ -144,6 +144,7 @@ define([
         });
         parsed.final = true;
       }
+
       // If primary and partisan race
       else if (parsed.done && parsed.primary && parsed.partisan) {
         _.each(_.groupBy(parsed.results, 'party_id'), function(p, pi) {
@@ -180,16 +181,28 @@ define([
     fetchBoundary: function() {
       var thisModel = this;
 
-      helpers.jsonpRequest({
-        url: this.app.options.boundaryAPI + 'boundary/?limit=10&slug__in=' +
-          encodeURIComponent(this.get('boundary'))
-      }, this.app.options)
-      .done(function(response) {
-        if (_.isArray(response.objects)) {
-          thisModel.set('boundarySets', response.objects);
-          thisModel.set('fetchedBoundary', true);
-        }
+      thisModel.set('boundarySets', []);
+      boundaries = [this.get('boundary')];
+      if (boundaries[0].includes(",")) {
+        boundaries = boundaries[0].split(",");
+      }
+
+      _.each(boundaries, function(b){
+        helpers.jsonpRequest({
+          url: thisModel.app.options.boundaryAPI + 'boundaries/' + encodeURIComponent(b) + '/simple_shape'
+        }, thisModel.app.options)
+        .done(function(response) {
+          if (response) {
+            boundarySets = thisModel.get('boundarySets');
+            boundarySets.push({'slug': b, 'simple_shape': response});
+            thisModel.set('boundarySets', boundarySets);
+            if (boundarySets.length == boundaries.length) {
+              thisModel.set('fetchedBoundary', true);
+            }
+          }
+        });
       });
+
     },
 
     // Our API is pretty simple, so we do a basic time based

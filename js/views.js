@@ -104,7 +104,11 @@ define([
       });
       map.addControl(new L.Control.Zoom({ position: 'topright' }));
       map.attributionControl.setPrefix(false);
-      map.addLayer(new L.tileLayer('//{s}.tiles.mapbox.com/v3/minnpost.map-wi88b700/{z}/{x}/{y}.png'));
+      map.addLayer(new L.tileLayer('//api.mapbox.com/styles/v1/mapbox/light-v10/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWlubnBvc3QiLCJhIjoicUlOUkpvWSJ9.djE93rNktev9eWRJVav6xA'),
+      {
+        tileSize: 512,
+        zoomOffset: -1
+      });
 
       // Make GeoJSON layer from shapes
       featureGroup = new L.featureGroup();
@@ -230,10 +234,10 @@ define([
       // Add parties
       this.set('parties', mpConfig.politicalParties);
 
-      // Make a map if boundary has been found
-      this.observe('boundarySets', function(newValue, oldValue) {
-        if (_.isArray(newValue) && _.isObject(newValue[0])) {
-          this.makeMap('contest-map-' + this.get('id'), newValue);
+      // Make a map if boundary has been fetched
+      this.observe('fetchedBoundary', function(newValue, oldValue) {
+        if (newValue) {
+          this.makeMap('contest-map-' + this.get('id'), this.get('boundarySets'));
         }
       });
     }
@@ -260,14 +264,15 @@ define([
 
       // React to boundary update.  For some reason, this is getting changed
       // more than once.
-      this.observe('models.*.boundarySets', function(newValue, oldValue, keypath) {
+      this.observe('models.*.fetchedBoundary', function(newValue, oldValue, keypath) {
+        //Keypath example models.0.fetchedBoundary
         var parts = keypath.split('.');
-        var m = this.get(parts[0] + '.' + parts[1]);
+        var m = this.get(parts[0] + '.' + parts[1]); // var m = this.get('models.0')
 
-        if (_.isArray(newValue) && _.isObject(newValue[0]) && _.isObject(m) &&
+        if (newValue && _.isArray(m.get('boundarySets')) && _.isObject(m.get('boundarySets')[0]) && _.isObject(m) &&
           !modelBoundarySet[m.get('id')]) {
           modelBoundarySet[m.get('id')] = true;
-          this.makeMap('contest-map-' + m.get('id'), newValue);
+          this.makeMap('contest-map-' + m.get('id'), m.get('boundarySets'));
         }
       });
 
@@ -292,7 +297,11 @@ define([
             dragging: false
           });
           map.attributionControl.setPrefix(false);
-          map.addLayer(new L.tileLayer('//{s}.tiles.mapbox.com/v3/minnpost.map-wi88b700/{z}/{x}/{y}.png'));
+          map.addLayer(new L.tileLayer('//api.mapbox.com/styles/v1/mapbox/light-v10/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWlubnBvc3QiLCJhIjoicUlOUkpvWSJ9.djE93rNktev9eWRJVav6xA'),
+          {
+            tileSize: 512,
+            zoomOffset: -1
+          });
 
           circle = new L.circleMarker([ll[1], ll[0]], 10);
           circle.setStyle(this.defaultMapStyle);

@@ -1,4 +1,4 @@
-<div class="contest {{#isDashboard}}dashboard-contest{{/isDashboard}} {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}} {{#(final === true)}}is-final{{/()}} {{#primary}}primary{{/primary}}">
+<div class="contest {{#isDashboard}}dashboard-contest{{/isDashboard}} {{ classes }} {{#(ranked_choice == 1)}}is-ranked-choice {{/()}} {{#(final === true)}}is-final{{/()}} {{#primary}}primary{{/primary}} contest-{{id}}">
   {{^isDashboard}}
     <a class="dashboard-link" href="#dashboard">&larr; Back to dashboard</a>
   {{/isDashboard}}
@@ -22,19 +22,23 @@
     </h3>
 
     {{#sub_title}}
-      <h5>{{ sub_title }}</h5>
+      <h4>{{ sub_title }}</h4>
     {{/sub_title}}
 
     {{^isDashboard}}
       <div class="last-updated">Last updated {{ updated.formatToday() }}</div>
     {{/isDashboard}}
 
+    
+    {{^isDashboard}}
     {{#(!!question_body)}}
       <p>{{{ question_body }}}</p>
     {{/()}}
+    {{/isDashboard}}
+
 
     {{#percent_needed}}
-      <p><em>This contest requires {{ formatters.number(percent_needed, 1) }}% or more "yes" votes for the measure to pass.</em></p>
+      <p class="small"><em>This contest requires {{ formatters.number(percent_needed, 1) }}% or more "yes" votes for the measure to pass.</em></p>
     {{/percent_needed}}
   {{/()}}
 
@@ -93,7 +97,7 @@
           </thead>
 
           <tbody>
-            {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party != undefined && party_id == show_party)))}}
+            {{#results:r}} {{#(!isDashboard || ((show_party == undefined && (r < 2 || (rows != undefined && r < rows))) || (show_party && party_id == show_party)))}}
               <tr data-row-id="{{ id }}" class="{{ (r % 2 === 0) ? 'even' : 'odd' }} {{#primary}}{{ party_id.toLowerCase() }}{{/primary}}">
                 <td class="winner-column">{{#winner}}<span class="fa fa-check"></span>{{/winner}}</td>
 

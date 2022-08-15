@@ -22,18 +22,18 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q=',
+      electionsAPI: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
       // Local: '//localhost:5000/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
-      boundaryAPI: '//boundaries.minnpost.com/1.0/',
+      boundaryAPI: '//represent-minnesota.herokuapp.com/',
       boundarySets: [
         'minor-civil-divisions-2010',
         'wards-2012',
         'minnesota-state-2014',
-        'school-districts-2013',
-        'minneapolis-parks-and-recreation-districts-2012',
+        'school-districts-2018',
+        'minneapolis-parks-and-recreation-districts-2014',
         'congressional-districts-2012',
         'state-senate-districts-2012',
         'state-house-districts-2012',
@@ -49,190 +49,69 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       originalTitle: document.title,
       dashboard: [
         {
+          title: 'Minneapolis Mayor',
           type: 'race',
-          title: 'Governor and Lt. Governor',
-          id: 'id-MN----0331',
+          id: 'id-MN---43000-2001',
+          rows: 5
+        },
+        {
+          title: 'Minneapolis Question 1',
+          type: 'race',
+          id: 'id-MN---43000-1131',
           rows: 2
         },
         {
+          title: 'Minneapolis Question 2',
           type: 'race',
-          title: 'Senator - Special Election',
-          id: 'id-MN----0103',
+          id: 'id-MN---43000-1132',
           rows: 2
         },
         {
+          title: 'Minneapolis Question 3',
           type: 'race',
-          title: 'Congressional District 1',
-          id: 'id-MN---1-0104',
+          id: 'id-MN---43000-1133',
           rows: 2
         },
         {
+          type: 'spacer'
+        },
+        {
+          title: 'St. Paul Question 1',
           type: 'race',
-          title: 'Congressional District 2',
-          id: 'id-MN---2-0105',
+          id: 'id-MN---58000-1131',
           rows: 2
         },
         {
+          title: 'Minneapolis Council Member — Ward 3',
           type: 'race',
-          title: 'Congressional District 3',
-          id: 'id-MN---3-0106',
-          rows: 2
-        },
-        {
-          type: 'race',
-          title: 'Congressional District 8',
-          id: 'id-MN---8-0111',
-          rows: 2
-        },
-        {
-          type: 'race',
-          title: 'Attorney General',
-          id: 'id-MN----0335',
+          id: 'id-MN---43000-2121',
           rows: 3
         },
         {
-          type: 'custom',
-          id: 'state-leg',
-          template: tDStateLeg,
-          query: "SELECT r.id AS results_id, r.candidate, r.party_id, r.percentage, " +
-            "c.id, c.title, c.precincts_reporting, c.total_effected_precincts, c.incumbent_party " +
-            "FROM contests AS c LEFT JOIN results AS r " +
-            "ON c.id = r.contest_id WHERE title LIKE '%state representative%' " +
-            "ORDER BY c.title, r.percentage, r.candidate ASC LIMIT 410",
-          parse: function(response, options) {
-            var parsed = {};
-            var tempContests = [];
-
-            parsed.chamber = "house";
-
-            // Put contest info into friendly format
-            parsed.contests = {};
-            _.each(response, function(r, ri) {
-              parsed.contests[r.id] = parsed.contests[r.id] || {
-                id: r.id,
-                title: r.title,
-                precincts_reporting: r.precincts_reporting,
-                total_effected_precincts: r.total_effected_precincts,
-                incumbent_party: r.incumbent_party,
-                results: []
-              };
-              parsed.contests[r.id].results.push({
-                id: r.results_id,
-                candidate: r.candidate,
-                party_id: r.party_id,
-                percentage: r.percentage
-              });
-            });
-
-            // Process contests
-            parsed.contests = _.map(parsed.contests, function(c, ci) {
-              c.done = (c.precincts_reporting === c.total_effected_precincts);
-              c.some = (c.precincts_reporting > 0);
-              c.partyWon = _.max(c.results, function(r, ri) {
-                return r.percentage;
-              }).party_id;
-
-              // Test data
-
-              // var t = Math.random();
-              // if (t < 0.9) {
-              //   c.done = true;
-              //   c.partyWon = (Math.random() < 0.5) ? 'DFL' : 'R';
-              // }
-
-
-
-              c.partyShift = (c.partyWon !== c.incumbent_party && c.done);
-              c.results = _.sortBy(c.results, 'candidate').reverse();
-              c.results = _.sortBy(c.results, 'percentage').reverse();
-
-              return c;
-            });
-
-            // Sort contests, this could get messey
-            parsed.contests = _.sortBy(parsed.contests, 'title');
-            parsed.contests = _.sortBy(parsed.contests, 'partyShift').reverse();
-            parsed.contests = _.sortBy(parsed.contests, function(c, ci) {
-              if (c.done) {
-                return (c.partyWon === 'DFL') ? 'AAAADFL' :
-                  (c.partyWon === 'R') ? 'ZZZZZR' : 'MMMMMM' + c.partyWon;
-              }
-              else {
-                return (c.some) ? 'MMMAAAAAA' : 'MMMMMM';
-              }
-            });
-
-            // Counts
-            parsed.counts = {};
-            _.each(parsed.contests, function(c, ci) {
-              if (c.done) {
-                if (parsed.counts[c.partyWon]) {
-                  parsed.counts[c.partyWon].count += 1;
-                }
-                else {
-                  parsed.counts[c.partyWon] = {
-                    id: c.partyWon,
-                    count: 1,
-                    party: mpConfig.politicalParties[c.partyWon.toLowerCase()]
-                  };
-                }
-              }
-              else {
-                if (parsed.counts.unknown) {
-                  parsed.counts.unknown.count += 1;
-                }
-                else {
-                  parsed.counts.unknown = {
-                    id: 'MMMMMMMunknown',
-                    count: 1,
-                    party: 'Not fully reported yet'
-                  };
-                }
-              }
-            });
-            parsed.counts = _.sortBy(parsed.counts, 'id');
-
-            // DFL net
-            parsed.dflNet = 0;
-            _.each(parsed.contests, function(c, ci) {
-              if (c.done && c.partyShift && c.partyWon === 'DFL') {
-                parsed.dflNet += 1;
-              }
-              if (c.done && c.partyShift && c.incumbent_party === 'DFL') {
-                parsed.dflNet -= 1;
-              }
-            });
-
-            // Is everything done
-            parsed.allDone = (_.where(parsed.contests, { done: true }).length ===
-              parsed.contests.length);
-
-            return parsed;
-          }
+          title: 'Minneapolis Council Member — Ward 9',
+          type: 'race',
+          id: 'id-MN---43000-2181',
+          rows: 3
         },
         {
+          title: 'Minneapolis Council Member — Ward 10',
           type: 'race',
-          title: 'State Senator District 13',
-          id: 'id-MN---13-0133',
-          rows: 2
-        },
-        {
-          type: 'race',
-          title: 'Hennepin County Sheriff',
-          id: 'id-MN-27---0404',
-          rows: 2
+          id: 'id-MN---43000-2191',
+          rows: 3
         },
         {
           type: 'links',
           itemClass: 'dashboard-links',
           links: [
-            { href: '#contest/id-MN-62---0404', text: 'Ramsey County Sheriff' },
-            { href: '#search/hennepin+county+commissioner', text: 'Hennepin County commissioners' },
-            { href: '#search/ramsey+county+commissioner', text: 'Ramsey County commissioners'},
-            { href: '#search/school+board+ssd+%231', text: 'Minneapolis school board'},
-            { href: '#contest/id-MN---43000-1131', text: 'Minneapolis Charter amendment' }
+            { href: '#search/school+board+member', text: 'All school board races' },
+            { href: '#search/minneapolis+council+member', text: 'All Minneapolis City Council races'},
+            { href: '#contest/id-MN---58000-2001', text: 'St. Paul Mayor'},
+            { href: '#search/question', text: 'All ballot questions' },
+            { href: '#search/minneapolis park and recreation commissioner', text: 'Minneapolis Park Board'}
           ]
         }
+
+
       ]
     },
 

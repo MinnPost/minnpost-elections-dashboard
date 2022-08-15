@@ -1,6 +1,8 @@
 <div class="dashboard-state-leg">
   <h3>{{#(chamber === "senate")}}MN Senate{{/()}}{{#(chamber === "house")}}MN House of Representatives{{/()}}</h3>
 
+  {{#note}}<p class="small">{{ note }}</p>{{/note}}
+
   {{#(!contests.length)}}
     {{>loading}}
   {{/()}}
@@ -47,31 +49,31 @@
     </div>
 
     <div class="legend-item">
-      <div class="legend-box party-shift"></div> District has changed parties
+      <div class="legend-box party-shift"></div> District set to change parties
     </div>
   </div>
 
   {{#(chamber === "house")}}
     <div class="state-leg-rnet">
       <div class="heading">
-        DFL net gain{{^allDone}}&nbsp;so far{{/allDone}}:
-        <span class="color-political-dfl dflnet">
-          {{ (dflNet > 0) ? '+' : '' }}{{ dflNet }}
+        Current Republican net gain:
+        <span class="color-political-r rnet">
+          {{ (rNet > 0) ? '+' : '' }}{{ rNet }}
         </span>
       </div>
-      <div class="sub-heading">DFLers need a net gain of at least +11 to win control of the House.</div>
+      <div class="sub-heading">Republicans need a net gain of at least +9 to win control of the House.</div>
     </div>
   {{/()}}
 
   {{#(chamber === "senate")}}
     <div class="state-leg-rnet">
       <div class="heading">
-        Republican net gain{{^allDone}}&nbsp;so far{{/allDone}}:
-        <span class="color-political-r rnet">
-          {{ (rNet > 0) ? '+' : '' }}{{ rNet }}
+        Current DFL net gain:
+        <span class="color-political-dfl rnet">
+          {{ (dflNet > 0) ? '+' : '' }}{{ dflNet }}
         </span>
       </div>
-      <div class="sub-heading">Republicans need a net gain of at least +6 to win control of the Senate.</div>
+      <div class="sub-heading">DFLers need a net gain of at least +2 to win control of the Senate.</div>
     </div>
   {{/()}}
 
