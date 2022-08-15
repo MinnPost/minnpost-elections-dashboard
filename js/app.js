@@ -16,17 +16,19 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
 
     defaults: {
       name: 'minnpost-elections-dashboard',
-      remoteProxy: '//mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
+      //remoteProxy: '//mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
       el: '.minnpost-elections-dashboard-container',
       // Hard page refresh, in case the interface needs to be
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
-      // Local: '//localhost:5000/?q='
+      //electionsAPI: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
+      electionsAPI: '//minnpost-mn-election-results.herokuapp.com/api/query/?q=',
+      // Local: '//0.0.0.0:5000/api/?q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
+      // Heroku: https://minnpost-mn-election-results.herokuapp.com/api/query/?q=
       boundaryAPI: '//represent-minnesota.herokuapp.com/',
       boundarySets: [
         'minor-civil-divisions-2010',
