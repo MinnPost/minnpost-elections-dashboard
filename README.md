@@ -110,7 +110,19 @@ Once the application is deployed to Heroku, Celery will be ready to run. To enab
 
 ## Scraping data
 
-`<ELECTION_DATE>` is optional and the newest election will be used if not provided. It should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
+To run the scraper in the browser, use the following URLs:
+
+- [areas](https://minnpost-mn-election-results.herokuapp.com/scraper/areas)
+- [contests](https://minnpost-mn-election-results.herokuapp.com/scraper/contests)
+- [meta](https://minnpost-mn-election-results.herokuapp.com/scraper/meta)
+- [questions](https://minnpost-mn-election-results.herokuapp.com/scraper/questions)
+- [results](https://minnpost-mn-election-results.herokuapp.com/scraper/results)
+
+**Note**: `ELECTION_DATE_OVERRIDE` is an optional override configuration value that can be added to `.env`. The newest election will be used if not provided. If an override is necessary, the value should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
+
+### Command line
+
+** this stuff is not up to date yet **
 
 1. (optional) Remove old data as the scraper is not built to manage more than one election: `find command to dump database` (let's find out if this is still necessary)
 1. Scrape areas: `python code/scraper.py scrape areas <ELECTION_DATE>`
@@ -121,19 +133,7 @@ Once the application is deployed to Heroku, Celery will be ready to run. To enab
 1. Match contests to boundary area: `python code/scraper.py match_contests <ELECTION_DATE>`
 1. (optional) To check each boundary ID against the boundary service: `python code/scraper.py check_boundaries`
 
-## Endpoints
-
-### Scraper
-
-To run the scraper in the browser, use the following URLs:
-
-- [areas](https://minnpost-mn-election-results.herokuapp.com/scraper/areas)
-- [contests](https://minnpost-mn-election-results.herokuapp.com/scraper/contests)
-- [meta](https://minnpost-mn-election-results.herokuapp.com/scraper/meta)
-- [questions](https://minnpost-mn-election-results.herokuapp.com/scraper/questions)
-- [results](https://minnpost-mn-election-results.herokuapp.com/scraper/results)
-
-### API
+## Accessing the API
 
 To access the scraper's content in JSON format, use the following URLs. These URLs will return all of the contents of the respective models:
 
@@ -143,9 +143,45 @@ To access the scraper's content in JSON format, use the following URLs. These UR
 - [questions](https://minnpost-mn-election-results.herokuapp.com/api/questions)
 - [results](https://minnpost-mn-election-results.herokuapp.com/api/results)
 
-By supplying parameters, you can limit what is returned by the various endpoints:
+By receiving parameters, the API can limit what is returned by the various endpoints. Each endpoint, unless otherwise noted, can receive data in `GET`, `POST`, and JSON formats.
 
-- [areas](https://minnpost-mn-election-results.herokuapp.com/api/areas?area_id=[supply-valid-area-id])
+### SQL query
+
+This endpoint returns the result of a valid `select` SQL query. For example, to run the query `select * from meta`, use the URL [https://minnpost-mn-election-results.herokuapp.com/api/query/?q=select%20*%20from%20meta].
+
+### Areas
+
+The Areas endpoint can receive `area_id` and `area_group` parameters.
+
+- Area ID: [https://minnpost-mn-election-results.herokuapp.com/api/areas/?area_id=precincts-69-0770]
+- Area Group: [https://minnpost-mn-election-results.herokuapp.com/api/areas/?area_group=municipalities]
+
+### Contests
+
+The Contests endpoint can receive `title`, `contest_id`, and `contest_ids` (for multiple contests) parameters.
+
+- Contest ID: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?contest_id=id-MN---02872-1001]
+- Contest Title: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?title=governor]
+- Contest IDs: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?contest_ids=id-MN---43000-2001,id-MN---43000-1131,id-MN---43000-1132,id-MN---43000-1133,id-MN---58000-1131,id-MN---43000-2121,id-MN---43000-2181,id-MN---43000-2191]
+
+### Meta
+
+The Meta endpoint receives a `key` parameter. It works like this: [https://minnpost-mn-election-results.herokuapp.com/api/api/meta/?key=base_url].
+
+### Questions
+
+The Questions endpoint can receive a `question_id` and `contest_id` parameters.
+
+- Question ID: [https://minnpost-mn-election-results.herokuapp.com/api/questions/?question_id=id-82-1131-13456-]
+- Contest ID: [https://minnpost-mn-election-results.herokuapp.com/api/questions/?contest_id=id-MN---13456-1131]
+
+### Results
+
+The Results endpoint can receive `result_id` and `contest_id` parameters.
+
+- Result ID: [https://minnpost-mn-election-results.herokuapp.com/api/results/?result_id=id-MN---02872-1001-9901]
+- Contest ID: [https://minnpost-mn-election-results.herokuapp.com/api/results/?contest_id=id-MN---02872-1001]
+
 
 # stuff we have to build, still
 
