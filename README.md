@@ -120,11 +120,12 @@ To run the scraper in the browser, use the following URLs:
 
 **Note**: `ELECTION_DATE_OVERRIDE` is an optional override configuration value that can be added to `.env`. The newest election will be used if not provided. If an override is necessary, the value should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
 
+By receiving parameters, the scraper URLs can limit what is scraped by the various endpoints. Each endpoint, unless otherwise noted, can receive data in `GET`, `POST`, and JSON formats. Unless otherwise noted, all scraper endpoints receive an `election_id` parameter. For example, [https://minnpost-mn-election-results.herokuapp.com/scraper/areas/?election_id=id-20211102].
+
 ### Command line
 
 ** this stuff is not up to date yet **
 
-1. (optional) Remove old data as the scraper is not built to manage more than one election: `find command to dump database` (let's find out if this is still necessary)
 1. Scrape areas: `python code/scraper.py scrape areas <ELECTION_DATE>`
   * This is something that only really needs to be done once, at least close to the election, as there little change it will change the day of the election.
 1. Scrape questions: `python code/scraper.py scrape questions <ELECTION_DATE>`
@@ -139,48 +140,69 @@ To access the scraper's content in JSON format, use the following URLs. These UR
 
 - [areas](https://minnpost-mn-election-results.herokuapp.com/api/areas)
 - [contests](https://minnpost-mn-election-results.herokuapp.com/api/contests)
-- [meta](https://minnpost-mn-election-results.herokuapp.com/api/meta)
+- [elections](https://minnpost-mn-election-results.herokuapp.com/api/elections)
 - [questions](https://minnpost-mn-election-results.herokuapp.com/api/questions)
 - [results](https://minnpost-mn-election-results.herokuapp.com/api/results)
 
+And `https://minnpost-mn-election-results.herokuapp.com/api/query/` will return the results of valid `select` SQL statements. This runs the legacy election dashboard on MinnPost.
+
 By receiving parameters, the API can limit what is returned by the various endpoints. Each endpoint, unless otherwise noted, can receive data in `GET`, `POST`, and JSON formats.
+
+### For all endpoints
+
+Unless otherwise noted, all API endpoints can receive parameters with a "true" or "false" value to control cache behavior: `bypass_cache`, `delete_cache`, and `cache_data`.
+
+#### Default values
+
+- `bypass_cache` whether to load data from the cache. Defaults to "false".
+- `delete_cache` whether to delete existing cached data for this request. Defaults to "false".
+- `cache_data` whether to cache this request's response. Defaults to "true".
 
 ### SQL query
 
 This endpoint returns the result of a valid `select` SQL query. For example, to run the query `select * from meta`, use the URL [https://minnpost-mn-election-results.herokuapp.com/api/query/?q=select%20*%20from%20meta].
 
+This endpoint also accepts a `callback` parameter. If it is present, it returns the data as JavaScript instead of JSON, for use as `JSONP`. This runs the legacy election dashboard on MinnPost.
+
 ### Areas
 
-The Areas endpoint can receive `area_id` and `area_group` parameters.
+The Areas endpoint can receive `area_id`, `area_group`, and `election_id` parameters.
 
 - Area ID: [https://minnpost-mn-election-results.herokuapp.com/api/areas/?area_id=precincts-69-0770]
 - Area Group: [https://minnpost-mn-election-results.herokuapp.com/api/areas/?area_group=municipalities]
+- Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/areas/?election_id=id-20211102]
 
 ### Contests
 
-The Contests endpoint can receive `title`, `contest_id`, and `contest_ids` (for multiple contests) parameters.
+The Contests endpoint can receive `title`, `contest_id`, `contest_ids` (for multiple contests), and `election_id` parameters.
 
 - Contest ID: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?contest_id=id-MN---02872-1001]
 - Contest Title: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?title=governor]
 - Contest IDs: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?contest_ids=id-MN---43000-2001,id-MN---43000-1131,id-MN---43000-1132,id-MN---43000-1133,id-MN---58000-1131,id-MN---43000-2121,id-MN---43000-2181,id-MN---43000-2191]
+- Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?election_id=id-20211102]
 
-### Meta
+### Elections
 
-The Meta endpoint receives a `key` parameter. It works like this: [https://minnpost-mn-election-results.herokuapp.com/api/api/meta/?key=base_url].
+The Elections endpoint can receive `election_id` and `election_date` parameters.
+
+- Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/elections/?election_id=id-MN---02872-1001]
+- Election Date: [https://minnpost-mn-election-results.herokuapp.com/api/elections/?election_date=2021-11-02]
 
 ### Questions
 
-The Questions endpoint can receive a `question_id` and `contest_id` parameters.
+The Questions endpoint can receive a `question_id`, `contest_id`, and `election_id` parameters.
 
 - Question ID: [https://minnpost-mn-election-results.herokuapp.com/api/questions/?question_id=id-82-1131-13456-]
 - Contest ID: [https://minnpost-mn-election-results.herokuapp.com/api/questions/?contest_id=id-MN---13456-1131]
+- Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/questions/?election_id=id-20211102]
 
 ### Results
 
-The Results endpoint can receive `result_id` and `contest_id` parameters.
+The Results endpoint can receive `result_id`, `contest_id`, and `election_id` parameters.
 
 - Result ID: [https://minnpost-mn-election-results.herokuapp.com/api/results/?result_id=id-MN---02872-1001-9901]
 - Contest ID: [https://minnpost-mn-election-results.herokuapp.com/api/results/?contest_id=id-MN---02872-1001]
+- Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/results/?election_id=id-20211102]
 
 
 # stuff we have to build, still
