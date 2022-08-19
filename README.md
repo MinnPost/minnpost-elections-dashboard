@@ -112,11 +112,11 @@ Once the application is deployed to Heroku, Celery will be ready to run. To enab
 
 To run the scraper in the browser, use the following URLs:
 
-- [areas](https://minnpost-mn-election-results.herokuapp.com/scraper/areas)
-- [contests](https://minnpost-mn-election-results.herokuapp.com/scraper/contests)
-- [meta](https://minnpost-mn-election-results.herokuapp.com/scraper/meta)
-- [questions](https://minnpost-mn-election-results.herokuapp.com/scraper/questions)
-- [results](https://minnpost-mn-election-results.herokuapp.com/scraper/results)
+- [areas](https://minnpost-mn-election-results.herokuapp.com/scraper/areas/)
+- [contests](https://minnpost-mn-election-results.herokuapp.com/scraper/contests/)
+- [meta](https://minnpost-mn-election-results.herokuapp.com/scraper/meta/)
+- [questions](https://minnpost-mn-election-results.herokuapp.com/scraper/questions/)
+- [results](https://minnpost-mn-election-results.herokuapp.com/scraper/results/)
 
 **Note**: `ELECTION_DATE_OVERRIDE` is an optional override configuration value that can be added to `.env`. The newest election will be used if not provided. If an override is necessary, the value should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
 
