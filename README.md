@@ -114,7 +114,7 @@ To run the scraper in the browser, use the following URLs:
 
 - [areas](https://minnpost-mn-election-results.herokuapp.com/scraper/areas/)
 - [contests](https://minnpost-mn-election-results.herokuapp.com/scraper/contests/)
-- [meta](https://minnpost-mn-election-results.herokuapp.com/scraper/meta/)
+- [elections](https://minnpost-mn-election-results.herokuapp.com/scraper/elections/)
 - [questions](https://minnpost-mn-election-results.herokuapp.com/scraper/questions/)
 - [results](https://minnpost-mn-election-results.herokuapp.com/scraper/results/)
 
