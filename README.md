@@ -39,6 +39,36 @@ In theory this should be it, assuming the scraper can reconcile everything. Ther
 
 Both manual results and contest question text can be managed in Google Spreadsheets.
 
+A good example of an election's JSON entry with manual data stored in a spreadsheet is:
+
+```json
+"20211102": {
+  "meta": {
+    "base_url": "https://electionresultsfiles.sos.state.mn.us/20211102/",
+    "date": "2021-11-02",
+    "primary": false
+  },
+  [the standard entries],
+  "raw_csv_supplemental_results": {
+    "url": "https://s3.amazonaws.com/data.minnpost/projects/minnpost-mn-election-supplements/2021/Election+Results+Supplement+2021-11-02+-+Results.csv",
+    "type": "raw_csv"
+  },
+  "raw_csv_supplemental_contests": {
+    "url": "https://s3.amazonaws.com/data.minnpost/projects/minnpost-mn-election-supplements/2021/Election+Results+Supplement+2021-11-02+-+Contests.csv",
+    "type": "raw_csv"
+  },
+  "supplemental_contests": {
+    "spreadsheet_id": "1Jkt6UzHh-3h_sT_9VQ2GWu4It9Q96bQyL00j5_R0bqg",
+    "worksheet_id": 0,
+    "notes": "Worksheet ID is the zero-based ID from the order of workssheets and is used to find the actual ID."
+  },
+  "supplemental_results": {
+    "spreadsheet_id": "1Jkt6UzHh-3h_sT_9VQ2GWu4It9Q96bQyL00j5_R0bqg",
+    "worksheet_id": 1
+  }
+}
+```
+
 ## Google Sheets to JSON API setup
 
 For both local and remote environments, you'll need to have access to an instance of the [Google Sheets to JSON API](https://github.com/MinnPost/google-sheet-to-json-api) that itself has access to the Google Sheet(s) that you want to process. If you don't already have access to a working instance of that API, set it up and ensure it's working first.
