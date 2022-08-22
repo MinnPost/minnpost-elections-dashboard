@@ -88,6 +88,19 @@ To get the data for the database, you can also [export it from Heroku](https://d
 
 See the scraper section below for commands to run after local setup is finished.
 
+### Local setup for Celery
+
+This documentation describes how to install our Celery requirements with Homebrew.
+
+1. Run `brew install redis` to install Redis.
+1. By default, the Redis credentials are used like this: `redis://127.0.0.1:6379/0`. Replace `0` with another number if you are already using Redis for other purposes and would like to keep the databases separate. Whatever value you use, put it into the `REDIS_URL` value of your `.env` file.
+1. By default, this application uses Redis for the application cache and for the Celery backend. If you'd like to use something else for the Celery backend, add a different value to `RESULT_BACKEND` in your `.env` file.
+1. Run `brew install rabbitmq` to install RabbitMQ.
+1. By default, RabbitMQ credentials are used like this: `amqp://guest:guest@127.0.0.1:5672`. We store it in the `CLOUDAMQP_URL` `.env` value, as this matches Heroku's use of the `CloudAMQP` add-on.
+1. By default, this application uses `CloudAMQP` as the Celery broker. If you'd like to use something else, add a different value to the `CELERY_BROKER_URL` value.
+
+**Note**: in a local environment, it tends to be fine to use Redis in place of RabbitMQ, but this does not work with Heroku's free Redis plan.
+
 ## Production setup and deployment
 
 ### Code, Libraries and prerequisites
