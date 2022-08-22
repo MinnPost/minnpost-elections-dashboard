@@ -161,11 +161,13 @@ Redis is used for caching data for the front end, and as the backend for Celery 
 
 To run the scraper in the browser, use the following URLs:
 
-- [areas](https://minnpost-mn-election-results.herokuapp.com/scraper/areas/)
-- [contests](https://minnpost-mn-election-results.herokuapp.com/scraper/contests/)
-- [elections](https://minnpost-mn-election-results.herokuapp.com/scraper/elections/)
-- [questions](https://minnpost-mn-election-results.herokuapp.com/scraper/questions/)
-- [results](https://minnpost-mn-election-results.herokuapp.com/scraper/results/)
+- Scrape areas: [areas](https://minnpost-mn-election-results.herokuapp.com/scraper/areas/)
+  * This is something that only really needs to be done once, at least close to the election, as there little change it will change the day of the election.
+- Scrape contests: [contests](https://minnpost-mn-election-results.herokuapp.com/scraper/contests/)
+  * This one also will match the contests to the boundary service.
+- Scrape elections: [elections](https://minnpost-mn-election-results.herokuapp.com/scraper/elections/)
+- Scrape questions: [questions](https://minnpost-mn-election-results.herokuapp.com/scraper/questions/)
+- Scrape results: [results](https://minnpost-mn-election-results.herokuapp.com/scraper/results/)
 
 **Note**: `ELECTION_DATE_OVERRIDE` is an optional override configuration value that can be added to `.env`. The newest election will be used if not provided. If an override is necessary, the value should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
 
@@ -173,15 +175,12 @@ By receiving parameters, the scraper URLs can limit what is scraped by the vario
 
 ### Command line
 
-** this stuff is not up to date yet **
+Ideally, it would be good to make command line equivalents of the scraper URLs. Previously these commands were called:
 
-1. Scrape areas: `python code/scraper.py scrape areas <ELECTION_DATE>`
-  * This is something that only really needs to be done once, at least close to the election, as there little change it will change the day of the election.
-1. Scrape questions: `python code/scraper.py scrape questions <ELECTION_DATE>`
-1. Scrape the results: `python code/scraper.py scrape results <ELECTION_DATE>`
-  * This is the core processing of the scraper will be run frequently.
-1. Match contests to boundary area: `python code/scraper.py match_contests <ELECTION_DATE>`
-1. (optional) To check each boundary ID against the boundary service: `python code/scraper.py check_boundaries`
+1. `python code/scraper.py scrape areas <ELECTION_DATE>`
+1. `python code/scraper.py scrape questions <ELECTION_DATE>`
+1. `python code/scraper.py scrape match_contests <ELECTION_DATE>`
+1. `python code/scraper.py scrape results <ELECTION_DATE>`
 
 ## Accessing the API
 
@@ -189,6 +188,7 @@ To access the scraper's content in JSON format, use the following URLs. These UR
 
 - [areas](https://minnpost-mn-election-results.herokuapp.com/api/areas)
 - [contests](https://minnpost-mn-election-results.herokuapp.com/api/contests)
+- [contest boundaries](https://minnpost-mn-election-results.herokuapp.com/api/boundaries)
 - [elections](https://minnpost-mn-election-results.herokuapp.com/api/elections)
 - [questions](https://minnpost-mn-election-results.herokuapp.com/api/questions)
 - [results](https://minnpost-mn-election-results.herokuapp.com/api/results)
@@ -221,9 +221,9 @@ The Areas endpoint can receive `area_id`, `area_group`, and `election_id` parame
 - Area Group: [https://minnpost-mn-election-results.herokuapp.com/api/areas/?area_group=municipalities]
 - Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/areas/?election_id=id-20211102]
 
-### Contests
+### Contests and Contest Boundaries
 
-The Contests endpoint can receive `title`, `contest_id`, `contest_ids` (for multiple contests), and `election_id` parameters.
+The Contests and Contest Boundaries endpoints can both receive `title`, `contest_id`, `contest_ids` (for multiple contests), and `election_id` parameters.
 
 - Contest ID: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?contest_id=id-MN---02872-1001]
 - Contest Title: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?title=governor]
@@ -274,10 +274,6 @@ I think this is part working well, but needs to be documented above.
 - `python code/scraper.py match_contests <ELECTION_DATE>` 
 
 I think this is part working well, but needs to be documented above.
-
-### Don't run, currently
-
-- `python code/scraper.py check_boundaries`
 
 
 ## Caching
