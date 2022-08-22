@@ -96,7 +96,7 @@ This application should be deployed to Heroku. If you are creating a new Heroku 
 
 ### Production setup for Postgres
 
-Add the Heroku Postgres add-on to the Heroku application. The amount of data that this scraper uses will require at least the `Hobby Basic` plan. Heroku allows two applications to share the same database. They provide [instructions](https://devcenter.heroku.com/articles/managing-add-ons#using-the-command-line-interface-attaching-an-add-on-to-another-app) for this.
+Add the `Heroku Postgres` add-on to the Heroku application. The amount of data that this scraper uses will require at least the `Hobby Basic` plan. Heroku allows two applications to share the same database. They provide [instructions](https://devcenter.heroku.com/articles/managing-add-ons#using-the-command-line-interface-attaching-an-add-on-to-another-app) for this.
 
 To get the data into the database, you can either [import it into Heroku](https://devcenter.heroku.com/articles/heroku-postgres-import-export), either from the included `election-scraper-structure.sql` file or from your database once it has data in it.
 
@@ -107,6 +107,12 @@ Run the scraper commands from the section below by following [Heroku's instructi
 ### Production setup for Celery
 
 Once the application is deployed to Heroku, Celery will be ready to run. To enable it, run the command `heroku ps:scale worker=1`. See Heroku's [Celery deployment](https://devcenter.heroku.com/articles/celery-heroku#deploying-on-heroku).
+
+### Production setup for Redis and RabbitMQ
+
+In the resources section of the Heroku application, add the `Heroku Data for Redis` and `CloudAMQP` add-ons. Unless we learn otherwise, both apps should be able to use the free plan.
+
+Redis is used for caching data for the front end, and as the backend for Celery tasks. RabbitMQ is used as the broker for Celery tasks.
 
 ## Scraping data
 
