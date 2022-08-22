@@ -1,6 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import { dashboard } from './data/dashboard.js';
-import { fetchMetadata, fetchContests } from "./data/api.js";
+import { fetchElection, fetchContests } from "./data/api.js";
 import { path, query, pattern } from 'svelte-pathfinder';
 
 let delay = 300;
@@ -27,14 +27,14 @@ export const resultStore = derived([pattern, query], ([$pattern, $query], set) =
 }, []);
 
 // data
-export const electionMeta = createMetadata();
-function createMetadata() {
+export const electionData = createElectionData();
+function createElectionData() {
 	const {subscribe, set, update} = writable([]);
 	return {
 		subscribe,
 		fetchAll: () => {
-			const fetchedMetadata = fetchMetadata();
-			set(fetchedMetadata);
+			const fetchedElection = fetchElection();
+			set(fetchedElection);
 		}
 	}
 }

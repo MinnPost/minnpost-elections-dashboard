@@ -1,3 +1,9 @@
+<style>
+    .search-field {
+        width: 100%;
+    }
+</style>
+
 <script>
     // svelte-pathfinder stuff
 	import { path, submit } from 'svelte-pathfinder';
