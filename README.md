@@ -39,6 +39,36 @@ In theory this should be it, assuming the scraper can reconcile everything. Ther
 
 Both manual results and contest question text can be managed in Google Spreadsheets.
 
+A good example of an election's JSON entry with manual data stored in a spreadsheet is:
+
+```json
+"20211102": {
+  "meta": {
+    "base_url": "https://electionresultsfiles.sos.state.mn.us/20211102/",
+    "date": "2021-11-02",
+    "primary": false
+  },
+  [the standard entries],
+  "raw_csv_supplemental_results": {
+    "url": "https://s3.amazonaws.com/data.minnpost/projects/minnpost-mn-election-supplements/2021/Election+Results+Supplement+2021-11-02+-+Results.csv",
+    "type": "raw_csv"
+  },
+  "raw_csv_supplemental_contests": {
+    "url": "https://s3.amazonaws.com/data.minnpost/projects/minnpost-mn-election-supplements/2021/Election+Results+Supplement+2021-11-02+-+Contests.csv",
+    "type": "raw_csv"
+  },
+  "supplemental_contests": {
+    "spreadsheet_id": "1Jkt6UzHh-3h_sT_9VQ2GWu4It9Q96bQyL00j5_R0bqg",
+    "worksheet_id": 0,
+    "notes": "Worksheet ID is the zero-based ID from the order of workssheets and is used to find the actual ID."
+  },
+  "supplemental_results": {
+    "spreadsheet_id": "1Jkt6UzHh-3h_sT_9VQ2GWu4It9Q96bQyL00j5_R0bqg",
+    "worksheet_id": 1
+  }
+}
+```
+
 ## Google Sheets to JSON API setup
 
 For both local and remote environments, you'll need to have access to an instance of the [Google Sheets to JSON API](https://github.com/MinnPost/google-sheet-to-json-api) that itself has access to the Google Sheet(s) that you want to process. If you don't already have access to a working instance of that API, set it up and ensure it's working first.
@@ -88,6 +118,19 @@ To get the data for the database, you can also [export it from Heroku](https://d
 
 See the scraper section below for commands to run after local setup is finished.
 
+### Local setup for Celery
+
+This documentation describes how to install our Celery requirements with Homebrew.
+
+1. Run `brew install redis` to install Redis.
+1. By default, the Redis credentials are used like this: `redis://127.0.0.1:6379/0`. Replace `0` with another number if you are already using Redis for other purposes and would like to keep the databases separate. Whatever value you use, put it into the `REDIS_URL` value of your `.env` file.
+1. By default, this application uses Redis for the application cache and for the Celery backend. If you'd like to use something else for the Celery backend, add a different value to `RESULT_BACKEND` in your `.env` file.
+1. Run `brew install rabbitmq` to install RabbitMQ.
+1. By default, RabbitMQ credentials are used like this: `amqp://guest:guest@127.0.0.1:5672`. We store it in the `CLOUDAMQP_URL` `.env` value, as this matches Heroku's use of the `CloudAMQP` add-on.
+1. By default, this application uses `CloudAMQP` as the Celery broker. If you'd like to use something else, add a different value to the `CELERY_BROKER_URL` value.
+
+**Note**: in a local environment, it tends to be fine to use Redis in place of RabbitMQ, but this does not work with Heroku's free Redis plan.
+
 ## Production setup and deployment
 
 ### Code, Libraries and prerequisites
@@ -96,11 +139,11 @@ This application should be deployed to Heroku. If you are creating a new Heroku 
 
 ### Production setup for Postgres
 
-Add the Heroku Postgres add-on to the Heroku application. The amount of data that this scraper uses will require at least the `Hobby Basic` plan. Heroku allows two applications to share the same database. They provide [instructions](https://devcenter.heroku.com/articles/managing-add-ons#using-the-command-line-interface-attaching-an-add-on-to-another-app) for this.
+Add the `Heroku Postgres` add-on to the Heroku application. The amount of data that this scraper uses will require at least the `Hobby Basic` plan. Heroku allows two applications to share the same database. They provide [instructions](https://devcenter.heroku.com/articles/managing-add-ons#using-the-command-line-interface-attaching-an-add-on-to-another-app) for this.
 
 To get the data into the database, you can either [import it into Heroku](https://devcenter.heroku.com/articles/heroku-postgres-import-export), either from the included `election-scraper-structure.sql` file or from your database once it has data in it.
 
-If you want to create empty tables on Heroku, you can do that by running the `CREATE TABLE` and `CREATE INDEX` commands from the `election-scraper-structure.sql` files after you open a `heroku pg:psql` session. Then you can run the scraper to populate the database.
+If you want to create an empty installation of the Flask database structure, run `heroku run flask db upgrade`. Flask's migration system will create all of the tables and relationships.
 
 Run the scraper commands from the section below by following [Heroku's instructions](https://devcenter.heroku.com/articles/getting-started-with-python#start-a-console) for running Python commands. Generally, run commands on Heroku by adding `heroku run ` before the rest of the command listed below.
 
@@ -108,44 +151,108 @@ Run the scraper commands from the section below by following [Heroku's instructi
 
 Once the application is deployed to Heroku, Celery will be ready to run. To enable it, run the command `heroku ps:scale worker=1`. See Heroku's [Celery deployment](https://devcenter.heroku.com/articles/celery-heroku#deploying-on-heroku).
 
+### Production setup for Redis and RabbitMQ
+
+In the resources section of the Heroku application, add the `Heroku Data for Redis` and `CloudAMQP` add-ons. Unless we learn otherwise, both apps should be able to use the free plan.
+
+Redis is used for caching data for the front end, and as the backend for Celery tasks. RabbitMQ is used as the broker for Celery tasks.
+
 ## Scraping data
-
-`<ELECTION_DATE>` is optional and the newest election will be used if not provided. It should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
-
-1. (optional) Remove old data as the scraper is not built to manage more than one election: `find command to dump database` (let's find out if this is still necessary)
-1. Scrape areas: `python code/scraper.py scrape areas <ELECTION_DATE>`
-  * This is something that only really needs to be done once, at least close to the election, as there little change it will change the day of the election.
-1. Scrape questions: `python code/scraper.py scrape questions <ELECTION_DATE>`
-1. Scrape the results: `python code/scraper.py scrape results <ELECTION_DATE>`
-  * This is the core processing of the scraper will be run frequently.
-1. Match contests to boundary area: `python code/scraper.py match_contests <ELECTION_DATE>`
-1. (optional) To check each boundary ID against the boundary service: `python code/scraper.py check_boundaries`
-
-## Endpoints
-
-### Scraper
 
 To run the scraper in the browser, use the following URLs:
 
-- [areas](https://minnpost-mn-election-results.herokuapp.com/scraper/areas)
-- [contests](https://minnpost-mn-election-results.herokuapp.com/scraper/contests)
-- [meta](https://minnpost-mn-election-results.herokuapp.com/scraper/meta)
-- [questions](https://minnpost-mn-election-results.herokuapp.com/scraper/questions)
-- [results](https://minnpost-mn-election-results.herokuapp.com/scraper/results)
+- Scrape areas: [areas](https://minnpost-mn-election-results.herokuapp.com/scraper/areas/)
+  * This is something that only really needs to be done once, at least close to the election, as there little change it will change the day of the election.
+- Scrape contests: [contests](https://minnpost-mn-election-results.herokuapp.com/scraper/contests/)
+  * This one also will match the contests to the boundary service.
+- Scrape elections: [elections](https://minnpost-mn-election-results.herokuapp.com/scraper/elections/)
+- Scrape questions: [questions](https://minnpost-mn-election-results.herokuapp.com/scraper/questions/)
+- Scrape results: [results](https://minnpost-mn-election-results.herokuapp.com/scraper/results/)
 
-### API
+**Note**: `ELECTION_DATE_OVERRIDE` is an optional override configuration value that can be added to `.env`. The newest election will be used if not provided. If an override is necessary, the value should be the key of the object in the `scraper_sources.json` file; for instance `20140812`.
+
+By receiving parameters, the scraper URLs can limit what is scraped by the various endpoints. Each endpoint, unless otherwise noted, can receive data in `GET`, `POST`, and JSON formats. Unless otherwise noted, all scraper endpoints receive an `election_id` parameter. For example, [https://minnpost-mn-election-results.herokuapp.com/scraper/areas/?election_id=id-20211102].
+
+### Command line
+
+Ideally, it would be good to make command line equivalents of the scraper URLs. Previously these commands were called:
+
+1. `python code/scraper.py scrape areas <ELECTION_DATE>`
+1. `python code/scraper.py scrape questions <ELECTION_DATE>`
+1. `python code/scraper.py scrape match_contests <ELECTION_DATE>`
+1. `python code/scraper.py scrape results <ELECTION_DATE>`
+
+## Accessing the API
 
 To access the scraper's content in JSON format, use the following URLs. These URLs will return all of the contents of the respective models:
 
 - [areas](https://minnpost-mn-election-results.herokuapp.com/api/areas)
 - [contests](https://minnpost-mn-election-results.herokuapp.com/api/contests)
-- [meta](https://minnpost-mn-election-results.herokuapp.com/api/meta)
+- [contest boundaries](https://minnpost-mn-election-results.herokuapp.com/api/boundaries)
+- [elections](https://minnpost-mn-election-results.herokuapp.com/api/elections)
 - [questions](https://minnpost-mn-election-results.herokuapp.com/api/questions)
 - [results](https://minnpost-mn-election-results.herokuapp.com/api/results)
 
-By supplying parameters, you can limit what is returned by the various endpoints:
+And `https://minnpost-mn-election-results.herokuapp.com/api/query/` will return the results of valid `select` SQL statements. This runs the legacy election dashboard on MinnPost.
 
-- [areas](https://minnpost-mn-election-results.herokuapp.com/api/areas?area_id=[supply-valid-area-id])
+By receiving parameters, the API can limit what is returned by the various endpoints. Each endpoint, unless otherwise noted, can receive data in `GET`, `POST`, and JSON formats.
+
+### For all endpoints
+
+Unless otherwise noted, all API endpoints can receive parameters with a "true" or "false" value to control cache behavior: `bypass_cache`, `delete_cache`, and `cache_data`.
+
+#### Default values
+
+- `bypass_cache` whether to load data from the cache. Defaults to "false".
+- `delete_cache` whether to delete existing cached data for this request. Defaults to "false".
+- `cache_data` whether to cache this request's response. Defaults to "true".
+
+### SQL query
+
+This endpoint returns the result of a valid `select` SQL query. For example, to run the query `select * from meta`, use the URL [https://minnpost-mn-election-results.herokuapp.com/api/query/?q=select%20*%20from%20meta].
+
+This endpoint also accepts a `callback` parameter. If it is present, it returns the data as JavaScript instead of JSON, for use as `JSONP`. This runs the legacy election dashboard on MinnPost.
+
+### Areas
+
+The Areas endpoint can receive `area_id`, `area_group`, and `election_id` parameters.
+
+- Area ID: [https://minnpost-mn-election-results.herokuapp.com/api/areas/?area_id=precincts-69-0770]
+- Area Group: [https://minnpost-mn-election-results.herokuapp.com/api/areas/?area_group=municipalities]
+- Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/areas/?election_id=id-20211102]
+
+### Contests and Contest Boundaries
+
+The Contests and Contest Boundaries endpoints can both receive `title`, `contest_id`, `contest_ids` (for multiple contests), and `election_id` parameters.
+
+- Contest ID: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?contest_id=id-MN---02872-1001]
+- Contest Title: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?title=governor]
+- Contest IDs: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?contest_ids=id-MN---43000-2001,id-MN---43000-1131,id-MN---43000-1132,id-MN---43000-1133,id-MN---58000-1131,id-MN---43000-2121,id-MN---43000-2181,id-MN---43000-2191]
+- Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?election_id=id-20211102]
+
+### Elections
+
+The Elections endpoint can receive `election_id` and `election_date` parameters.
+
+- Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/elections/?election_id=id-MN---02872-1001]
+- Election Date: [https://minnpost-mn-election-results.herokuapp.com/api/elections/?election_date=2021-11-02]
+
+### Questions
+
+The Questions endpoint can receive a `question_id`, `contest_id`, and `election_id` parameters.
+
+- Question ID: [https://minnpost-mn-election-results.herokuapp.com/api/questions/?question_id=id-82-1131-13456-]
+- Contest ID: [https://minnpost-mn-election-results.herokuapp.com/api/questions/?contest_id=id-MN---13456-1131]
+- Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/questions/?election_id=id-20211102]
+
+### Results
+
+The Results endpoint can receive `result_id`, `contest_id`, and `election_id` parameters.
+
+- Result ID: [https://minnpost-mn-election-results.herokuapp.com/api/results/?result_id=id-MN---02872-1001-9901]
+- Contest ID: [https://minnpost-mn-election-results.herokuapp.com/api/results/?contest_id=id-MN---02872-1001]
+- Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/results/?election_id=id-20211102]
+
 
 # stuff we have to build, still
 
@@ -167,10 +274,6 @@ I think this is part working well, but needs to be documented above.
 - `python code/scraper.py match_contests <ELECTION_DATE>` 
 
 I think this is part working well, but needs to be documented above.
-
-### Don't run, currently
-
-- `python code/scraper.py check_boundaries`
 
 
 ## Caching
