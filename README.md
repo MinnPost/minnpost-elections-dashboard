@@ -97,8 +97,8 @@ Use the following additional fields in your `.env` or in your Heroku settings.
 1. Create a `.env` file based on the repository's `.env-example` file in the root of your project.
 1. Run `pipenv install`.
 1. Open up three command line tabs if you need to run the scheduled scraping tasks as well as the API. In each tab, run `pipenv shell`. See below section on Scraping data.
-1. To process scrape tasks, either manually or on schedule, run `celery -A src.worker:celery worker -S redbeat.RedBeatScheduler --loglevel=INFO` in a tab. Include the `-E` flag to monitor task events that the worker receives.
-1. To run the scheduled scraper, run `celery -A src.worker:celery beat -S redbeat.RedBeatScheduler --loglevel=INFO` in a tab.
+1. To process scrape tasks, either manually or on schedule, run `celery -A src.worker:celery worker -S redbeat.RedBeatScheduler --loglevel=INFO` in a tab. Include the `-E` flag to monitor task events that the worker receives. When this command runs, the initial scraper tasks should also run, after which they should run on schedule.
+1. To run the scheduled scraper tasks, run `celery -A src.worker:celery beat -S redbeat.RedBeatScheduler --loglevel=INFO` in a tab.
 1. In the tab where you want to run the Flask-based API, run `flask run --host=0.0.0.0`. This creates a basic endpoint server at http://0.0.0.0:5000.
 
 ### Local setup for Postgres
@@ -131,6 +131,8 @@ This documentation describes how to install our Celery requirements with Homebre
 
 **Note**: in a local environment, it tends to be fine to use Redis in place of RabbitMQ, but this does not work with Heroku's free Redis plan.
 
+**Note**: if the application changes its task structure and Celery tries to run old tasks, run the `celery purge` command from within the application's virtualenv.
+
 ## Production setup and deployment
 
 ### Code, Libraries and prerequisites
@@ -149,7 +151,9 @@ Run the scraper commands from the section below by following [Heroku's instructi
 
 ### Production setup for Celery
 
-Once the application is deployed to Heroku, Celery will be ready to run. To enable it, run the command `heroku ps:scale worker=1`. See Heroku's [Celery deployment](https://devcenter.heroku.com/articles/celery-heroku#deploying-on-heroku).
+Once the application is deployed to Heroku, Celery will be ready to run. To enable it, run the command `heroku ps:scale worker=1`. See Heroku's [Celery deployment](https://devcenter.heroku.com/articles/celery-heroku#deploying-on-heroku). To run the worker dyno as well, Heroku needs to be on a non-free plan.
+
+**Note**: if the application changes its task structure and Celery tries to run old tasks, run the `celery purge` command from within the application's virtualenv.
 
 ### Production setup for Redis and RabbitMQ
 
@@ -192,8 +196,7 @@ To access the scraper's content in JSON format, use the following URLs. These UR
 - [elections](https://minnpost-mn-election-results.herokuapp.com/api/elections)
 - [questions](https://minnpost-mn-election-results.herokuapp.com/api/questions)
 - [results](https://minnpost-mn-election-results.herokuapp.com/api/results)
-
-And `https://minnpost-mn-election-results.herokuapp.com/api/query/` will return the results of valid `select` SQL statements. This runs the legacy election dashboard on MinnPost.
+- [sql queries](`https://minnpost-mn-election-results.herokuapp.com/api/query/`)
 
 By receiving parameters, the API can limit what is returned by the various endpoints. Each endpoint, unless otherwise noted, can receive data in `GET`, `POST`, and JSON formats.
 
@@ -209,9 +212,9 @@ Unless otherwise noted, all API endpoints can receive parameters with a "true" o
 
 ### SQL query
 
-This endpoint returns the result of a valid `select` SQL query. For example, to run the query `select * from meta`, use the URL [https://minnpost-mn-election-results.herokuapp.com/api/query/?q=select%20*%20from%20meta].
+This endpoint returns the result of a valid `select` SQL query. For example, to run the query `select * from meta`, use the URL [https://minnpost-mn-election-results.herokuapp.com/api/query/?q=select%20*%20from%20meta]. This endpoint currently runs the legacy election dashboard on MinnPost, although ideally we will be able to replace it with proper calls to the SQL-Alchemy models.
 
-This endpoint also accepts a `callback` parameter. If it is present, it returns the data as JavaScript instead of JSON, for use as `JSONP`. This runs the legacy election dashboard on MinnPost.
+This endpoint also accepts a `callback` parameter. If it is present, it returns the data as JavaScript instead of JSON, for use as `JSONP`. This is needed for the legacy election dashboard on MinnPost.
 
 ### Areas
 
