@@ -145,7 +145,7 @@ Add the `Heroku Postgres` add-on to the Heroku application. The amount of data t
 
 To get the data into the database, you can either [import it into Heroku](https://devcenter.heroku.com/articles/heroku-postgres-import-export), either from the included `election-scraper-structure.sql` file or from your database once it has data in it.
 
-If you want to create an empty installation of the Flask database structure, run `heroku run flask db upgrade`. Flask's migration system will create all of the tables and relationships.
+If you want to create an empty installation of the Flask database structure, or if the database structure changes and the changes need to be added to Heroku, run `heroku run flask db upgrade`. Flask's migration system will create all of the tables and relationships.
 
 Run the scraper commands from the section below by following [Heroku's instructions](https://devcenter.heroku.com/articles/getting-started-with-python#start-a-console) for running Python commands. Generally, run commands on Heroku by adding `heroku run ` before the rest of the command listed below.
 
