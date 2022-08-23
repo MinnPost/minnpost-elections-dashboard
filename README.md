@@ -163,7 +163,31 @@ Redis is used for caching data for the front end, and as the backend for Celery 
 
 ## Scraping data
 
-To run the scraper in the browser, use the following URLs:
+This application runs several tasks to scrape data from all of the data sources in the background. Whenever a scraper task runs, it will clear any cached data related to that task. In other words, the result scraper will clear any cached result queries. This is designed to keep the application from displaying cached data that is older than the newest scraped data.
+
+### On a Schedule
+
+While the scraper's tasks can be run manually, they are designed primarily to run automatically at intervals, which are configurable within the application's settings.
+
+The default scrape behavior is to run these scraper tasks based on the `DEFAULT_SCRAPE_FREQUENCY` configuration value (which is stored in seconds and defaults to `86400` seconds, or one day):
+
+- `areas`: the areas for which elections happen. Counties, wards, precincts, school board districts, etc.
+- `elections`: the distinct elections periods. For example, the 2022 primary election.
+- `contests`: the distinct electoral contests. For example, the 2022 governor's race.
+- `questions`: ballot questions.
+- `results`: the results of an election that has occurred.
+
+The default behavior is primarily designed to structure the data before an election occurs.
+
+During an election return window, such as election night, the application runs the `results` task much more frequently. This is designed to detect the status of contests as results come in, whether all the results are in or not. The application determines if an election return window is open by using the `ELECTION_DAY_RESULT_HOURS_START` and `ELECTION_DAY_RESULT_HOURS_END` configuration values. Both of these values should be stored in a full datetime string such as `"2022-08-23T00:00:00-0600"`.
+
+If the application detects that the current time is between the start and end values, it will run the `results` task based on the `ELECTION_DAY_RESULT_SCRAPE_FREQUENCY` configuration value, which is stored in seconds. It defaults to run every `180` seconds, which is three minutes.
+
+This window detection behavior can be overridden by setting the `ELECTION_RESULT_DATETIME_OVERRIDDEN` configuration value. If it is set to `"true"`, the `results` task will run according to the `ELECTION_DAY_RESULT_SCRAPE_FREQUENCY` value, regardless of what day it is. If it is set to `"false"`, the `results` task will run according to the `DEFAULT_SCRAPE_FREQUENCY` value, regardless of what day it is. Don't use either value in `ELECTION_RESULT_DATETIME_OVERRIDDEN` unless the current behavior specifically needs to be overridden; remove the setting after the override is no longer necessary.
+
+### In a Browser
+
+To run the scraper in a browser, use the following URLs:
 
 - Scrape areas: [areas](https://minnpost-mn-election-results.herokuapp.com/scraper/areas/)
   * This is something that only really needs to be done once, at least close to the election, as there little change it will change the day of the election.
@@ -179,6 +203,8 @@ By receiving parameters, the scraper URLs can limit what is scraped by the vario
 
 ### Command line
 
+** this part is not done **
+
 Ideally, it would be good to make command line equivalents of the scraper URLs. Previously these commands were called:
 
 1. `python code/scraper.py scrape areas <ELECTION_DATE>`
@@ -188,7 +214,9 @@ Ideally, it would be good to make command line equivalents of the scraper URLs. 
 
 ## Accessing the API
 
-To access the scraper's content in JSON format, use the following URLs. These URLs will return all of the contents of the respective models:
+The application's API returns the most recent data, in JSON format, that has been stored by the scraper tasks. Once an API endpoint has been requested, data is cached based on the API settings, and it is returned by the application until either the relevant scraper task runs again, or until the cache expires. The cache's default expiration is stored in seconds in the `CACHE_DEFAULT_TIMEOUT` configuration value. There is a separate value for the Google Sheet API's timeout, which is stored (also in seconds) in the `PARSER_API_CACHE_TIMEOUT` configuration value.
+
+To access the scraper's data, use the following URLs. These URLs will return all of the contents of the respective models:
 
 - [areas](https://minnpost-mn-election-results.herokuapp.com/api/areas)
 - [contests](https://minnpost-mn-election-results.herokuapp.com/api/contests)
@@ -255,39 +283,3 @@ The Results endpoint can receive `result_id`, `contest_id`, and `election_id` pa
 - Result ID: [https://minnpost-mn-election-results.herokuapp.com/api/results/?result_id=id-MN---02872-1001-9901]
 - Contest ID: [https://minnpost-mn-election-results.herokuapp.com/api/results/?contest_id=id-MN---02872-1001]
 - Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/results/?election_id=id-20211102]
-
-
-# stuff we have to build, still
-
-## Scheduling
-
-We need to run the scraper commands at intervals that differ based on which command it is and whether we're in the result hour window on Election Day. I think this is working well, but needs to be documented.
-
-Set the result hour window by adding a datetime value to `ELECTION_RESULT_DATETIME_START` and `ELECTION_RESULT_DATETIME_END`. If you're developing locally, add these values to your `.env` file; in production, add it to the Heroku settings for the application. The code will check to make sure these are both actual `datetime`s and that the window between them is a valid timespan; if it is not a valid time window it will act as it does normally.
-
-To manually turn the result hour window on, regardless of the time window, set the `ELECTION_RESULT_DATETIME_OVERRIDDEN` setting to `True`.
-
-I think this is part working well, but needs to be documented above.
-
-### Run daily, except during result hours on Election Day
-
-- `python code/scraper.py scrape areas <ELECTION_DATE>`
-- `python code/scraper.py scrape questions <ELECTION_DATE>`
-- `python code/scraper.py scrape results <ELECTION_DATE>`
-- `python code/scraper.py match_contests <ELECTION_DATE>` 
-
-I think this is part working well, but needs to be documented above.
-
-
-## Caching
-
-- I think the scraper should never return a cache. It should always return new data from the secretary of state or the spreadsheet API or wherever.
-- The API should return a cache based on its configuration.
-- The scraper should invalidate the API cache when it finishes running, if there is one.
-
-
-## Metadata structure
-
-Once we have the new dashboard fully ready, we should change the metadata structure so each election has its own row, rather than the whole database only having one set of election metadata.
-
-This will change the scraper, the API response, and anything that is consuming it.
