@@ -189,7 +189,7 @@ If the application detects that the current time is between these start and end 
 
 #### Use the election date from the scraper sources
 
-If the `ELECTION_DAY_RESULT_HOURS_START` and `ELECTION_DAY_RESULT_HOURS_END` settings are not filled out, the plugin will look to the election data in the `scraper_sources.json` file. Each entry should have a `date` value, and the plugin will assume that date is the election date. From there, the application will use the `ELECTION_DAY_RESULT_DEFAULT_START_TIME` (this is 8pm by default) and `ELECTION_DAY_RESULT_DEFAULT_DURATION_HOURS` (this defaults to 24 hours) values to determine a start and end value for election day behavior.
+If the `ELECTION_DAY_RESULT_HOURS_START` and `ELECTION_DAY_RESULT_HOURS_END` settings are not filled out, the plugin will look to the election data in the `scraper_sources.json` file. Each entry should have a `date` value, and the plugin will assume that date is the election date. From there, the application will use the `ELECTION_DAY_RESULT_DEFAULT_START_TIME` (this is midnight by default) and `ELECTION_DAY_RESULT_DEFAULT_DURATION_HOURS` (this defaults to 48 hours) values to determine a start and end value for election day behavior.
 
 If the application detects that the current time is between these start and end values (for example, between 8pm on election day and 8pm the following day), it will run the `results` task based on the `ELECTION_DAY_RESULT_SCRAPE_FREQUENCY` configuration value, which is stored in seconds. It defaults to run every `180` seconds, which is three minutes.
 
