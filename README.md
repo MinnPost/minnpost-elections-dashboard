@@ -177,11 +177,23 @@ The default scrape behavior is to run these scraper tasks based on the `DEFAULT_
 - `questions`: ballot questions.
 - `results`: the results of an election that has occurred.
 
-The default behavior is primarily designed to structure the data before an election occurs.
+The default behavior is primarily designed to structure the data before an election occurs, although it may also catch changes when results are finalized.
 
-During an election return window, such as election night, the application runs the `results` task much more frequently. This is designed to detect the status of contests as results come in, whether all the results are in or not. The application determines if an election return window is open by using the `ELECTION_DAY_RESULT_HOURS_START` and `ELECTION_DAY_RESULT_HOURS_END` configuration values. Both of these values should be stored in a full datetime string such as `"2022-08-23T00:00:00-0600"`.
+There are multiple ways that the application can run the `results` task much more frequently. This is designed to detect the status of contests as results come in, for example on election night, whether all the results are in or not.
 
-If the application detects that the current time is between the start and end values, it will run the `results` task based on the `ELECTION_DAY_RESULT_SCRAPE_FREQUENCY` configuration value, which is stored in seconds. It defaults to run every `180` seconds, which is three minutes.
+#### Set the start and end window as configuration values
+
+To set an election return window by configuration values, use the `ELECTION_DAY_RESULT_HOURS_START` and `ELECTION_DAY_RESULT_HOURS_END` settings. Both of these values should be stored in a full datetime string such as `"2022-08-23T00:00:00-0600"`.
+
+If the application detects that the current time is between these start and end values, it will run the `results` task based on the `ELECTION_DAY_RESULT_SCRAPE_FREQUENCY` configuration value, which is stored in seconds. It defaults to run every `180` seconds, which is three minutes.
+
+#### Use the election date from the scraper sources
+
+If the `ELECTION_DAY_RESULT_HOURS_START` and `ELECTION_DAY_RESULT_HOURS_END` settings are not filled out, the plugin will look to the election data in the `scraper_sources.json` file. Each entry should have a `date` value, and the plugin will assume that date is the election date. From there, the application will use the `ELECTION_DAY_RESULT_DEFAULT_START_TIME` (this is midnight by default) and `ELECTION_DAY_RESULT_DEFAULT_DURATION_HOURS` (this defaults to 48 hours) values to determine a start and end value for election day behavior.
+
+If the application detects that the current time is between these start and end values (for example, between 8pm on election day and 8pm the following day), it will run the `results` task based on the `ELECTION_DAY_RESULT_SCRAPE_FREQUENCY` configuration value, which is stored in seconds. It defaults to run every `180` seconds, which is three minutes.
+
+#### Use the override configuration value
 
 This window detection behavior can be overridden by setting the `ELECTION_RESULT_DATETIME_OVERRIDDEN` configuration value. If it is set to `"true"`, the `results` task will run according to the `ELECTION_DAY_RESULT_SCRAPE_FREQUENCY` value, regardless of what day it is. If it is set to `"false"`, the `results` task will run according to the `DEFAULT_SCRAPE_FREQUENCY` value, regardless of what day it is. Don't use either value in `ELECTION_RESULT_DATETIME_OVERRIDDEN` unless the current behavior specifically needs to be overridden; remove the setting after the override is no longer necessary.
 
