@@ -1,15 +1,15 @@
 // set the races
 let dashboardRaces = [
     {
-        title: 'Minneapolis Mayor',
+        title: 'State Senator District 3',
         type: 'race',
-        id: 'id-MN---43000-2001',
+        id: 'id-MN---3-0123',
         rows: 5
     },
     {
-        title: 'Minneapolis Question 1',
+        title: 'State Senator District 7',
         type: 'race',
-        id: 'id-MN---43000-1131',
+        id: 'id-MN---7-0127',
         rows: 2
     },
     {
