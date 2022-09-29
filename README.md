@@ -36,7 +36,7 @@ Add a new object keyed by the date of the election, like `YYYYMMDD`. This should
 
 In theory this should be it, assuming the scraper can reconcile everything. There is a good chance, though, that formatting changes could break the scraper, or that the scraper does not know how to fully process some results.
 
-The current version of `scraper_sources.json` only works with this application as far back as the `20200303` key. Older elections run into scrape errors.
+The current version of `scraper_sources.json` only works with this application as far back as the `20200303` key. Older elections run into scrape errors. Elections older than 2020 likely are using incorrect boundary sets due to redistricting.
 
 ### Manual data
 
