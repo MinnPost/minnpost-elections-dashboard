@@ -13,6 +13,8 @@ Flask-based scraper for Minnesota elections with an API that returns JSON data f
   * The format of results are text, csv-like files. Unfortunately there is no header row and no metadata to know what fields are which. See `src/scraper/models.py` to see what is assumed.
 * Minneapolis (due to Ranked-Choice voting)
 
+Boundary data, for drawing maps and plotting locations, comes from [Represent Minnesota](https://github.com/minnpost/represent-minnesota). By default, it assumes we're using https://represent-minnesota.herokuapp.com but this is configurable by a `.env` value, `BOUNDARY_SERVICE_URL`.
+
 ### Adding an election
 
 Metadata about each election is managed in `scraper_sources.json`. Though there are often similarly named files for each election, there are usually files for each group of races and some can be named inconsistently.
