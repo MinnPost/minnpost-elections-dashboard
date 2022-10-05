@@ -190,7 +190,7 @@ There are multiple ways that the application can run the `results` task much mor
 
 To set an election return window by configuration values, use the `ELECTION_DAY_RESULT_HOURS_START` and `ELECTION_DAY_RESULT_HOURS_END` settings. Both of these values should be stored in a full datetime string such as `"2022-08-23T00:00:00-0600"`.
 
-If the application detects that the current time is between these start and end values, it will run the `results` task based on the `ELECTION_DAY_RESULT_SCRAPE_FREQUENCY` configuration value, which is stored in seconds. It defaults to run every `180` seconds, which is three minutes.
+If the application detects that the current time is between these start and end values, it will run the `results` task based on the `ELECTION_DAY_RESULT_SCRAPE_FREQUENCY` configuration value, which is stored in seconds. See the `.env-example` and `config.py` files for how this value is set.
 
 #### Use the election date from the scraper sources
 
