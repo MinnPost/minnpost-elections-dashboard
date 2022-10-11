@@ -13,6 +13,8 @@ Flask-based scraper for Minnesota elections with an API that returns JSON data f
   * The format of results are text, csv-like files. Unfortunately there is no header row and no metadata to know what fields are which. See `src/scraper/models.py` to see what is assumed.
 * Minneapolis (due to Ranked-Choice voting)
 
+Boundary data, for drawing maps and plotting locations, comes from [Represent Minnesota](https://github.com/minnpost/represent-minnesota). By default, it assumes we're using https://represent-minnesota.herokuapp.com but this is configurable by a `.env` value, `BOUNDARY_SERVICE_URL`.
+
 ### Adding an election
 
 Metadata about each election is managed in `scraper_sources.json`. Though there are often similarly named files for each election, there are usually files for each group of races and some can be named inconsistently.
@@ -36,7 +38,7 @@ Add a new object keyed by the date of the election, like `YYYYMMDD`. This should
 
 In theory this should be it, assuming the scraper can reconcile everything. There is a good chance, though, that formatting changes could break the scraper, or that the scraper does not know how to fully process some results.
 
-The current version of `scraper_sources.json` only works with this application as far back as the `20200303` key. Older elections run into scrape errors.
+The current version of `scraper_sources.json` only works with this application as far back as the `20200303` key. Older elections run into scrape errors. Elections older than 2020 likely are using incorrect boundary sets due to redistricting.
 
 ### Manual data
 
@@ -188,7 +190,7 @@ There are multiple ways that the application can run the `results` task much mor
 
 To set an election return window by configuration values, use the `ELECTION_DAY_RESULT_HOURS_START` and `ELECTION_DAY_RESULT_HOURS_END` settings. Both of these values should be stored in a full datetime string such as `"2022-08-23T00:00:00-0600"`.
 
-If the application detects that the current time is between these start and end values, it will run the `results` task based on the `ELECTION_DAY_RESULT_SCRAPE_FREQUENCY` configuration value, which is stored in seconds. It defaults to run every `180` seconds, which is three minutes.
+If the application detects that the current time is between these start and end values, it will run the `results` task based on the `ELECTION_DAY_RESULT_SCRAPE_FREQUENCY` configuration value, which is stored in seconds. See the `.env-example` and `config.py` files for how this value is set.
 
 #### Use the election date from the scraper sources
 
