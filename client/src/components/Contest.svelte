@@ -9,5 +9,9 @@
     {#if contest.sub_title !== null }
         <h4>{contest.sub_title}</h4>
     {/if}
-    {contest.results}
+    <ul>
+    {#each contest.results as result}
+        <li>{result.candidate}</li>
+    {/each}
+    </ul>
 </li>
