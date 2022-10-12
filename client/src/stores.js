@@ -15,6 +15,23 @@ export const resultStore = derived([pattern, query], ([$pattern, $query], set) =
                 resolve()
             }, delay)
         })
+    } else if ($pattern('/contests/')) {
+        if ($query.params.scope) {
+            new Promise((resolve) => {
+                setTimeout(() => {
+                    fetchContests('scope', $query.params.scope)
+                        .then(set);
+                    resolve()
+                }, delay)})
+        } else if ($query.params.group) {
+            new Promise((resolve) => {
+                setTimeout(() => {
+                    fetchContests('results_group', $query.params.group)
+                        .then(set);
+                    resolve()
+                }, delay)
+            })
+        }
     } else {
         new Promise((resolve) => {
             setTimeout(() => {
