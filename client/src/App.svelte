@@ -26,11 +26,7 @@
 
 <div class="election-results">
 
-	{#if $pattern('/search/')} <!-- eg. /products/1 -->
-	<p><a href="/" on:click={e => suggestedSearchClick()}>return to dashboard</a></p>
-	{:else}
-	<Search/>
-	{/if}
+	<Search pattern="{$pattern}"/>
 	
 	<Header/>
 
@@ -41,7 +37,7 @@
 	{#if $pattern('/contests/:id')} <!-- eg. /products/1 -->
 		contest id {$path.params.id}
 	{:else}
-		<Results/>
+		<Results pattern="{$pattern}"/>
 	{/if}
 
 	<ol>

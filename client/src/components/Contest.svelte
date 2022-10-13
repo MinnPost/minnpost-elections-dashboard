@@ -1,7 +1,7 @@
 <script>
     // data
+    export let pattern;
     export let contest;
-    console.log(contest);
 </script>
 
 <li id="{contest.id}">

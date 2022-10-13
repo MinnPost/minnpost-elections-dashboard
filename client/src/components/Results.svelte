@@ -1,6 +1,8 @@
 <script>
     // data
     export let promise;
+    export let pattern;
+    
     import { resultStore } from './../stores.js';
 
     // behavior
@@ -21,7 +23,7 @@
         out:fade={{duration: 20}
         }>
         {#each $resultStore as contest}
-            <Contest contest="{contest}"/>
+            <Contest contest="{contest}" pattern="{pattern}"/>
         {/each}
     </ul>
 {/key}
