@@ -2,12 +2,16 @@ export let apiRoot = "http://0.0.0.0:5000/api/";
 export let electionId = "id-20220809";
 
 // api calls
-export async function fetchContests(key, value) {
+export async function fetchContests(key, value, withResults = false) {
 	let res = [];
+	let endpoint = 'contests';
+	if (withResults === true) {
+		endpoint = 'contests-with-results';
+	}
 	if ( key && value ) {
-		res = await fetch(`${apiRoot}contests/?${key}=${value}&election_id=${electionId}`);
+		res = await fetch(`${apiRoot}${endpoint}/?${key}=${value}&election_id=${electionId}`);
 	} else {
-		res = await fetch(`${apiRoot}contests/?election_id=${electionId}`);
+		res = await fetch(`${apiRoot}${endpoint}/?election_id=${electionId}`);
 	}
 	const json = await res.json();
 	if (res.ok) {
