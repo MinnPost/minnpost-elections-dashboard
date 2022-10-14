@@ -4,7 +4,7 @@
     export let contest;
     
     // formatting
-    import './data/formatting.js';
+    import {isWinner} from './../data/formatting.js';
     
     function setResultClass(result, contest) {
         let resultClass = '';
