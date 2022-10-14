@@ -3,6 +3,9 @@
     export let pattern;
     export let contest;
     
+    // formatting
+    import './data/formatting.js';
+    
     function setResultClass(result, contest) {
         let resultClass = '';
         if (contest.primary === true && result.party_id != '') {
@@ -11,9 +14,7 @@
         return resultClass;
     }
 
-    function isWinner(result, contest) {
-        let winner = false;
-    }
+    
 </script>
 
 <li id="{contest.id}">
@@ -70,10 +71,10 @@
             </tr>
         </thead>
         <tbody>
-            {#each contest.results as r}
+            {#each contest.results as r, key}
                 
                 <tr id="{r.id}" class="{setResultClass(contest, r)}">
-                    
+                    winner? {isWinner(r, contest, key)}
                 </tr>
 
             {/each}
