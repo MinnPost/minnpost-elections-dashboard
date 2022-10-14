@@ -10,30 +10,38 @@ let interval = 50000;
 export const resultStore = derived([pattern, query], ([$pattern, $query], set) => {
     if ($pattern('/search/') && $query.params.q) {
         new Promise((resolve) => {
-            fetchContests('title', $query.params.q, true)
-                .then(set);
-            resolve()
-        });
+            setTimeout(() => {
+                fetchContests('title', $query.params.q, true)
+                    .then(set);
+                resolve()
+            }, delay)
+        })
     } else if ($pattern('/contests/')) {
         if ($query.params.scope) {
             new Promise((resolve) => {
-                fetchContests('scope', $query.params.scope, true)
-                    .then(set);
-                resolve()
-            });
+                setTimeout(() => {
+                    fetchContests('scope', $query.params.scope, true)
+                        .then(set);
+                    resolve()
+                }, delay)
+            })
         } else if ($query.params.group) {
             new Promise((resolve) => {
-                fetchContests('results_group', $query.params.group, true)
-                    .then(set);
-                resolve()
-            });
+                setTimeout(() => {
+                    fetchContests('results_group', $query.params.group, true)
+                        .then(set);
+                    resolve()
+                }, delay)
+            })
         }
     } else {
         new Promise((resolve) => {
-            fetchContests('contest_ids', dashboard, true)
-                .then(set);
-            resolve()
-        });
+            setTimeout(() => {
+                fetchContests('contest_ids', dashboard, true)
+                    .then(set);
+                resolve()
+            }, delay)
+        })
     }
 }, []);
 
