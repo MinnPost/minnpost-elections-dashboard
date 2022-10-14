@@ -4,42 +4,36 @@ import { fetchElection, fetchContests } from "./data/api.js";
 import { path, query, pattern } from 'svelte-pathfinder';
 
 let delay = 300;
+let interval = 50000;
 
 // routing
 export const resultStore = derived([pattern, query], ([$pattern, $query], set) => {
     if ($pattern('/search/') && $query.params.q) {
         new Promise((resolve) => {
-            setTimeout(() => {
-                fetchContests('title', $query.params.q, true)
-                    .then(set);
-                resolve()
-            }, delay)
-        })
+            fetchContests('title', $query.params.q, true)
+                .then(set);
+            resolve()
+        });
     } else if ($pattern('/contests/')) {
         if ($query.params.scope) {
             new Promise((resolve) => {
-                setTimeout(() => {
-                    fetchContests('scope', $query.params.scope, true)
-                        .then(set);
-                    resolve()
-                }, delay)})
+                fetchContests('scope', $query.params.scope, true)
+                    .then(set);
+                resolve()
+            });
         } else if ($query.params.group) {
             new Promise((resolve) => {
-                setTimeout(() => {
-                    fetchContests('results_group', $query.params.group, true)
-                        .then(set);
-                    resolve()
-                }, delay)
-            })
+                fetchContests('results_group', $query.params.group, true)
+                    .then(set);
+                resolve()
+            });
         }
     } else {
         new Promise((resolve) => {
-            setTimeout(() => {
-                fetchContests('contest_ids', dashboard, true)
-                    .then(set);
-                resolve()
-            }, delay)
-        })
+            fetchContests('contest_ids', dashboard, true)
+                .then(set);
+            resolve()
+        });
     }
 }, []);
 
