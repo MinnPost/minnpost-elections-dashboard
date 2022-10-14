@@ -13,7 +13,7 @@
         }
         return resultClass;
     }
-
+    // title="{parties[r.party_id.toLowerCase()]}"
     
 </script>
 
@@ -72,17 +72,26 @@
         </thead>
         <tbody>
             {#each contest.results as r, key}
-                
+
                 <tr id="{r.id}" class="{setResultClass(contest, r)}">
-                    winner? {isWinner(r, contest, key)}
+                    <td class="winner-column">{#if isWinner(r, contest, key) === true}<span class="fa fa-check"></span>{/if}</td>
+                    <td class="candidate-column">{r.candidate}</td>
+                    {#if contest.partisan}
+                        <td>
+                            {#if (['WI', 'NP'].indexOf(r.party_id) === -1)}
+                            <span class="party-label bg-color-political-{r.party_id.toLowerCase()}">{r.party_id}</span>
+                            {/if}
+                        </td>
+                    {/if}
+                    {#if contest.ranked_choice !== true}
+                        <td class="percentage">{r.percentage}%</td>
+                        {#if ! pattern('/')}
+                            <td class="votes">{r.votes_candidate}</td>
+                        {/if}
+                    {/if}
                 </tr>
 
             {/each}
-
-
-            
-
-            
 
         </tbody>
     </table>
