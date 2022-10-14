@@ -32,7 +32,7 @@ export const resultStore = derived([pattern, query], ([$pattern, $query], set) =
                 }, delay)
             })
         }
-    } else {
+    } else if ($pattern('/')) {
         new Promise((resolve) => {
             setTimeout(() => {
                 fetchContests('contest_ids', dashboard, true)
