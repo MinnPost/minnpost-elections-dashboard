@@ -1,18 +1,28 @@
-import { writable, derived } from 'svelte/store';
+import { readable, writable, derived } from 'svelte/store';
 import { dashboard } from './data/dashboard.js';
 import { fetchElection, fetchContests } from "./data/api.js";
 import { path, query, pattern } from 'svelte-pathfinder';
 
 let delay = 300;
-let interval = 50000;
+let fetchInterval = 50000;
+
+const getTime = () => new Date().toLocaleTimeString();
+const getValue = () =>  Math.floor(Math.random() * 10);
+
+const datastream = readable(null, set => {
+    const interval = setInterval(() => set({time: getTime()}), fetchInterval);
+    return function stop() {
+        clearInterval(interval);
+  };
+}); 
 
 // routing
-export const resultStore = derived([pattern, query], ([$pattern, $query], set) => {
+export const resultStore = derived([datastream, pattern, query], ([$datastream, $pattern, $query], set) => {
+    //if ($datastream) {
     if ($pattern('/search/') && $query.params.q) {
         new Promise((resolve) => {
             setTimeout(() => {
-                fetchContests('title', $query.params.q, true)
-                    .then(set);
+                fetchContests('title', $query.params.q, true).then(set);
                 resolve()
             }, delay)
         })
@@ -20,29 +30,27 @@ export const resultStore = derived([pattern, query], ([$pattern, $query], set) =
         if ($query.params.scope) {
             new Promise((resolve) => {
                 setTimeout(() => {
-                    fetchContests('scope', $query.params.scope, true)
-                        .then(set);
+                    fetchContests('scope', $query.params.scope, true).then(set);
                     resolve()
                 }, delay)
             })
         } else if ($query.params.group) {
             new Promise((resolve) => {
                 setTimeout(() => {
-                    fetchContests('results_group', $query.params.group, true)
-                        .then(set);
+                    fetchContests('results_group', $query.params.group, true).then(set);
                     resolve()
                 }, delay)
             })
         }
-    } else if ($pattern('/')) {
+    } else if ($pattern('/') && !$query.params.q) {
         new Promise((resolve) => {
             setTimeout(() => {
-                fetchContests('contest_ids', dashboard, true)
-                    .then(set);
-                resolve()
+                fetchContests('contest_ids', dashboard, true).then(set);
+                resolve({name: "testing"})
             }, delay)
         })
     }
+    //}
 }, []);
 
 // data
