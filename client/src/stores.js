@@ -6,19 +6,21 @@ import { path, query, pattern } from 'svelte-pathfinder';
 let delay = 300;
 let fetchInterval = 50000;
 
-const getTime = () => new Date().toLocaleTimeString();
-const getValue = () =>  Math.floor(Math.random() * 10);
-
-const datastream = readable(null, set => {
-    const interval = setInterval(() => set({time: getTime()}), fetchInterval);
-    return function stop() {
+// store and refresh displayed results
+export const resultStore = derived([pattern, query], ([$pattern, $query], set) => {
+    fetchAndSet($pattern, $query, set);
+    const interval = setInterval(() => {
+        fetchAndSet($pattern, $query, set)
+    }, fetchInterval);
+    //  If you return a function from the callback, it will be called when
+    //  a) the callback runs again, or b) the last subscriber unsubscribes.
+    return () => {
         clearInterval(interval);
-  };
-}); 
+    };
+}, []);
 
-// routing
-export const resultStore = derived([datastream, pattern, query], ([$datastream, $pattern, $query], set) => {
-    //if ($datastream) {
+// routing for displayed results
+function fetchAndSet($pattern, $query, set) {
     if ($pattern('/search/') && $query.params.q) {
         new Promise((resolve) => {
             setTimeout(() => {
@@ -50,18 +52,26 @@ export const resultStore = derived([datastream, pattern, query], ([$datastream, 
             }, delay)
         })
     }
-    //}
-}, []);
+}
 
-// data
+// election data
 export const electionData = createElectionData();
 function createElectionData() {
 	const {subscribe, set, update} = writable([]);
 	return {
 		subscribe,
 		fetchAll: () => {
-			const fetchedElection = fetchElection();
-			set(fetchedElection);
+            const fetchedElection = fetchElection();
+            set(fetchedElection);
+            const interval = setInterval(() => {
+                fetchElection();
+                set(fetchedElection);
+            }, fetchInterval);
+            //  If you return a function from the callback, it will be called when
+            //  a) the callback runs again, or b) the last subscriber unsubscribes.
+            return () => {
+                clearInterval(interval);
+            };
 		}
 	}
 }
