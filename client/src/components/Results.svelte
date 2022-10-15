@@ -5,6 +5,12 @@
         grid-template-columns: repeat(auto-fit, minmax(10em, 25em));
         list-style: none;
     }
+    .a-election-status {
+        text-align: center;
+        color: #5e6e76;
+        font-size: var(--scale-1);
+        margin-bottom: 1.5em;
+    }
 </style>
 
 <script>
@@ -26,7 +32,7 @@
 	<p>Loading contests</p>
 {:then}
 {#key $resultStore}
-    <p>Showing {$resultStore.length} races</p>
+    <h3 class="a-election-status">Showing {$resultStore.length} races</h3>
     <ul
         in:fade={{duration: 500, delay: 500}}
         out:fade={{duration: 20}

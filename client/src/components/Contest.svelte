@@ -1,9 +1,46 @@
 <style>
     .o-result-contest {
-        padding-left: .5em;
-        padding-right: 2em;
-        padding-bottom: 2em;
+        padding-left: 0.5em;
+        padding-right: 0.5em;
     }
+
+    h3 {
+        margin-bottom: 0.25em;
+    }
+
+    .o-table-striped {
+
+    }
+
+    th, td {
+        vertical-align: middle;
+        padding: .5em;
+    }
+
+    tr:not(:last-child) th {
+        padding-bottom: 0;
+    }
+
+    tr:last-child th {
+        padding-top: 0;
+        border-bottom: 2px solid #d6d6da;
+        font-style: italic;
+    }
+
+    tr:last-child th, td {
+        border-bottom: 1px solid #d6d6da;
+        font-weight: 300;
+        font-size: 0.85em;
+    }
+
+    .o-table-striped-start-light tbody tr:nth-child(odd) {
+        background-color: #efeff0;
+    }
+
+    .o-table-striped-start-dark {
+        
+    }
+
 </style>
 <script>
     // data
@@ -30,10 +67,10 @@
         <h4>{contest.sub_title}</h4>
     {/if}
 
-    <table class="o-table-striped">
+    <table class="o-table-striped o-table-striped-start-light">
         <thead>
             <tr>
-                <th class="winner-column"></th>
+                <th class="winner-column">&nbsp;</th>
                 <th>Candidate</th>
                 {#if contest.partisan && contest.show_party === undefined}
                     <th>
