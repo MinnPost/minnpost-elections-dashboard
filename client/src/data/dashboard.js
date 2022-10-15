@@ -1,52 +1,61 @@
 // set the races
 let dashboardRaces = [
     {
-        title: 'State Senator District 3',
-        type: 'race',
-        id: 'id-MN---3-0123',
-        rows: 5
+        id: 'id-MN---3-0123'
     },
     {
-        title: 'State Senator District 7',
-        type: 'race',
-        id: 'id-MN---7-0127',
-        rows: 2
+        id: 'id-MN---7-0127'
     },
     {
-        title: 'Minneapolis Question 2',
-        type: 'race',
-        id: 'id-MN---43000-1132',
-        rows: 2
+        id: "id-MN---3-0106"
     },
     {
-        title: 'Minneapolis Question 3',
-        type: 'race',
-        id: 'id-MN---43000-1133',
-        rows: 2
+        id: "id-MN----0335"
     },
     {
-        title: 'St. Paul Question 1',
-        type: 'race',
-        id: 'id-MN---58000-1131',
-        rows: 2
+        id: "id-MN----0332"
     },
     {
-        title: 'Minneapolis Council Member — Ward 3',
-        type: 'race',
-        id: 'id-MN---43000-2121',
-        rows: 3
+        id: "id-MN---8-0111"
     },
     {
-        title: 'Minneapolis Council Member — Ward 9',
-        type: 'race',
-        id: 'id-MN---43000-2181',
-        rows: 3
+        id: "id-MN---4-0107"
     },
     {
-        title: 'Minneapolis Council Member — Ward 10',
-        type: 'race',
-        id: 'id-MN---43000-2191',
-        rows: 3
+        id: "id-MN---5-0108"
+    },
+    {
+        id: "id-MN---6-0109"
+    },
+    {
+        id: "id-MN----0333"
+    },
+    {
+        id: "id-MN---2-0105"
+    },
+    {
+        id: "id-MN---7-0110"
+    },
+    {
+        id: "id-MN----0331"
+    },
+    {
+        id: 'id-MN---43000-1132'
+    },
+    {
+        id: 'id-MN---43000-1133'
+    },
+    {
+        id: 'id-MN---58000-1131'
+    },
+    {
+        id: 'id-MN---43000-2121'
+    },
+    {
+        id: 'id-MN---43000-2181'
+    },
+    {
+        id: 'id-MN---43000-2191'
     }
 ];
 
