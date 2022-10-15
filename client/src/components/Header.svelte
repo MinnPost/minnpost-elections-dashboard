@@ -1,6 +1,7 @@
 <script>
     // data
 	import { electionData } from './../stores.js';
+    import { pollInfo } from './../stores.js';
 
     // formatting
     import Dateline from 'dateline';
@@ -58,7 +59,7 @@
 {#await $electionData}
     <p>loading...</p>
 {:then electionData}
-    <header class="m-dashboard-header" data-last-updated="{electionData.updated}" data-last-scraped="{electionData.scraped}">
+    <header class="m-dashboard-header" data-last-updated="{electionData.updated}" data-last-scraped-server="{electionData.scraped}" data-last-loaded-client="{$pollInfo.lastModified}">
         <h2 class="a-election-status">Showing {apDate(electionData.date, false)} {#if electionData.primary == true}primary{:else}general{/if} election results. Last updated {apDate(electionData.updated, true, true)}</h2>
     </header>
 {:catch error}
