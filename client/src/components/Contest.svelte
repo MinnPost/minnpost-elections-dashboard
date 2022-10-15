@@ -1,3 +1,10 @@
+<style>
+    .o-result-contest {
+        padding-left: .5em;
+        padding-right: 2em;
+        padding-bottom: 2em;
+    }
+</style>
 <script>
     // data
     export let pattern;
@@ -17,7 +24,7 @@
     
 </script>
 
-<li id="{contest.id}">
+<li class="o-result-contest" id="{contest.id}">
     <h3>{contest.title}</h3>
     {#if contest.sub_title !== null }
         <h4>{contest.sub_title}</h4>
@@ -95,21 +102,4 @@
 
         </tbody>
     </table>
-
-
-
-
-
-
-
-
-
-    {contest.precincts_reporting} of {contest.total_effected_precincts} precincts reporting.
-    <ul>
-    {#each contest.results as result}
-        <li>{result.candidate}</li>
-        <li>{result.percentage}%</li>
-        <li>{result.votes_candidate} votes</li>
-    {/each}
-    </ul>
 </li>

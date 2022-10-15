@@ -15,7 +15,6 @@
 <style>
 	.election-results {
 		font-family: "ff-meta-web-pro", helvetica, arial, sans-serif;
-		text-align: center;
 	}
 	:global(.election-results h2, .election-results .h2, .election-results h3, .election-results .h3, .election-results h4, .election-results .h4, .election-results h5, .election-results .h5) {
 		font-family: "ff-meta-web-pro", helvetica, arial, sans-serif;
