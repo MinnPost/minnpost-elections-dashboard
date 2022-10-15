@@ -48,6 +48,13 @@ function fetchAndSet($pattern, $query, set) {
                 }, delay)
             })
         }
+    } else if ($pattern('/contest/') && $query.params.id) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                fetchContests('contest_id', $query.params.id, true).then(set);
+                resolve()
+            }, delay)
+        })
     } else if ($pattern('/') && !$query.params.q) {
         new Promise((resolve) => {
             setTimeout(() => {

@@ -46,7 +46,7 @@
     // data
     export let pattern;
     export let contest;
-    
+
     // formatting
     import {isWinner} from './../data/formatting.js';
     
@@ -72,7 +72,7 @@
             <tr>
                 <th class="winner-column">&nbsp;</th>
                 <th>Candidate</th>
-                {#if contest.partisan && contest.show_party === undefined}
+                {#if contest.partisan && contest.show_party === true}
                     <th>
                         <span class="large-table-label">Party</span>
                         <span class="small-table-label"></span>
@@ -98,7 +98,7 @@
             <tr class="table-second-heading">
                 <th class="winner-column"></th>
                 <th>{contest.precincts_reporting} of {contest.total_effected_precincts} precincts reporting.{#if contest.seats > 1} Choosing {contest.seats}.{/if}</th>
-            {#if contest.partisan && contest.show_party === undefined}
+            {#if contest.partisan && contest.show_party === true}
                 <th></th>
             {/if}
             {#if contest.ranked_choice == true}
@@ -120,7 +120,7 @@
                 <tr id="{r.id}" class="{setResultClass(contest, r)}">
                     <td class="winner-column">{#if isWinner(r, contest, key) === true}<span class="fa fa-check"></span>{/if}</td>
                     <td class="candidate-column">{r.candidate}</td>
-                    {#if contest.partisan}
+                    {#if contest.partisan && contest.show_party === true}
                         <td>
                             {#if (['WI', 'NP'].indexOf(r.party_id) === -1)}
                             <span class="party-label bg-color-political-{r.party_id.toLowerCase()}">{r.party_id}</span>
@@ -139,4 +139,9 @@
 
         </tbody>
     </table>
+    {#if pattern('/')}
+    <a href="#!/contest/?id={contest.id}">Full results for this contest</a>
+    {:else}
+    <a href="/">return to dashboard</a>
+    {/if}
 </li>

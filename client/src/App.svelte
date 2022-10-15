@@ -9,6 +9,7 @@
 	import Search from './components/Search.svelte';
 	import Navigation from './components/Navigation.svelte';
 	import Results from "./components/Results.svelte";
+	import Contest from "./components/Contest.svelte";
 
 </script>
 
@@ -29,12 +30,10 @@
 	
 	<Header/>
 
-	
-
 	<!--<Navigation/>-->
 
-	{#if $pattern('/contests/:id')} <!-- eg. /products/1 -->
-		contest id {$path.params.id}
+	{#if $pattern('/contest/?id=:id')} <!-- eg. /products/1 -->
+		<Contest contest="{$path.params.id}" pattern="$pattern}"/>
 	{:else}
 		<Results pattern="{$pattern}"/>
 	{/if}

@@ -34,7 +34,7 @@
 {#key $resultStore}
     <h3 class="a-election-status">Showing {$resultStore.length} races</h3>
     <ul
-        in:fade={{duration: 500, delay: 500}}
+        in:fade={{duration: 20}}
         out:fade={{duration: 20}
         } class="o-results">
         {#each $resultStore as contest}
