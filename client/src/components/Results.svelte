@@ -26,13 +26,15 @@
     // layout components
 	import Contest from "./Contest.svelte";
     import Advertisement from './Advertisement.svelte';
+
+    const pluralize = (count, noun, suffix = 's') => `${count} ${noun}${count !== 1 ? suffix : ''}`;
 </script>
 
 {#await promise}
 	<p>Loading contests</p>
 {:then}
 {#key $resultStore}
-    <h3 class="a-election-status">Showing {$resultStore.length} races</h3>
+    <h3 class="a-election-status">Showing {pluralize($resultStore.length, 'contest')}</h3>
     <ul
         in:fade={{duration: 20}}
         out:fade={{duration: 20}
