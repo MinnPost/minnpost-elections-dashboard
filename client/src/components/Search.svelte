@@ -35,11 +35,8 @@
 </style>
 
 <script>
-    // data
-    export let pattern;
-
     // svelte-pathfinder stuff
-	import { path, submit } from 'svelte-pathfinder';
+	import { path, pattern, submit } from 'svelte-pathfinder';
 
     // form behavior
     let searchTerm = "";
@@ -50,7 +47,7 @@
 </script>
 
 <div class="m-form m-form-search">
-    {#if pattern('/search/')}
+    {#if $pattern('/search/')}
 	    <p><a href="/" on:click={e => suggestedSearchClick()}>return to dashboard</a></p>
 	{:else}
         <form on:submit={submit} action="/search" method="GET">

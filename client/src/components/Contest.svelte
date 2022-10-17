@@ -43,12 +43,15 @@
 
 </style>
 <script>
+    // svelte-pathfinder stuff
+	import { path, pattern } from 'svelte-pathfinder';
+
     // data
-    export let pattern;
     export let contest;
 
     // formatting
     import {isWinner} from './../data/formatting.js';
+    export let label;
     
     function setResultClass(result, contest) {
         let resultClass = '';
@@ -84,7 +87,7 @@
                     <th class="third-choice-column"></th>
                     <th class="final-column">Final</th>
                 {:else}
-                    {#if pattern('/')}
+                    {#if $pattern('/')}
                         <th class="percentage">Results</th>
                     {:else}
                         <th class="percentage">
@@ -109,7 +112,7 @@
             {:else}
             <th></th>
             {/if}
-            {#if ! pattern('/')}
+            {#if ! $pattern('/')}
                 <th></th>
             {/if}
             </tr>
@@ -129,7 +132,7 @@
                     {/if}
                     {#if contest.ranked_choice !== true}
                         <td class="percentage">{r.percentage}%</td>
-                        {#if ! pattern('/')}
+                        {#if ! $pattern('/')}
                             <td class="votes">{r.votes_candidate}</td>
                         {/if}
                     {/if}
@@ -139,9 +142,9 @@
 
         </tbody>
     </table>
-    {#if pattern('/')}
-    <a href="#!/contest/?id={contest.id}">Full results for this contest</a>
+    {#if $pattern('/')}
+    <a href="/contest/?id={contest.id}" on:click={e => $path = "/contest/?id={contest.id}"}>Full results for this {label}</a>
     {:else}
-    <a href="/">return to dashboard</a>
+        <a href="/" on:click={e => $path = "/"}>return to dashboard</a>
     {/if}
 </li>

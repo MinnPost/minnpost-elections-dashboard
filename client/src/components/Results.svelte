@@ -24,7 +24,7 @@
 <script>
     // data
     export let promise;
-    export let pattern;
+	import { pattern } from 'svelte-pathfinder';
     
     import { resultStore } from './../stores.js';
 
@@ -50,7 +50,7 @@
         out:fade={{duration: 20}
         } class="o-results">
         {#each $resultStore as contest}
-            <Contest contest="{contest}" pattern="{pattern}"/>
+            <Contest contest="{contest}" pattern="{$pattern}" label="{label}"/>
         {/each}
     </ul>
 {/key}
