@@ -41,6 +41,12 @@
         
     }
 
+    .map-container {
+        height: 200px;
+        margin-top: 0.25em;
+        padding-bottom: 0.75em;
+    }
+
 </style>
 <script>
     // svelte-pathfinder stuff
@@ -48,6 +54,13 @@
 
     // data
     export let contest;
+
+    // map
+    import Map from "./Map.svelte";
+    let showMap = true;
+    if ( contest.boundary === "" || ! contest.boundary ) {
+        showMap = false;
+    }
 
     // formatting
     import {isWinner} from './../data/formatting.js';
@@ -146,5 +159,10 @@
     <a href="/contest/?id={contest.id}" on:click={e => $path = "/contest/?id={contest.id}"}>Full results for this {label}</a>
     {:else}
         <a href="/" on:click={e => $path = "/"}>return to dashboard</a>
+        {#if showMap}
+            <div class="map-container">
+            <Map boundary_slug={contest.boundary}/>
+            </div>
+        {/if}
     {/if}
 </li>

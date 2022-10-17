@@ -21,6 +21,7 @@
     "svelte-pathfinder": "^3.4.0"
   },
   "dependencies": {
+    "leaflet": "^1.9.1",
     "sirv-cli": "^2.0.2"
   }
 }
