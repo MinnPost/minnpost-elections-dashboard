@@ -3,7 +3,7 @@ import { dashboard } from './data/dashboard.js';
 import { fetchElection, fetchContests } from "./data/api.js";
 import { path, query, pattern } from 'svelte-pathfinder';
 
-let delay = 300;
+let delay = 0;
 let fetchInterval = 50000;
 
 export const pollInfo = writable({
