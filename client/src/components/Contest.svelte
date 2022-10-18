@@ -41,10 +41,18 @@
         
     }
 
-    .map-container {
-        height: 200px;
-        margin-top: 0.25em;
-        padding-bottom: 0.75em;
+    .m-map-container {
+        height: 100%;
+        margin-top: 1.5em;
+        padding: 0.5em;
+        border: 1px solid #d6d6da;
+        border-radius: 4px;
+    }
+
+    .o-result-contest-detail {
+        display: grid;
+        gap: 1em;
+        grid-template-columns: repeat(auto-fit, minmax(20em, 1fr));
     }
 
 </style>
@@ -78,6 +86,7 @@
 </script>
 
 <li class="o-result-contest" id="{contest.id}">
+    <div class="o-result-contest-content">
     <h3>{contest.title}</h3>
     {#if contest.sub_title !== null }
         <h4>{contest.sub_title}</h4>
@@ -159,8 +168,11 @@
     <a href="/contest/?id={contest.id}" on:click={e => $path = "/contest/?id={contest.id}"}>Full results for this {label}</a>
     {:else}
         <a href="/" on:click={e => $path = "/"}>return to dashboard</a>
+    {/if}
+    </div>
+    {#if ! $pattern('/')}
         {#if showMap}
-            <div class="map-container">
+            <div class="m-map-container">
             <Map boundary_slug={contest.boundary}/>
             </div>
         {/if}
