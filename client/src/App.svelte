@@ -32,23 +32,7 @@
 
 	<!--<Navigation/>-->
 
-	{#if $pattern('/contest/?id=:id')} <!-- eg. /products/1 -->
-		<Contest contest="{$path.params.id}" pattern="$pattern}"/>
-	{:else}
-		<Results pattern="{$pattern}"/>
-	{/if}
+	<Results pattern="{$pattern}"/>
 
-	<ol>
-		<li>show results
-			<ul>
-				<li>list of current result races</li>
-			</ul>
-			<ul>
-				<li>table of individual race's results</li>
-				<li>map</li>
-				<li>permalink to that race?</li>
-			</ul>
-		</li>
-	</ol>
 
 </div>
