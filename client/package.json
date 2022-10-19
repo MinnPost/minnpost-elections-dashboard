@@ -6,7 +6,8 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "autobuild": "rollup -c -w",
-    "start": "sirv public --no-clear"
+    "start": "sirv public --no-clear --single",
+    "start:dev": "sirv public --dev -s"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^23.0.0",

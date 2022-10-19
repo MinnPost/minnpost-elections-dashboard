@@ -57,7 +57,7 @@ function fetchAndSet($pattern, $query, set) {
 // election data
 export const electionData = createElectionData();
 function createElectionData() {
-	const {subscribe, set, update} = writable([]);
+	const {subscribe, set, update} = writable('electionData', []);
 	return {
 		subscribe,
 		fetchAll: () => {
