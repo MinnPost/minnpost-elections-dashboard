@@ -24,7 +24,8 @@
 <script>
     // data
     export let promise;
-	import { pattern } from 'svelte-pathfinder';
+	//import { pattern } from 'svelte-pathfinder';
+    export let params;
     
     import { resultStore } from './../stores.js';
 
@@ -33,7 +34,7 @@
 
     // layout components
 	import Contest from "./Contest.svelte";
-    import Advertisement from './Advertisement.svelte';
+    //import Advertisement from './Advertisement.svelte';
 
     // language settings
     const pluralize = (count, noun, suffix = 's') => `${count} ${noun}${count !== 1 ? suffix : ''}`;
@@ -47,7 +48,7 @@
     <h3 class="a-election-status">Showing {pluralize($resultStore.length, label)}</h3>
     <ul class="o-results">
         {#each $resultStore as contest}
-            <Contest contest="{contest}" pattern="{$pattern}" label="{label}"/>
+            <Contest contest="{contest}" params="{params}" label="{label}"/>
         {/each}
     </ul>
 {/key}

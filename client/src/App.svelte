@@ -1,15 +1,31 @@
 <script>
-	// svelte-pathfinder stuff
-	import { click, prefs, path, query, fragment, submit, state, pattern } from 'svelte-pathfinder';
-	// pathfinder preferences
-	prefs.hashbang = true;
+
+	import Router from 'svelte-spa-router'
 
 	// layout components
 	import Header from "./components/Header.svelte";
 	import Search from './components/Search.svelte';
-	import Navigation from './components/Navigation.svelte';
+	//import Navigation from './components/Navigation.svelte';
 	import Results from "./components/Results.svelte";
-	import Contest from "./components/Contest.svelte";
+	//import Contest from "./components/Contest.svelte";
+
+	const routes = {
+		// Exact path
+		'/': Results,
+
+		// Using named parameters, with last being optional
+		'/contests/*': Results,
+
+		// Using named parameters, with last being optional
+		'/search/*': Results,
+
+		// Using named parameters, with last being optional
+		'/contest/*': Results,
+
+		// Catch-all
+		// This is optional, but if present it must be the last
+		//'*': NotFound,
+	}
 
 </script>
 
@@ -22,17 +38,14 @@
 	}
 </style>
 
-<svelte:window on:click={click} />
-
 <div class="election-results">
 
-	<Search pattern="{$pattern}"/>
+	<Search/>
 	
 	<Header/>
 
 	<!--<Navigation/>-->
 
-	<Results pattern="{$pattern}"/>
-
+	<Router {routes}/>
 
 </div>

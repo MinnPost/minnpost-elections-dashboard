@@ -57,15 +57,18 @@
 
 </style>
 <script>
-    // svelte-pathfinder stuff
-	import { path, pattern } from 'svelte-pathfinder';
+    // routing
+    import {link} from 'svelte-spa-router';
+    export let params = {};
+
+    import {isEmpty} from './../data/handling.js';
 
     // data
     export let contest;
 
     // map
     import Map from "./Map.svelte";
-    let showMap = true;
+    let showMap = false;
     if ( contest.boundary === "" || ! contest.boundary ) {
         showMap = false;
     }
@@ -81,13 +84,11 @@
         }
         return resultClass;
     }
-    // title="{parties[r.party_id.toLowerCase()]}"
 
     let contestClass = 'o-result-contest';
-    if ( ! $pattern('/') ) {
+    if ( params ) {
         contestClass += ' o-result-contest-detail';
     }
-    
 </script>
 
 <li class="{contestClass}" id="{contest.id}">
@@ -114,7 +115,7 @@
                         <th class="third-choice-column"></th>
                         <th class="final-column">Final</th>
                     {:else}
-                        {#if $pattern('/')}
+                        {#if isEmpty(params)}
                             <th class="percentage">Results</th>
                         {:else}
                             <th class="percentage">
@@ -139,7 +140,7 @@
                 {:else}
                 <th></th>
                 {/if}
-                {#if ! $pattern('/')}
+                {#if ! isEmpty(params)}
                     <th></th>
                 {/if}
                 </tr>
@@ -159,7 +160,7 @@
                         {/if}
                         {#if contest.ranked_choice !== true}
                             <td class="percentage">{r.percentage}%</td>
-                            {#if ! $pattern('/')}
+                            {#if ! isEmpty(params)}
                                 <td class="votes">{r.votes_candidate}</td>
                             {/if}
                         {/if}
@@ -169,13 +170,13 @@
 
             </tbody>
         </table>
-    {#if $pattern('/')}
-    <a href="/contest/?id={contest.id}" on:click={e => $path = "/contest/?id={contest.id}"}>Full results for this {label}</a>
+    {#if isEmpty(params)}
+        <a href="/contest/?id={contest.id}" use:link>Full results for this {label}</a>
     {:else}
-        <a href="/" on:click={e => $path = "/"}>return to dashboard</a>
+        <a href="/" use:link>return to dashboard</a>
     {/if}
     </div>
-    {#if ! $pattern('/')}
+    {#if ! isEmpty(params)}
         {#if showMap}
             <div class="m-map-container">
                 <Map boundary_slug={contest.boundary}/>

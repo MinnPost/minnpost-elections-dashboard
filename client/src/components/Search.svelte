@@ -36,26 +36,33 @@
 
 <script>
     // svelte-pathfinder stuff
-	import { path, pattern, submit } from 'svelte-pathfinder';
+	//import { path, pattern, submit } from 'svelte-pathfinder';
+    import {push, link, location, querystring} from 'svelte-spa-router';
 
     // form behavior
     let searchTerm = "";
-    function suggestedSearchClick() {
-        $path = '/';
-        searchTerm = "";
+    let searchField;
+    if ( ! $location.startsWith("/search/") || searchParams.get('q') === null) {
+        searchField.value = "";
+    }
+    function searchClick(path) {
+        if ( path !== '') {
+            push('/search/?q=' + path);
+        } else {
+            push('/');
+        }
+        searchTerm = path;
     }
 </script>
 
 <div class="m-form m-form-search">
-    {#if $pattern('/search/')}
-	    <p><a href="/" on:click={e => suggestedSearchClick()}>return to dashboard</a></p>
-	{:else}
-        <form on:submit={submit} action="/search" method="GET">
+    
+        <form on:submit|preventDefault={() => searchClick(searchTerm)} action="" method="GET">
             <fieldset>
                 <label class="a-search-label screen-reader-text" for="q">Search for a contest</label>
                 <div class="a-input-with-button a-button-sentence">
                     <input type="search" name="q"
-                        bind:value={searchTerm}
+                        bind:value={searchField}
                         class="search-field"
                         placeholder="Search for a contest"
                     >
@@ -63,9 +70,14 @@
                 </div>
             </fieldset>
         </form>
+        <ol>
+        {#if ($location !== "/")}
+            <li><a href="/" use:link>return to dashboard</a></li>
+        {/if}
+        </ol>
         <!--<ol>
             <li>suggested searches</li>
             <li><a href="/" on:click={e => suggestedSearchClick()}>return to dashboard</a></li>
         </ol>-->
-    {/if}
+    
 </div>
