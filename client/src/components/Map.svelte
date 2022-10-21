@@ -2,7 +2,7 @@
 
     export let boundary_slug;
   
-      import L from 'leaflet';
+    import L from 'leaflet';
   
     const mapDefaults = {
       zoom: 10,
@@ -68,7 +68,7 @@
   
     .loading {
       font-size: 2em;
-          font-family: "ff-meta-web-pro", helvetica, arial, sans-serif;
+      font-family: "ff-meta-web-pro", helvetica, arial, sans-serif;
       background-color: #ffffff;
       position: absolute;
       top: 50%;

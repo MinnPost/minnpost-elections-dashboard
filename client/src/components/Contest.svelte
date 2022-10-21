@@ -57,6 +57,9 @@
 
 </style>
 <script>
+    // settings
+    import {settings} from './../settings.js';
+
     // routing
     import {link} from 'svelte-spa-router';
     export let params = {};
@@ -64,15 +67,22 @@
     // data handling
     import {isEmpty} from './../data/handling.js';
 
+    import { onMount } from 'svelte';
+
     // data
     export let contest;
 
     // map
-    import Map from "./Map.svelte";
-    let showMap = false;
-    if ( contest.boundary === "" || ! contest.boundary ) {
-        showMap = false;
-    }
+    contest.showMap = settings.showMap;
+    let Map;
+    onMount(async () => {
+        if ( contest.boundary === "" || ! contest.boundary ) {
+            contest.showMap = false;
+        }
+        if (contest.showMap === true) {
+            Map = (await import('./Map.svelte')).default;
+        }
+    });
 
     // formatting
     import {isWinner} from './../data/formatting.js';
@@ -92,7 +102,6 @@
     }
     
     // scroll to element
-    import { onMount } from 'svelte';
 	onMount(async () => {
         const el = document.querySelector('.m-form-search-contest');
 		if (!el) return;
@@ -188,9 +197,11 @@
     {/if}
     </div>
     {#if ! isEmpty(params)}
-        {#if showMap}
+        {#if contest.showMap}
             <div class="m-map-container">
-                <Map boundary_slug={contest.boundary}/>
+
+                <svelte:component this={Map} boundary_slug={contest.boundary}/>
+
             </div>
         {/if}
     {/if}

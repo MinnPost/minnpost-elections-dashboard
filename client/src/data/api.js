@@ -1,6 +1,5 @@
-//export let apiRoot = "http://0.0.0.0:5000/api/";
-export let apiRoot = "https://minnpost-mn-election-results.herokuapp.com/api/";
-export let electionId = "id-20221108";
+// settings
+import {settings} from './../settings.js';
 
 // api calls
 export async function fetchContests(key, value, withResults = false) {
@@ -10,9 +9,9 @@ export async function fetchContests(key, value, withResults = false) {
 		endpoint = 'contests-with-results';
 	}
 	if ( key && value ) {
-		res = await fetch(`${apiRoot}${endpoint}/?${key}=${value}&election_id=${electionId}`);
+		res = await fetch(`${settings.apiRoot}${endpoint}/?${key}=${value}&election_id=${settings.electionId}`);
 	} else {
-		res = await fetch(`${apiRoot}${endpoint}/?election_id=${electionId}`);
+		res = await fetch(`${settings.apiRoot}${endpoint}/?election_id=${settings.electionId}`);
 	}
 	const json = await res.json();
 	if (res.ok) {
@@ -23,7 +22,7 @@ export async function fetchContests(key, value, withResults = false) {
 }
 
 export async function fetchElection() {
-	const res = await fetch(`${apiRoot}elections/?election_id=${electionId}`);
+	const res = await fetch(`${settings.apiRoot}elections/?election_id=${settings.electionId}`);
 	const json = await res.json();
 	if (res.ok) {
 		return json.data[0];

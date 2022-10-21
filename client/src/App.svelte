@@ -1,6 +1,6 @@
 <script>
 	// settings
-	let useNavigation = false;
+	import {settings} from './settings.js';
 
 	// behavior
     import { fade } from 'svelte/transition';
@@ -48,7 +48,7 @@
 	
 	<Header/>
 
-	{#if useNavigation === true}
+	{#if settings.useNavigation === true}
 		<Navigation/>
 	{/if}
 

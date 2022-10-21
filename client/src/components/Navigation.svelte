@@ -1,7 +1,7 @@
 <style>
     .o-wrapper-contests-navigation {
         border-top: 2px solid #d6d6da;
-        margin: 0;
+        margin: 0 0 0.75em 0;
         position: sticky;
         top: 0;
         background: #fff;

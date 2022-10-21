@@ -51,7 +51,6 @@
     import {push, location, querystring} from 'svelte-spa-router';
 
     import AutoComplete from "simple-svelte-autocomplete"
-    //import { resultStore } from './../stores.js';
     import { fetchContests } from "./../data/api.js";
 
     // form behavior
