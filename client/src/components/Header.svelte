@@ -1,7 +1,7 @@
 <script>
     // data
 	import { electionData } from './../stores.js';
-    import { pollInfo } from './../stores.js';
+    import { pollInfo, resultStore } from './../stores.js';
 
     // formatting
     import Dateline from 'dateline';
@@ -45,7 +45,9 @@
     onMount(async () => {
 		electionData.fetchAll()
 	});
-
+    // language settings
+    const pluralize = (count, noun, suffix = 's') => `${count} ${noun}${count !== 1 ? suffix : ''}`;
+    let label = 'contest';
 </script>
 
 <style>
@@ -64,4 +66,12 @@
     </header>
 {:catch error}
     <p style="color: red">{error.message}</p>
+{/await}
+
+{#await $resultStore}
+	<p>Loading contests</p>
+{:then}
+    <h3 class="a-election-status">Showing {pluralize($resultStore.length, label)}</h3>
+{:catch error}
+    <p>Something went wrong: {error.message}</p>
 {/await}

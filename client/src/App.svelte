@@ -1,6 +1,6 @@
 <script>
-	// routing
-	import Router from 'svelte-spa-router';
+	// settings
+	let useNavigation = false;
 
 	// behavior
     import { fade } from 'svelte/transition';
@@ -8,9 +8,11 @@
 	// layout components
 	import Header from "./components/Header.svelte";
 	import Search from './components/Search.svelte';
-	//import Navigation from './components/Navigation.svelte';
+	import Navigation from './components/Navigation.svelte';
 	import Results from "./components/Results.svelte";
 
+	// routing
+	import Router from 'svelte-spa-router';
 	const routes = {
 		// Exact path
 		'/': Results,
@@ -46,7 +48,9 @@
 	
 	<Header/>
 
-	<!--<Navigation/>-->
+	{#if useNavigation === true}
+		<Navigation/>
+	{/if}
 
 	<Router {routes} />
 
