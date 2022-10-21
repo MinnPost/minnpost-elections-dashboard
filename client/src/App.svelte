@@ -1,41 +1,57 @@
 <script>
-	// svelte-pathfinder stuff
-	import { click, prefs, path, query, fragment, submit, state, pattern } from 'svelte-pathfinder';
-	// pathfinder preferences
-	prefs.hashbang = true;
+	// settings
+	let useNavigation = false;
+
+	// behavior
+    import { fade } from 'svelte/transition';
 
 	// layout components
 	import Header from "./components/Header.svelte";
 	import Search from './components/Search.svelte';
+	import Navigation from './components/Navigation.svelte';
 	import Results from "./components/Results.svelte";
+
+	// routing
+	import Router from 'svelte-spa-router';
+	const routes = {
+		// Exact path
+		'/': Results,
+
+		// Using named parameters, with last being optional
+		'/contests/*': Results,
+
+		// Using named parameters, with last being optional
+		'/search/*': Results,
+
+		// Using named parameters, with last being optional
+		'/contest/*': Results,
+
+		// Catch-all
+		// This is optional, but if present it must be the last
+		//'*': NotFound,
+	}
 
 </script>
 
-<svelte:window on:click={click} />
+<style>
+	.election-results {
+		font-family: "ff-meta-web-pro", helvetica, arial, sans-serif;
+	}
+	:global(.election-results h2, .election-results .h2, .election-results h3, .election-results .h3, .election-results h4, .election-results .h4, .election-results h5, .election-results .h5) {
+		font-family: "ff-meta-web-pro", helvetica, arial, sans-serif;
+	}
+</style>
 
-<div class="election-results">
-
-	<Header/>
+<div class="election-results" in:fade="{{duration: 500}}">
 
 	<Search/>
+	
+	<Header/>
 
-	{#if $pattern('/contests/:id')} <!-- eg. /products/1 -->
-		contest id {$path.params.id}
-	{:else}
-		<Results/>
+	{#if useNavigation === true}
+		<Navigation/>
 	{/if}
 
-	<ol>
-		<li>show results
-			<ul>
-				<li>list of current result races</li>
-			</ul>
-			<ul>
-				<li>table of individual race's results</li>
-				<li>map</li>
-				<li>permalink to that race?</li>
-			</ul>
-		</li>
-	</ol>
+	<Router {routes} />
 
 </div>

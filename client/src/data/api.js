@@ -1,5 +1,6 @@
-export let apiRoot = "http://0.0.0.0:5000/api/";
-export let electionId = "id-20220809";
+//export let apiRoot = "http://0.0.0.0:5000/api/";
+export let apiRoot = "https://minnpost-mn-election-results.herokuapp.com/api/";
+export let electionId = "id-20221108";
 
 // api calls
 export async function fetchContests(key, value, withResults = false) {

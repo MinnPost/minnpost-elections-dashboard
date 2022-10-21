@@ -1,16 +1,20 @@
-import { readable, writable, derived } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 import { dashboard } from './data/dashboard.js';
 import { fetchElection, fetchContests } from "./data/api.js";
-import { path, query, pattern } from 'svelte-pathfinder';
+import {location, querystring} from 'svelte-spa-router';
 
-let delay = 300;
+let delay = 0;
 let fetchInterval = 50000;
 
+export const pollInfo = writable({
+    lastModified: new Date()
+  });
+
 // store and refresh displayed results
-export const resultStore = derived([pattern, query], ([$pattern, $query], set) => {
-    fetchAndSet($pattern, $query, set);
+export const resultStore = derived([location, querystring], ([$location, $querystring], set) => {
+    fetchAndSet($location, $querystring, set);
     const interval = setInterval(() => {
-        fetchAndSet($pattern, $query, set)
+        fetchAndSet($location, $querystring, set);
     }, fetchInterval);
     //  If you return a function from the callback, it will be called when
     //  a) the callback runs again, or b) the last subscriber unsubscribes.
@@ -20,52 +24,63 @@ export const resultStore = derived([pattern, query], ([$pattern, $query], set) =
 }, []);
 
 // routing for displayed results
-function fetchAndSet($pattern, $query, set) {
-    if ($pattern('/search/') && $query.params.q) {
+function fetchAndSet($location, $querystring, set) {
+    const searchParams = new URLSearchParams($querystring);
+    if ($location.startsWith("/search/") && searchParams.get('q') !== null) {
         new Promise((resolve) => {
             setTimeout(() => {
-                fetchContests('title', $query.params.q, true).then(set);
+                fetchContests('title', searchParams.get('q'), true).then(set);
                 resolve()
             }, delay)
         })
-    } else if ($pattern('/contests/')) {
-        if ($query.params.scope) {
+    } else if ($location.startsWith("/contests/")) {
+        if (searchParams.get('scope') !== null) {
             new Promise((resolve) => {
                 setTimeout(() => {
-                    fetchContests('scope', $query.params.scope, true).then(set);
+                    fetchContests('scope', searchParams.get('scope'), true).then(set);
                     resolve()
                 }, delay)
             })
-        } else if ($query.params.group) {
+        } else if (searchParams.get('group') !== null) {
             new Promise((resolve) => {
                 setTimeout(() => {
-                    fetchContests('results_group', $query.params.group, true).then(set);
+                    fetchContests('results_group', searchParams.get('group'), true).then(set);
                     resolve()
                 }, delay)
             })
         }
-    } else if ($pattern('/') && !$query.params.q) {
+    } else if ($location.startsWith("/contest/") && searchParams.get('id') !== null) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                fetchContests('contest_id', searchParams.get('id'), true).then(set);
+                resolve()
+            }, delay)
+        })
+    } else if ($location === "/" && ! searchParams.get('q')) {
         new Promise((resolve) => {
             setTimeout(() => {
                 fetchContests('contest_ids', dashboard, true).then(set);
-                resolve({name: "testing"})
+                resolve()
             }, delay)
         })
     }
+    pollInfo.set({ lastModified: new Date() });
 }
 
 // election data
 export const electionData = createElectionData();
 function createElectionData() {
-	const {subscribe, set, update} = writable('electionData', []);
+	const {subscribe, set, update} = writable([]);
 	return {
 		subscribe,
 		fetchAll: () => {
             const fetchedElection = fetchElection();
             set(fetchedElection);
+            pollInfo.set({ lastModified: new Date() });
             const interval = setInterval(() => {
                 fetchElection();
                 set(fetchedElection);
+                pollInfo.set({ lastModified: new Date() });
             }, fetchInterval);
             //  If you return a function from the callback, it will be called when
             //  a) the callback runs again, or b) the last subscriber unsubscribes.
