@@ -57,12 +57,11 @@
 
 </style>
 <script>
-    import { onMount } from 'svelte';
-
     // routing
     import {link} from 'svelte-spa-router';
     export let params = {};
 
+    // data handling
     import {isEmpty} from './../data/handling.js';
 
     // data
@@ -79,6 +78,7 @@
     import {isWinner} from './../data/formatting.js';
     export let label;
     
+    // set class based on dashboard or not
     function setResultClass(result, contest) {
         let resultClass = '';
         if (contest.primary === true && result.party_id != '') {
@@ -91,8 +91,10 @@
         contestClass += ' o-result-contest-detail';
     }
     
+    // scroll to element
+    import { onMount } from 'svelte';
 	onMount(async () => {
-        const el = document.querySelector('.a-election-status');
+        const el = document.querySelector('.m-form-search-contest');
 		if (!el) return;
         el.scrollIntoView({
             behavior: 'smooth'

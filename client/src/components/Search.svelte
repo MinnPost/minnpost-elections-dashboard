@@ -32,11 +32,27 @@
             width: 59.3670886076%;
         }
     }
+    :global(div.autocomplete) {
+        width: 100%;
+    }
+    :global(.input-container) {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        margin: 0;
+    }
+    :global(span.autocomplete-clear-button) {
+        opacity: 0.6;
+    }
 </style>
 
 <script>
     // routing
-    import {push, link, location, querystring} from 'svelte-spa-router';
+    import {push, location, querystring} from 'svelte-spa-router';
+
+    import AutoComplete from "simple-svelte-autocomplete"
+    //import { resultStore } from './../stores.js';
+    import { fetchContests } from "./../data/api.js";
 
     // form behavior
     let searchTerm = "";
@@ -44,28 +60,103 @@
     if ( ! $location.startsWith("/search/") || searchParams.get('q') === null) {
         searchTerm = "";
     }
-    let searchClick = function(path) {
-        if ( path !== '') {
-            push('/search/?q=' + path);
+    let searchClick = function(value) {
+        if ( typeof value === 'object' ) {
+            value = value.title;
+        }
+        if ( value !== '') {
+            push('/search/?q=' + value);
         } else {
             push('/');
+            clearInput();
         }
-        searchTerm = path;
+        searchTerm = value;
     }
+
+    async function getContests(keyword) {
+        var contests = fetchContests('title', keyword, false);
+        return contests;
+    }
+
+    function getItem(value) {
+        if (!value) {
+            searchTerm = value;
+            return '';
+        }
+        return value.title;
+    }
+
+
+    let selection = '';
+    let autocompleteClearButton;
+
+    import { onMount } from 'svelte';
+    onMount(() => {
+        const autocompleteInput = document.querySelector('input.autocomplete-input');
+        autocompleteInput.addEventListener('input', _inputChanged);
+
+        const autocompleteList = document.querySelector('div.autocomplete-list');
+        autocompleteList.addEventListener('click', _setAutocomplete);
+
+        autocompleteClearButton = document.querySelector('span.autocomplete-clear-button');
+        autocompleteClearButton.addEventListener('click', _clearedAutocomplete);
+        _toggleClearButton(false);
+    });
+
+    function _inputChanged() {
+        // doesn't catch changes made from JS (e.g. clearing)
+        // @ts-ignore
+        const newValue = this.value;
+        _toggleClearButton(!!newValue);
+        if (newValue.toLowerCase() != selection?.toLowerCase()) {
+        selection = undefined;
+        }
+    }
+
+    function _clearedAutocomplete() {
+        selection = undefined;
+        _toggleClearButton(false);
+        push('/');
+    }
+
+    function _setAutocomplete() {
+        _toggleClearButton(true);
+    }
+
+    function _toggleClearButton(show) {
+        autocompleteClearButton.setAttribute(
+        'style',
+        'display:' + (show ? 'block' : 'none')
+        );
+    }
+    function clearInput() {
+        autocompleteClearButton.click();
+    }
+
 </script>
 
-<div class="m-form m-form-search">
-    
+<div class="m-form m-form-search m-form-search-contest">
         <form>
             <fieldset>
                 <label class="a-search-label screen-reader-text" for="q">Search for a contest</label>
                 <div class="a-input-with-button a-button-sentence">
-                    <input type="search" name="q"
+                    <AutoComplete
+                        type="search" name="q"
+                        searchFunction="{getContests}"
+                        delay="500"
+                        localFiltering={false}
+                        labelFieldName="title"
+                        valueFunction={getItem}
+                        bind:selectedItem="{searchTerm}"
                         bind:value={searchTerm}
-                        class="search-field"
+                        inputClassName="search-field"
                         placeholder="Search for a contest"
-                    >
-                    <input type="submit" class="search-submit" value="Search" on:click|preventDefault={() => searchClick(searchTerm)}>
+                        hideArrow="{true}"
+                        cleanUserText={false}
+                        minCharactersToSearch=3
+                        showClear="{true}"
+                    />
+                <input type="submit" class="search-submit" value="Search" on:click|preventDefault={() => searchClick(searchTerm)}>
                 </div>
             </fieldset>
         </form>
@@ -78,5 +169,4 @@
             <li>suggested searches</li>
             <li><a href="/" on:click={e => suggestedSearchClick()}>return to dashboard</a></li>
         </ol>-->
-    
 </div>
