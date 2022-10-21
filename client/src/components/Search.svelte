@@ -35,17 +35,16 @@
 </style>
 
 <script>
-    // svelte-pathfinder stuff
-	//import { path, pattern, submit } from 'svelte-pathfinder';
+    // routing
     import {push, link, location, querystring} from 'svelte-spa-router';
 
     // form behavior
     let searchTerm = "";
-    let searchField;
+    let searchParams = new URLSearchParams($querystring);
     if ( ! $location.startsWith("/search/") || searchParams.get('q') === null) {
-        searchField.value = "";
+        searchTerm = "";
     }
-    function searchClick(path) {
+    let searchClick = function(path) {
         if ( path !== '') {
             push('/search/?q=' + path);
         } else {
@@ -57,22 +56,22 @@
 
 <div class="m-form m-form-search">
     
-        <form on:submit|preventDefault={() => searchClick(searchTerm)} action="" method="GET">
+        <form>
             <fieldset>
                 <label class="a-search-label screen-reader-text" for="q">Search for a contest</label>
                 <div class="a-input-with-button a-button-sentence">
                     <input type="search" name="q"
-                        bind:value={searchField}
+                        bind:value={searchTerm}
                         class="search-field"
                         placeholder="Search for a contest"
                     >
-                    <input type="submit" class="search-submit" value="Search">
+                    <input type="submit" class="search-submit" value="Search" on:click|preventDefault={() => searchClick(searchTerm)}>
                 </div>
             </fieldset>
         </form>
         <ol>
         {#if ($location !== "/")}
-            <li><a href="/" use:link>return to dashboard</a></li>
+            <li><a href="/" on:click|preventDefault={() => searchClick('')}>return to dashboard</a></li>
         {/if}
         </ol>
         <!--<ol>

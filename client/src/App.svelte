@@ -1,13 +1,15 @@
 <script>
+	// routing
+	import Router from 'svelte-spa-router';
 
-	import Router from 'svelte-spa-router'
+	// behavior
+    import { fade } from 'svelte/transition';
 
 	// layout components
 	import Header from "./components/Header.svelte";
 	import Search from './components/Search.svelte';
 	//import Navigation from './components/Navigation.svelte';
 	import Results from "./components/Results.svelte";
-	//import Contest from "./components/Contest.svelte";
 
 	const routes = {
 		// Exact path
@@ -38,7 +40,7 @@
 	}
 </style>
 
-<div class="election-results">
+<div class="election-results" in:fade="{{duration: 500}}">
 
 	<Search/>
 	
@@ -46,6 +48,6 @@
 
 	<!--<Navigation/>-->
 
-	<Router {routes}/>
+	<Router {routes} />
 
 </div>

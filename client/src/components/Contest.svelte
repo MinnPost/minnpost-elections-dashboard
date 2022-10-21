@@ -57,6 +57,8 @@
 
 </style>
 <script>
+    import { onMount } from 'svelte';
+
     // routing
     import {link} from 'svelte-spa-router';
     export let params = {};
@@ -84,11 +86,18 @@
         }
         return resultClass;
     }
-
     let contestClass = 'o-result-contest';
     if ( params ) {
         contestClass += ' o-result-contest-detail';
     }
+    
+	onMount(async () => {
+        const el = document.querySelector('.a-election-status');
+		if (!el) return;
+        el.scrollIntoView({
+            behavior: 'smooth'
+        });
+	});
 </script>
 
 <li class="{contestClass}" id="{contest.id}">

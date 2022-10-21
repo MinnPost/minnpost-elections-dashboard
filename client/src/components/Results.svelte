@@ -24,13 +24,9 @@
 <script>
     // data
     export let promise;
-	//import { pattern } from 'svelte-pathfinder';
     export let params;
     
     import { resultStore } from './../stores.js';
-
-    // behavior
-    //import { fade } from 'svelte/transition';
 
     // layout components
 	import Contest from "./Contest.svelte";

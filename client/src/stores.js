@@ -1,7 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import { dashboard } from './data/dashboard.js';
 import { fetchElection, fetchContests } from "./data/api.js";
-//import { path, query, pattern } from 'svelte-pathfinder';
 import {location, querystring} from 'svelte-spa-router';
 
 let delay = 0;
