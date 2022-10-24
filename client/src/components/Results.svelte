@@ -18,7 +18,6 @@
 <script>
     // data
     export let promise;
-    export let params;
     
     import { resultStore } from './../stores.js';
 
@@ -27,7 +26,6 @@
     //import Advertisement from './Advertisement.svelte';
 
     let label = 'contest';
-
 </script>
 
 {#await promise}
@@ -35,8 +33,8 @@
 {:then}
 {#key $resultStore}
     <ul class="o-results">
-        {#each $resultStore as contest, index}
-            <Contest contest="{contest}" params="{params}" label="{label}"/>
+        {#each $resultStore as contest}
+            <Contest contest="{contest}" label="{label}"/>
         {/each}
     </ul>
 {/key}

@@ -1,7 +1,6 @@
 <script>
 
     export let boundary_slug;
-  
     import L from 'leaflet';
   
     const mapDefaults = {
@@ -30,10 +29,9 @@
       clickable: false
     }
   
-  
     let map;
     let mapReady = false;
-  
+    
     async function createMap(container) {
       map = new L.Map(container, mapDefaults);
       map.addControl(new L.Control.Zoom({ position: 'topright' }));
@@ -42,7 +40,6 @@
   
       let url = 'https://represent-minnesota.herokuapp.com/boundaries/'
       url += boundary_slug + "/simple_shape";
-      console.log(url);
   
       let response =  await fetch(`` + url);
       let boundary = await response.json();
@@ -84,7 +81,6 @@
   <link href='https://api.mapbox.com/mapbox.js/v3.3.1/mapbox.css' rel='stylesheet' />
   
   <svelte:window on:resize={resizeMap} />
-  
   <div class="map" use:createMap>
     {#if !mapReady }<div class="loading">Loading map&#133;</div>{/if}
   </div>

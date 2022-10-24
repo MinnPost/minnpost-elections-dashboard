@@ -61,8 +61,7 @@
     import {settings} from './../settings.js';
 
     // routing
-    import {link} from 'svelte-spa-router';
-    export let params = {};
+    import {link, location, querystring} from 'svelte-spa-router';
 
     // data handling
     import {isEmpty} from './../data/handling.js';
@@ -73,16 +72,23 @@
     export let contest;
 
     // map
-    contest.showMap = settings.showMap;
+    let showMap = settings.showMap;
     let Map;
-    onMount(async () => {
+    const mapDelay = 300;
+    const sleep = ms => new Promise(f => setTimeout(f, ms));
+	onMount(async () => {
+        let searchParams = new URLSearchParams($querystring);
+        if ( ! $location.startsWith("/contest/") || searchParams.get('id') === null) {
+            showMap = false;
+        }
         if ( contest.boundary === "" || ! contest.boundary ) {
-            contest.showMap = false;
+            showMap = false;
         }
-        if (contest.showMap === true) {
-            Map = (await import('./Map.svelte')).default;
+        if (showMap === true) {
+		    await sleep(mapDelay); // simulate network delay
+		    Map = (await import('./Map.svelte')).default;
         }
-    });
+	});
 
     // formatting
     import {isWinner} from './../data/formatting.js';
@@ -97,7 +103,7 @@
         return resultClass;
     }
     let contestClass = 'o-result-contest';
-    if ( params ) {
+    if ($location !== "/") {
         contestClass += ' o-result-contest-detail';
     }
     
@@ -135,7 +141,7 @@
                         <th class="third-choice-column"></th>
                         <th class="final-column">Final</th>
                     {:else}
-                        {#if isEmpty(params)}
+                        {#if ($location === "/")}
                             <th class="percentage">Results</th>
                         {:else}
                             <th class="percentage">
@@ -160,7 +166,7 @@
                 {:else}
                 <th></th>
                 {/if}
-                {#if ! isEmpty(params)}
+                {#if ($location !== "/")}
                     <th></th>
                 {/if}
                 </tr>
@@ -180,7 +186,7 @@
                         {/if}
                         {#if contest.ranked_choice !== true}
                             <td class="percentage">{r.percentage}%</td>
-                            {#if ! isEmpty(params)}
+                            {#if ($location !== "/")}
                                 <td class="votes">{r.votes_candidate}</td>
                             {/if}
                         {/if}
@@ -190,19 +196,18 @@
 
             </tbody>
         </table>
-    {#if isEmpty(params)}
+    {#if ($location === "/")}
         <a href="/contest/?id={contest.id}" use:link>Full results for this {label}</a>
     {:else}
         <a href="/" use:link>return to dashboard</a>
     {/if}
     </div>
-    {#if ! isEmpty(params)}
-        {#if contest.showMap}
+    {#if ($location !== "/" && showMap === true)}
+        <div class="o-map-wrapper">
             <div class="m-map-container">
-
-                <svelte:component this={Map} boundary_slug={contest.boundary}/>
-
+                <svelte:component this={Map} boundary_slug={contest.boundary}>
+                </svelte:component>
             </div>
-        {/if}
+        </div>
     {/if}
 </li>
