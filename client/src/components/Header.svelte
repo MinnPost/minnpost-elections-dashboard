@@ -24,7 +24,6 @@
 {#await $electionData}
     <p>loading...</p>
 {:then electionData}
-test? {isTestElection(electionData.date)}
     <header class="m-dashboard-header" data-last-updated="{electionData.updated}" data-last-scraped-server="{electionData.scraped}" data-last-loaded-client="{$pollInfo.lastModified}">
         <h2 class="a-election-status">Showing {apDate(electionData.date, false)} {#if electionData.primary == true}primary{:else}general{/if} election{#if isTestElection(electionData.date)}&nbsp;<em>test</em>{/if} results. Last updated {apDate(electionData.updated, true, true)}</h2>
     </header>
