@@ -16,7 +16,8 @@
         justify-content: space-around;
     }
     :global(a.active) {
-        color: red;
+        color: #135b7e;
+        font-weight: 700;
     }
 </style>
 
@@ -30,12 +31,12 @@
     <div class="m-sub-navigation m-topics m-contests">
         <nav class="m-subnav-navigation m-topics-navigation m-menu-contest-groups">
             <ul>
-                <li><a href="/" use:link>Dashboard</a></li>
-                <li><a href="/contests/?scope=state" use:link>State</a></li>
-                <li><a href="/contests/?scope=us_house" use:link>U.S. House</a></li>
-                <li><a href="/contests/?scope=state_senate" use:link>State Senate</a></li>
-                <li><a href="/contests/?scope=state_house" use:link>State House</a></li>
-                <li><a href="/search/?q=hennepin+county" use:link>Hennepin County</a></li>
+                <li><a href="/" use:link use:active>Dashboard</a></li>
+                <li><a href="/contests/?scope=state" use:link use:active={{path: '*/?scope=state'}}>State</a></li>
+                <li><a href="/contests/?scope=us_house" use:link use:active={{path: '*/?scope=us_house'}}>U.S. House</a></li>
+                <li><a href="/contests/?scope=state_senate" use:link use:active={{path: '*/?scope=state_senate'}}>State Senate</a></li>
+                <li><a href="/contests/?scope=state_house" use:link use:active={{path: '*/?scope=state_house'}}>State House</a></li>
+                <li><a href="/search/?q=hennepin" use:link use:active use:active={{path: '*/?q=hennepin'}}>Hennepin County</a></li>
                 <!--<li><a href="/contests/?scope=school" use:link use:active={{className: 'active'}}>School Districts</a></li>
                 <li><a href="/contests/?scope=municipal" use:link use:active={{className: 'active'}}>Municipal</a></li>
                 <li><a href="/contests/?scope=county" use:link use:active={{className: 'active'}}>County</a></li>-->

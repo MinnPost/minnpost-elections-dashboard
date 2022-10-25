@@ -184,11 +184,11 @@
                 </div>
             </fieldset>
         </form>
-        <ol>
+        <!--<ol>
         {#if ($location !== "/")}
             <li><a href="/" on:click|preventDefault={() => suggestedSearchClick('')}>return to dashboard</a></li>
         {/if}
-        </ol>
+        </ol>-->
         <!--<ol>
             <li>suggested searches</li>
             <li><a href="/" on:click={e => suggestedSearchClick()}>return to dashboard</a></li>
