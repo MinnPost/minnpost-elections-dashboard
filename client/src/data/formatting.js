@@ -19,21 +19,20 @@ export function isWinner(contest, result, key) {
         else if (result.candidate.toLowerCase() === 'no' && result.percentage > (100 - contest.percent_needed)) {
             isWinner = true;
         }
-        return isWinner;
-    } else if ((contest.done && !contest.ranked_choice && !contest.primary) ||
+    } else if ((contestIsDone(contest) && !contest.ranked_choice && !contest.primary) ||
     (contestIsDone(contest) && contest.ranked_choice && rankedChoiceFinal && !contest.primary) ||
     (contestIsDone(contest) && contest.primary && !contest.partisan)) {
         // Conditions where we just want the top seats
         if (key < contest.seats && !result.percent) {
             isWinner = true;
         }
-        r.final = true;
-    } else if (contest.done && contest.primary && contest.partisan) {
+        //r.final = true;
+    } else if (contestIsDone(contest) && contest.primary && contest.partisan) {
         isWinner = false;
         if (key < contest.seats) {
             isWinner = true;
         }
-        r.final = true;
+        //r.final = true;
     }
     return isWinner;
 }

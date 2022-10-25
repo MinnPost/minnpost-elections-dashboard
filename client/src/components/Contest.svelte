@@ -175,7 +175,7 @@
                 {#each contest.results as r, key}
 
                     <tr id="{r.id}" class="{setResultClass(contest, r)}">
-                        <td class="winner-column">{#if isWinner(r, contest, key) === true}<span class="fa fa-check"></span>{/if}</td>
+                        <td class="winner-column">{#if isWinner(contest, r, key) === true}<span class="fa fa-check"></span>{/if}</td>
                         <td class="candidate-column">{r.candidate}</td>
                         {#if contest.partisan && contest.show_party === true}
                             <td>
