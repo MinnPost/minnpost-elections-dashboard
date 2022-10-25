@@ -6,6 +6,9 @@
         top: 0;
         background: #fff;
     }
+    :global(.admin-bar .o-wrapper-contests-navigation) {
+        top: 32px !important;
+    }
     .m-contests, .m-menu-contest-groups, .m-menu-contest-groups ul {
         width: 100%;
     }
@@ -19,7 +22,7 @@
     import {link} from 'svelte-spa-router';
 </script>
 <div class="o-wrapper o-wrapper-sub-navigation o-wrapper-topics-navigation o-wrapper-contests-navigation">
-    <a class="a-subnav-label a-topics-label a-contests-label" href="/">Elections</a>
+    <a class="a-subnav-label a-topics-label a-contests-label" href="/" use:link>Elections</a>
     <div class="m-sub-navigation m-topics m-contests">
         <nav class="m-subnav-navigation m-topics-navigation m-menu-contest-groups">
             <ul>

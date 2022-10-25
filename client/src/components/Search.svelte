@@ -59,7 +59,16 @@
     if ( ! $location.startsWith("/search/") || searchParams.get('q') === null) {
         searchTerm = "";
     }
-    let searchClick = function(value) {
+    let searchSubmit = function(value) {
+        if ( typeof value === 'object' ) {
+            value = value.title;
+        }
+        if ( value !== '') {
+            push('/search/?q=' + value);
+        }
+        searchTerm = value;
+    }
+    let suggestedSearchClick = function(value) {
         if ( typeof value === 'object' ) {
             value = value.title;
         }
@@ -135,14 +144,14 @@
 </script>
 
 <div class="m-form m-form-search m-form-search-contest">
-        <form>
+        <form on:submit|preventDefault={() => searchSubmit(searchTerm)}>
             <fieldset>
                 <label class="a-search-label screen-reader-text" for="q">Search for a contest</label>
                 <div class="a-input-with-button a-button-sentence">
                     <AutoComplete
                         type="search" name="q"
                         searchFunction="{getContests}"
-                        delay="500"
+                        delay="300"
                         localFiltering={false}
                         labelFieldName="title"
                         valueFunction={getItem}
@@ -155,13 +164,13 @@
                         minCharactersToSearch=3
                         showClear="{true}"
                     />
-                <input type="submit" class="search-submit" value="Search" on:click|preventDefault={() => searchClick(searchTerm)}>
+                <input type="submit" class="search-submit" value="Search">
                 </div>
             </fieldset>
         </form>
         <ol>
         {#if ($location !== "/")}
-            <li><a href="/" on:click|preventDefault={() => searchClick('')}>return to dashboard</a></li>
+            <li><a href="/" on:click|preventDefault={() => suggestedSearchClick('')}>return to dashboard</a></li>
         {/if}
         </ol>
         <!--<ol>
