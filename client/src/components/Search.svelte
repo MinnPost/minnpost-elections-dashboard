@@ -59,9 +59,20 @@
     if ( ! $location.startsWith("/search/") || searchParams.get('q') === null) {
         searchTerm = "";
     }
-    let searchSubmit = function(value) {
+    let searchSubmit = function(event, value) {
         if ( typeof value === 'object' ) {
             value = value.title;
+        }
+        if (value === '') {
+            const formData = new FormData(event.target);
+            let data = [];
+            for (let field of formData) {
+                const [key, value] = field;
+                data[key] = value;
+            }
+            if (data['q'] ) {
+                value = data['q'];
+            }
         }
         if ( value !== '') {
             push('/search/?q=' + value);
@@ -127,8 +138,12 @@
         push('/');
     }
 
-    function _setAutocomplete() {
+    function _setAutocomplete(event) {
         _toggleClearButton(true);
+        if (event.target.textContent) {
+            let value = event.target.textContent;
+            suggestedSearchClick(value);
+        }
     }
 
     function _toggleClearButton(show) {
@@ -144,7 +159,7 @@
 </script>
 
 <div class="m-form m-form-search m-form-search-contest">
-        <form on:submit|preventDefault={() => searchSubmit(searchTerm)}>
+        <form on:submit|preventDefault={() => searchSubmit(event, searchTerm)}>
             <fieldset>
                 <label class="a-search-label screen-reader-text" for="q">Search for a contest</label>
                 <div class="a-input-with-button a-button-sentence">
@@ -163,8 +178,9 @@
                         cleanUserText={false}
                         minCharactersToSearch=3
                         showClear="{true}"
+                        showLoadingIndicator="{true}"
                     />
-                <input type="submit" class="search-submit" value="Search">
+                    <button type="submit" class="search-submit">Search</button>
                 </div>
             </fieldset>
         </form>
