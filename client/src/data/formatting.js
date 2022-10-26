@@ -85,6 +85,7 @@ export function apDate(string, hasTime = false, showTime = false, relative = tru
 // language settings
 export const pluralize = (count, noun, suffix = 's') => `${count} ${noun}${count !== 1 ? suffix : ''}`;
 
+// is this a test election?
 export function isTestElection(date) {
     let isTest = false;
     if (date) {

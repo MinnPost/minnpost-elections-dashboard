@@ -10,6 +10,7 @@
 	import Search from './components/Search.svelte';
 	import Navigation from './components/Navigation.svelte';
 	import Results from "./components/Results.svelte";
+	import Footer from "./components/Footer.svelte";
 
 	// routing
 	import Router from 'svelte-spa-router';
@@ -53,5 +54,7 @@
 	{/if}
 
 	<Router {routes} />
+
+	<Footer/>
 
 </div>
