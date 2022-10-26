@@ -2,16 +2,10 @@
     // settings
     import {settings} from './../settings.js';
     let showFooter = settings.showFooter;
-    // data
-	import { electionData } from './../stores.js';
-    import { pollInfo } from './../stores.js';
-    import { apDate} from './../data/formatting.js';
 
-    // svelte behavior
-    import { onMount } from "svelte";
-    onMount(async () => {
-		electionData.fetchAll()
-	});
+    // data
+	import { electionData, pollInfo } from './../stores.js';
+    import { apDate} from './../data/formatting.js';
 
 </script>
 
@@ -30,9 +24,9 @@
 {#if showFooter === true}
     {#await $electionData}
         <p>loading...</p>
-    {:then electionData}
+    {:then $electionData}
         <footer class="m-dashboard-footer">
-            <small class="a-election-status">Updated data was last received from the Secretary of State {apDate(electionData.updated, true, true)} We last checked for updated information {apDate(electionData.scraped, true, true)}, and this page last reloaded {apDate($pollInfo.lastModified, true, true)} During election night, the Secretary of State updates results approximately every ten minutes.</small>
+            <small class="a-election-status">Updated data was last received from the Secretary of State {apDate($electionData.updated, true, true)} We last checked for updated information {apDate($electionData.scraped, true, true)}, and this page last reloaded {apDate($pollInfo.lastModified, true, true)} During election night, the Secretary of State updates results approximately every ten minutes.</small>
         </footer>
     {:catch error}
         <p style="color: red">{error.message}</p>

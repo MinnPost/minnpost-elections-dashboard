@@ -6,9 +6,10 @@ import {location, querystring} from 'svelte-spa-router';
 let delay = 0;
 let fetchInterval = 50000;
 
+// when the page itself was last modified
 export const pollInfo = writable({
     lastModified: new Date()
-  });
+});
 
 // store and refresh displayed results
 export const resultStore = derived([location, querystring], ([$location, $querystring], set) => {
@@ -67,8 +68,27 @@ function fetchAndSet($location, $querystring, set) {
     pollInfo.set({ lastModified: new Date() });
 }
 
+// store and refresh displayed results
+export const electionData = writable([], () => {
+    fetchAndSetElection();
+    const interval = setInterval(() => {
+        fetchAndSetElection();
+    }, fetchInterval);
+    //  If you return a function from the callback, it will be called when
+    //  a) the callback runs again, or b) the last subscriber unsubscribes.
+    return () => {
+        clearInterval(interval);
+    };
+})
+
+function fetchAndSetElection() {
+    const fetchedElection = fetchElection();
+    electionData.set(fetchedElection);
+    pollInfo.set({ lastModified: new Date() });
+}
+
 // election data
-export const electionData = createElectionData();
+/*export const electionData = createElectionData();
 function createElectionData() {
 	const {subscribe, set, update} = writable([]);
 	return {
@@ -87,6 +107,7 @@ function createElectionData() {
             return () => {
                 clearInterval(interval);
             };
-		}
+		},
+        update
 	}
-}
+}*/

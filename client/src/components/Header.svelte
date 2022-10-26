@@ -1,14 +1,7 @@
 <script>
     // data
-	import { electionData } from './../stores.js';
-    import { pollInfo, resultStore } from './../stores.js';
+    import { electionData, pollInfo, resultStore } from './../stores.js';
     import { apDate, pluralize, isTestElection} from './../data/formatting.js';
-
-    // svelte behavior
-    import { onMount } from "svelte";
-    onMount(async () => {
-		electionData.fetchAll()
-	});
     
     let label = 'contest';
 </script>
@@ -23,9 +16,9 @@
 
 {#await $electionData}
     <p>loading...</p>
-{:then electionData}
-    <header class="m-dashboard-header" data-last-updated="{electionData.updated}" data-last-scraped-server="{electionData.scraped}" data-last-loaded-client="{$pollInfo.lastModified}">
-        <h2 class="a-election-status">Showing {apDate(electionData.date, false)} {#if electionData.primary == true}primary{:else}general{/if} election{#if isTestElection(electionData.date)}&nbsp;<em>test</em>{/if} results. Last updated {apDate(electionData.updated, true, true)}</h2>
+{:then $electionData}
+    <header class="m-dashboard-header" data-last-updated="{$electionData.updated}" data-last-scraped-server="{$electionData.scraped}" data-last-loaded-client="{$pollInfo.lastModified}">
+        <h2 class="a-election-status">Showing {apDate($electionData.date, false)} {#if $electionData.primary == true}primary{:else}general{/if} election{#if isTestElection($electionData.date)}&nbsp;<em>test</em>{/if} results. Last updated {apDate($electionData.updated, true, true)}</h2>
     </header>
 {:catch error}
     <p style="color: red">{error.message}</p>
