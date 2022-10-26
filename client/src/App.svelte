@@ -32,6 +32,14 @@
 		//'*': NotFound,
 	}
 
+	function routeLoaded(event) {
+		const el = document.querySelector('.m-form-search-contest');
+		if (!el) return;
+        el.scrollIntoView({
+            behavior: 'smooth'
+        });
+	}
+
 </script>
 
 <style>
@@ -53,7 +61,7 @@
 		<Navigation/>
 	{/if}
 
-	<Router {routes} />
+	<Router {routes} on:routeLoaded={routeLoaded} />
 
 	<Footer/>
 
