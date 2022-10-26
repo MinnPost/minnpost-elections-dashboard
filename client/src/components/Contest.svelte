@@ -64,7 +64,7 @@
     import {link, location, querystring} from 'svelte-spa-router';
 
     // data handling
-    import {isEmpty} from './../data/handling.js';
+    //import {isEmpty} from './../data/handling.js';
 
     import { onMount } from 'svelte';
 
@@ -106,15 +106,6 @@
     if ($location !== "/") {
         contestClass += ' o-result-contest-detail';
     }
-    
-    // scroll to element
-	onMount(async () => {
-        const el = document.querySelector('.m-form-search-contest');
-		if (!el) return;
-        el.scrollIntoView({
-            behavior: 'smooth'
-        });
-	});
 </script>
 
 <li class="{contestClass}" id="{contest.id}">

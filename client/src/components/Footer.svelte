@@ -26,7 +26,7 @@
         <p>loading...</p>
     {:then $electionData}
         <footer class="m-dashboard-footer">
-            <small class="a-election-status">Updated data was last received from the Secretary of State {apDate($electionData.updated, true, true)} We last checked for updated information {apDate($electionData.scraped, true, true)}, and this page last reloaded {apDate($pollInfo.lastModified, true, true)} During election night, the Secretary of State updates results approximately every ten minutes.</small>
+            <small class="a-election-status">Updated data was last received from the Minnesota Secretary of State's office {apDate($electionData.updated, true, true)} We last checked for updated information {apDate($electionData.scraped, true, true)}, and this page last reloaded {apDate($pollInfo.lastModified, true, true)} During election night, the Minnesota Secretary of State's office updates results approximately every ten minutes.</small>
         </footer>
     {:catch error}
         <p style="color: red">{error.message}</p>
