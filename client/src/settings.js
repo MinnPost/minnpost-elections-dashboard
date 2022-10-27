@@ -11,4 +11,4 @@ export let settings = {
 //electionId: "id-20221108",
 //electionId: "id-20221026",
 //apiRoot: "https://minnpost-mn-election-results.herokuapp.com/api/",
-//apiRoot: "https://0.0.0.0:5000/api/",
+//apiRoot: "http://0.0.0.0:5000/api/",
