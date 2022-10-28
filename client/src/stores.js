@@ -86,28 +86,3 @@ function fetchAndSetElection() {
     electionData.set(fetchedElection);
     pollInfo.set({ lastModified: new Date() });
 }
-
-// election data
-/*export const electionData = createElectionData();
-function createElectionData() {
-	const {subscribe, set, update} = writable([]);
-	return {
-		subscribe,
-		fetchAll: () => {
-            const fetchedElection = fetchElection();
-            set(fetchedElection);
-            pollInfo.set({ lastModified: new Date() });
-            const interval = setInterval(() => {
-                fetchElection();
-                set(fetchedElection);
-                pollInfo.set({ lastModified: new Date() });
-            }, fetchInterval);
-            //  If you return a function from the callback, it will be called when
-            //  a) the callback runs again, or b) the last subscriber unsubscribes.
-            return () => {
-                clearInterval(interval);
-            };
-		},
-        update
-	}
-}*/
