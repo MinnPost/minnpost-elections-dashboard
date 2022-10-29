@@ -270,12 +270,15 @@ The Areas endpoint can receive `area_id`, `area_group`, and `election_id` parame
 
 ### Contests and Contest Boundaries
 
-The Contests and Contest Boundaries endpoints can both receive `title`, `contest_id`, `contest_ids` (for multiple contests), and `election_id` parameters.
+The Contests and Contest Boundaries endpoints can both receive `title`, `contest_id`, `contest_ids` (for multiple contests), `election_id`, and `address` parameters.
 
 - Contest ID: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?contest_id=id-MN---02872-1001]
 - Contest Title: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?title=governor]
 - Contest IDs: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?contest_ids=id-MN---43000-2001,id-MN---43000-1131,id-MN---43000-1132,id-MN---43000-1133,id-MN---58000-1131,id-MN---43000-2121,id-MN---43000-2181,id-MN---43000-2191]
 - Election ID: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?election_id=id-20211102]
+- Address: [https://minnpost-mn-election-results.herokuapp.com/api/contests/?election_id=id-20211102&address=635 9th St SE, Minneapolis, MN, 55414]
+
+Note: for `address` to work, there needs to be a valid MapQuest API key in the `GEOCODER_MAPQUEST_KEY` configuration value, as shown in `.env-example`.
 
 ### Elections
 
