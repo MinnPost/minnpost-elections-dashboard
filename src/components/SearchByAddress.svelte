@@ -50,7 +50,7 @@
     }
     @media screen and (min-width: 70em) {
         form {
-            width: 59.3670886076%;
+            width: 75.5172413793%;
         }
     }
 </style>
