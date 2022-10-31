@@ -34,6 +34,13 @@ function fetchAndSet($location, $querystring, set) {
                 resolve()
             }, delay)
         })
+    } else if ($location.startsWith("/search/") && searchParams.get('address') !== null) {
+        new Promise((resolve) => {
+            setTimeout(() => {
+                fetchContests('address', searchParams.get('address'), true).then(set);
+                resolve()
+            }, delay)
+        })
     } else if ($location.startsWith("/contests/")) {
         if (searchParams.get('scope') !== null) {
             new Promise((resolve) => {

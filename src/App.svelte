@@ -8,6 +8,7 @@
 	// layout components
 	import Header from "./components/Header.svelte";
 	import Search from './components/Search.svelte';
+	import SearchByLocation from './components/SearchByLocation.svelte';
 	import Navigation from './components/Navigation.svelte';
 	import Results from "./components/Results.svelte";
 	import Footer from "./components/Footer.svelte";
@@ -54,6 +55,8 @@
 <div class="election-results" in:fade="{{duration: 500}}">
 
 	<Search/>
+
+	<SearchByLocation/>
 	
 	<Header/>
 
