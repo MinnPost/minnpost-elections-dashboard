@@ -1,7 +1,4 @@
-logs
-scraperwiki.sqlite
-venv/
-.env
-testsecret.json
-celerybeat-schedule
-redbeat.RedBeatScheduler
+/node_modules/
+/public/build/
+
+.DS_Store
