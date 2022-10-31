@@ -2,7 +2,7 @@
   "name": "minnpost-elections-dashboard",
   "title": "MinnPost Elections Dashboard",
   "description": "An elections results dashboard for MN elections.",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "homepage": "https://github.com/MinnPost/minnpost-elections-dashboard",
   "repository": {
     "type": "git",
@@ -44,6 +44,14 @@
     {
       "name": "Alan Palazzolo",
       "email": "apalazzolo@minnpost.com"
+    },
+    {
+      "name": "Tom Nehil",
+      "email": "tnehil@minnpost.com"
+    },
+    {
+      "name": "Jonathan Stegall",
+      "email": "jstegall@minnpost.com"
     }
   ]
 }

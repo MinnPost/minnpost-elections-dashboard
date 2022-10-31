@@ -397,7 +397,7 @@ define("lazyload", (function (global) {
 }(this)));
 
 
-define('text!../bower.json',[],function () { return '{\n  "name": "minnpost-elections-dashboard",\n  "version": "0.1.0",\n  "main": "index.html",\n  "ignore": [\n    "**/.*",\n    "node_modules",\n    "components",\n    "bower_components"\n  ],\n  "dependencies": {\n    "ractive": "~0.5.6",\n    "ractive-events-tap": "~0.1.1",\n    "requirejs": "~2.1.15",\n    "almond": "~0.3.0",\n    "text": "~2.0.12",\n    "underscore": "~1.7.0",\n    "jquery": "~1.11.1",\n    "minnpost-styles": "master",\n    "rgrove-lazyload": "*",\n    "backbone": "~1.1.2",\n    "leaflet": "0.7.3",\n    "momentjs": "~2.8.1",\n    "typeahead.js": "~0.10.4",\n    "Placeholders.js": "~3.0.0",\n    "ractive-backbone": "~0.1.1",\n    "moment-timezone": "~0.2.1",\n    "screenfull": "~1.2.1"\n  },\n  "dependencyMap": {\n    "requirejs": {\n      "rname": "requirejs",\n      "js": [\n        "requirejs/require"\n      ]\n    },\n    "almond": {\n      "rname": "almond",\n      "js": [\n        "almond/almond"\n      ]\n    },\n    "text": {\n      "rname": "text",\n      "js": [\n        "text/text"\n      ]\n    },\n    "jquery": {\n      "rname": "jquery",\n      "js": [\n        "jquery/dist/jquery"\n      ],\n      "returns": "$"\n    },\n    "underscore": {\n      "rname": "underscore",\n      "js": [\n        "underscore/underscore"\n      ],\n      "returns": "_"\n    },\n    "ractive": {\n      "rname": "ractive",\n      "js": [\n        "ractive/ractive-legacy"\n      ],\n      "returns": "Ractive"\n    },\n    "ractive-events-tap": {\n      "rname": "ractive-events-tap",\n      "js": [\n        "ractive-events-tap/ractive-events-tap"\n      ],\n      "returns": "RactiveEventsTap"\n    },\n    "ractive-backbone": {\n      "rname": "ractive-backbone",\n      "js": [\n        "ractive-backbone/ractive-backbone"\n      ],\n      "returns": "RactiveBackbone"\n    },\n    "leaflet": {\n      "rname": "leaflet",\n      "js": [\n        "leaflet/dist/leaflet-src"\n      ],\n      "css": [\n        "leaflet/dist/leaflet"\n      ],\n      "images": [\n        "leaflet/dist/images"\n      ],\n      "returns": "L"\n    },\n    "momentjs": {\n      "rname": "moment",\n      "js": [\n        "momentjs/moment"\n      ],\n      "returns": "moment"\n    },\n    "moment-timezone": {\n      "rname": "moment-timezone",\n      "js": [\n        "moment-timezone/builds/moment-timezone-with-data"\n      ],\n      "returns": "momentTimezone"\n    },\n    "Placeholders.js": {\n      "rname": "placeholders-js",\n      "js": [\n        "Placeholders.js/build/placeholders.jquery"\n      ],\n      "returns": "placeholders"\n    },\n    "typeahead.js": {\n      "rname": "typeahead-js",\n      "js": [\n        "typeahead.js/dist/typeahead.jquery"\n      ],\n      "returns": "typeahead"\n    },\n    "bloodhound": {\n      "rname": "bloodhound",\n      "js": [\n        "typeahead.js/dist/bloodhound"\n      ],\n      "returns": "Bloodhound"\n    },\n    "screenfull": {\n      "rname": "screenfull",\n      "js": [\n        "screenfull/dist/screenfull"\n      ],\n      "returns": "screenfull"\n    },\n    "minnpost-styles": {\n      "rname": "mpStyles",\n      "css": [\n        "//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css",\n        "minnpost-styles/dist/minnpost-styles"\n      ],\n      "sass": [\n        "minnpost-styles/styles/main"\n      ]\n    },\n    "mpConfig": {\n      "rname": "mpConfig",\n      "js": [\n        "minnpost-styles/dist/minnpost-styles.config"\n      ],\n      "returns": "mpConfig"\n    },\n    "mpFormatters": {\n      "rname": "mpFormatters",\n      "js": [\n        "minnpost-styles/dist/minnpost-styles.formatters"\n      ],\n      "returns": "mpFormatters"\n    },\n    "mpMaps": {\n      "rname": "mpMaps",\n      "js": [\n        "minnpost-styles/dist/minnpost-styles.maps"\n      ],\n      "returns": "mpMaps"\n    }\n  }\n}\n';});
+define('text!../bower.json',[],function () { return '{\n  "name": "minnpost-elections-dashboard",\n  "version": "0.1.0",\n  "main": "index.html",\n  "ignore": [\n    "**/.*",\n    "node_modules",\n    "components",\n    "bower_components"\n  ],\n  "dependencies": {\n    "ractive": "~0.5.6",\n    "ractive-events-tap": "~0.1.1",\n    "requirejs": "~2.1.15",\n    "almond": "~0.3.0",\n    "text": "~2.0.12",\n    "underscore": "~1.7.0",\n    "jquery": "~1.11.1",\n    "minnpost-styles": "master",\n    "rgrove-lazyload": "*",\n    "backbone": "~1.1.2",\n    "leaflet": "0.7.3",\n    "momentjs": "~2.8.1",\n    "typeahead.js": "~0.10.4",\n    "ractive-backbone": "~0.1.1",\n    "moment-timezone": "~0.2.1",\n    "screenfull": "~1.2.1"\n  },\n  "dependencyMap": {\n    "requirejs": {\n      "rname": "requirejs",\n      "js": [\n        "requirejs/require"\n      ]\n    },\n    "almond": {\n      "rname": "almond",\n      "js": [\n        "almond/almond"\n      ]\n    },\n    "text": {\n      "rname": "text",\n      "js": [\n        "text/text"\n      ]\n    },\n    "jquery": {\n      "rname": "jquery",\n      "js": [\n        "jquery/dist/jquery"\n      ],\n      "returns": "$"\n    },\n    "underscore": {\n      "rname": "underscore",\n      "js": [\n        "underscore/underscore"\n      ],\n      "returns": "_"\n    },\n    "ractive": {\n      "rname": "ractive",\n      "js": [\n        "ractive/ractive-legacy"\n      ],\n      "returns": "Ractive"\n    },\n    "ractive-events-tap": {\n      "rname": "ractive-events-tap",\n      "js": [\n        "ractive-events-tap/ractive-events-tap"\n      ],\n      "returns": "RactiveEventsTap"\n    },\n    "ractive-backbone": {\n      "rname": "ractive-backbone",\n      "js": [\n        "ractive-backbone/ractive-backbone"\n      ],\n      "returns": "RactiveBackbone"\n    },\n    "leaflet": {\n      "rname": "leaflet",\n      "js": [\n        "leaflet/dist/leaflet-src"\n      ],\n      "css": [\n        "leaflet/dist/leaflet"\n      ],\n      "images": [\n        "leaflet/dist/images"\n      ],\n      "returns": "L"\n    },\n    "momentjs": {\n      "rname": "moment",\n      "js": [\n        "momentjs/moment"\n      ],\n      "returns": "moment"\n    },\n    "moment-timezone": {\n      "rname": "moment-timezone",\n      "js": [\n        "moment-timezone/builds/moment-timezone-with-data"\n      ],\n      "returns": "momentTimezone"\n    },\n    "typeahead.js": {\n      "rname": "typeahead-js",\n      "js": [\n        "typeahead.js/dist/typeahead.jquery"\n      ],\n      "returns": "typeahead"\n    },\n    "bloodhound": {\n      "rname": "bloodhound",\n      "js": [\n        "typeahead.js/dist/bloodhound"\n      ],\n      "returns": "Bloodhound"\n    },\n    "screenfull": {\n      "rname": "screenfull",\n      "js": [\n        "screenfull/dist/screenfull"\n      ],\n      "returns": "screenfull"\n    },\n    "minnpost-styles": {\n      "rname": "mpStyles",\n      "css": [\n        "//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css",\n        "minnpost-styles/dist/minnpost-styles"\n      ],\n      "sass": [\n        "minnpost-styles/styles/main"\n      ]\n    },\n    "mpConfig": {\n      "rname": "mpConfig",\n      "js": [\n        "minnpost-styles/dist/minnpost-styles.config"\n      ],\n      "returns": "mpConfig"\n    },\n    "mpFormatters": {\n      "rname": "mpFormatters",\n      "js": [\n        "minnpost-styles/dist/minnpost-styles.formatters"\n      ],\n      "returns": "mpFormatters"\n    },\n    "mpMaps": {\n      "rname": "mpMaps",\n      "js": [\n        "minnpost-styles/dist/minnpost-styles.maps"\n      ],\n      "returns": "mpMaps"\n    }\n  }\n}\n';});
 
 /**
  * Base class(es) for applications.
@@ -1368,14 +1368,14 @@ define('text!templates/elections-search-form.mustache',[],function () { return '
 define('views',[
   'jquery', 'underscore', 'backbone', 'ractive', 'ractive-events-tap',
   'ractive-backbone', 'leaflet', 'models', 'collections',
-  'bloodhound', 'typeahead-js', 'placeholders-js', 'mpConfig', 'mpFormatters',
+  'bloodhound', 'typeahead-js', 'mpConfig', 'mpFormatters',
   'text!templates/application.mustache', 'text!templates/footnote.mustache',
   'text!templates/contest.mustache', 'text!templates/contests.mustache',
   'text!templates/dashboard.mustache', 'text!templates/loading.mustache',
   'text!templates/elections-search-form.mustache'
 ], function(
   $, _, Backbone, Ractive, RactiveETap, RactiveBackbone, L, models,
-  collections, Bloodhound, typeahead, placeholders, mpConfig, mpFormatters,
+  collections, Bloodhound, typeahead, mpConfig, mpFormatters,
   tApplication, tFootnote, tContest,
   tContests, tDashboard, tLoading, tElectionsSearch
   ) {
@@ -1975,31 +1975,33 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
 
     defaults: {
       name: 'minnpost-elections-dashboard',
-      remoteProxy: '//mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
+      //remoteProxy: '//mp-jsonproxy.herokuapp.com/proxy?callback=?&url=',
       el: '.minnpost-elections-dashboard-container',
       // Hard page refresh, in case the interface needs to be
       // updated through the night
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
-      electionsAPI: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
-      // Local: '//localhost:5000/?q='
+      //electionsAPI: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
+      electionsAPI: 'https://minnpost-mn-election-results.herokuapp.com/api/query/?election_id=id-20211108&q=',
+      // Local: '//0.0.0.0:5000/api/query/??election_id=id-20211102&q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
+      // Heroku: 'https://minnpost-mn-election-results.herokuapp.com/api/query/?election_id=id-20211108&q='
       boundaryAPI: '//represent-minnesota.herokuapp.com/',
       boundarySets: [
-        'minor-civil-divisions-2010',
+        'minor-civil-divisions-2020',
         'wards-2012',
         'minnesota-state-2014',
-        'school-districts-2018',
+        'school-districts-2021',
         'minneapolis-parks-and-recreation-districts-2014',
-        'congressional-districts-2012',
-        'state-senate-districts-2012',
-        'state-house-districts-2012',
+        'congressional-districts-2022',
+        'state-senate-districts-2022',
+        'state-house-districts-2022',
         'hospital-districts-2012',
         'district-courts-2012',
         'county-commissioner-districts-2012',
-        'counties-2010'
+        'counties-2020'
       ],
       npParties: ['WI', 'NP'],
       // Please don't steal/abuse
