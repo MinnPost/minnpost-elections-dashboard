@@ -1,8 +1,4 @@
 <style>
-    .search-field {
-        width: 100%;
-        max-width: 100%;
-    }
     form {
         border-bottom: 1px solid #5e6e76;
         padding: 0 1.5em;
@@ -43,6 +39,9 @@
     }
     :global(span.autocomplete-clear-button) {
         opacity: 0.6;
+    }
+    :global(.m-form-search-contest-by-address) {
+        display: none;
     }
 </style>
 
@@ -105,9 +104,9 @@
         return value.title;
     }
 
-
     let selection = '';
     let autocompleteClearButton;
+    let showAddressSearchForm;
 
     import { onMount } from 'svelte';
     onMount(() => {
@@ -120,6 +119,9 @@
         autocompleteClearButton = document.querySelector('span.autocomplete-clear-button');
         autocompleteClearButton.addEventListener('click', _clearedAutocomplete);
         _toggleClearButton(false);
+
+        showAddressSearchForm = document.querySelector('.a-show-address-form');
+        showAddressSearchForm.addEventListener('click', _showAddressForm);
     });
 
     function _inputChanged() {
@@ -156,6 +158,18 @@
         autocompleteClearButton.click();
     }
 
+    function _showAddressForm(e) {
+        e.preventDefault();
+        document.querySelector('.m-form-search-contest-by-address').setAttribute(
+        'style',
+        'display:block'
+        );
+        document.querySelector('.m-form-search-contest').setAttribute(
+        'style',
+        'display:none'
+        );
+    }
+
 </script>
 
 <div class="m-form m-form-search m-form-search-contest">
@@ -182,6 +196,7 @@
                     />
                     <button type="submit" class="search-submit">Search</button>
                 </div>
+                <p><small>To find results by location, <a href="#" class="a-show-address-form">search by an address</a> or <a href="" class="a-geolocate">view contests at your current location.</a></small></p>
             </fieldset>
         </form>
         <!--<ol>
