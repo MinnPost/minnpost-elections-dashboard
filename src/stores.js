@@ -27,20 +27,29 @@ export const resultStore = derived([location, querystring], ([$location, $querys
 // routing for displayed results
 function fetchAndSet($location, $querystring, set) {
     const searchParams = new URLSearchParams($querystring);
-    if ($location.startsWith("/search/") && searchParams.get('q') !== null) {
-        new Promise((resolve) => {
-            setTimeout(() => {
-                fetchContests('title', searchParams.get('q'), true).then(set);
-                resolve()
-            }, delay)
-        })
-    } else if ($location.startsWith("/search/") && searchParams.get('address') !== null) {
-        new Promise((resolve) => {
-            setTimeout(() => {
-                fetchContests('address', searchParams.get('address'), true).then(set);
-                resolve()
-            }, delay)
-        })
+    if ($location.startsWith("/search/")) {
+        if (searchParams.get('q') !== null) {
+            new Promise((resolve) => {
+                setTimeout(() => {
+                    fetchContests('title', searchParams.get('q'), true).then(set);
+                    resolve()
+                }, delay)
+            })
+        } else if (searchParams.get('address') !== null) {
+            new Promise((resolve) => {
+                setTimeout(() => {
+                    fetchContests('address', searchParams.get('address'), true).then(set);
+                    resolve()
+                }, delay)
+            })
+        } else if (searchParams.get('latitude') !== null && searchParams.get('longitude') !== null) {
+            new Promise((resolve) => {
+                setTimeout(() => {
+                    fetchContests('coordinates', searchParams.get('latitude') + ',' + searchParams.get('longitude'), true).then(set);
+                    resolve()
+                }, delay)
+            })
+        }
     } else if ($location.startsWith("/contests/")) {
         if (searchParams.get('scope') !== null) {
             new Promise((resolve) => {

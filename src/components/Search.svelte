@@ -25,7 +25,7 @@
     }
     @media screen and (min-width: 70em) {
         form {
-            width: 59.3670886076%;
+            width: 75.5172413793%;
         }
     }
     :global(div.autocomplete) {
@@ -170,6 +170,11 @@
         );
     }
 
+    let Geolocate;
+	onMount(async () => {
+		Geolocate = (await import('./Geolocate.svelte')).default;
+	});
+
 </script>
 
 <div class="m-form m-form-search m-form-search-contest">
@@ -196,7 +201,7 @@
                     />
                     <button type="submit" class="search-submit">Search</button>
                 </div>
-                <p><small>To find results by location, <a href="#" class="a-show-address-form">search by an address</a> or <a href="" class="a-geolocate">view contests at your current location.</a></small></p>
+                <p><small>To find results by location, <a href="#" class="a-show-address-form">search by an address</a> or <svelte:component this="{Geolocate}"/></small></p>
             </fieldset>
         </form>
         <!--<ol>
