@@ -23,26 +23,26 @@ require(['jquery', 'underscore', 'screenfull', 'base', 'helpers', 'views', 'rout
       interfaceRefresh: 1000 * 60 * 30,
       electionsAPIPollInterval: 50000,
       //electionsAPI: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q=',
-      electionsAPI: '//minnpost-mn-election-results.herokuapp.com/api/query/?election_id=id-20211102&q=',
+      electionsAPI: 'https://minnpost-mn-election-results.herokuapp.com/api/query/?election_id=id-20211108&q=',
       // Local: '//0.0.0.0:5000/api/query/??election_id=id-20211102&q='
       // Custom: '//54.91.220.106/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // MinnPost-specific: 'https://elections-scraper.minnpost.com/?box=ubuntu/minnpost-scraper-mn-election-results&method=sql&q='
       // ScraperWiki: '//premium.scraperwiki.com/ez47yoa/aaff8e67f921428/sql/?q='
-      // Heroku: 'https://minnpost-mn-election-results.herokuapp.com/api/query/?election_id=id-20211102&q='
+      // Heroku: 'https://minnpost-mn-election-results.herokuapp.com/api/query/?election_id=id-20211108&q='
       boundaryAPI: '//represent-minnesota.herokuapp.com/',
       boundarySets: [
-        'minor-civil-divisions-2010',
+        'minor-civil-divisions-2020',
         'wards-2012',
         'minnesota-state-2014',
-        'school-districts-2018',
+        'school-districts-2021',
         'minneapolis-parks-and-recreation-districts-2014',
-        'congressional-districts-2012',
-        'state-senate-districts-2012',
-        'state-house-districts-2012',
+        'congressional-districts-2022',
+        'state-senate-districts-2022',
+        'state-house-districts-2022',
         'hospital-districts-2012',
         'district-courts-2012',
         'county-commissioner-districts-2012',
-        'counties-2010'
+        'counties-2020'
       ],
       npParties: ['WI', 'NP'],
       // Please don't steal/abuse
