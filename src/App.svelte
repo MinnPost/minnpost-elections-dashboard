@@ -8,7 +8,7 @@
 	// layout components
 	import Header from "./components/Header.svelte";
 	import Search from './components/Search.svelte';
-	import SearchByLocation from './components/SearchByLocation.svelte';
+	import SearchByAddress from './components/SearchByAddress.svelte';
 	import Navigation from './components/Navigation.svelte';
 	import Results from "./components/Results.svelte";
 	import Footer from "./components/Footer.svelte";
@@ -56,7 +56,7 @@
 
 	<Search/>
 
-	<SearchByLocation/>
+	<SearchByAddress/>
 	
 	<Header/>
 

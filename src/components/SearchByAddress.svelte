@@ -140,6 +140,11 @@
         }
     };
 
+    let Geolocate;
+	onMount(async () => {
+		Geolocate = (await import('./Geolocate.svelte')).default;
+	});
+
 </script>
 
 <div class="m-form m-form-search m-form-search-contest m-form-search-contest-by-address">
@@ -158,7 +163,7 @@
                     </div>
                     <button type="submit" class="search-submit">Search</button>
                 </div>
-                <p><small>To find results, <a href="#" class="a-show-search-form">search for a contest</a> or <a href="" class="a-geolocate">view contests at your current location.</a></small></p>
+                <p><small>To find results, <a href="#" class="a-show-search-form">search for a contest</a> or <svelte:component this="{Geolocate}"/></small></p>
             </fieldset>
         </form>
 </div>
