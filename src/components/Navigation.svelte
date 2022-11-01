@@ -32,7 +32,7 @@
         <nav class="m-subnav-navigation m-topics-navigation m-menu-contest-groups">
             <ul>
                 <li><a href="/" use:link use:active>Dashboard</a></li>
-                <li><a href="/contests/?scope=state" use:link use:active={{path: '*/?scope=state'}}>State</a></li>
+                <li><a href="/contests/?scope=state" use:link use:active={{path: '*/?scope=state'}}>Statewide</a></li>
                 <li><a href="/contests/?scope=us_house" use:link use:active={{path: '*/?scope=us_house'}}>U.S. House</a></li>
                 <li><a href="/contests/?scope=state_senate" use:link use:active={{path: '*/?scope=state_senate'}}>State Senate</a></li>
                 <li><a href="/contests/?scope=state_house" use:link use:active={{path: '*/?scope=state_house'}}>State House</a></li>

@@ -7,6 +7,23 @@
     h3 {
         margin-bottom: 0.25em;
     }
+    .m-ballot-question {
+        padding-top: 0.5em;
+        font-size: var(--scale-1);
+        
+    }
+    .m-ballot-question blockquote {
+        padding: 1em;
+        font-family: "ff-meta-web-pro", helvetica, arial, sans-serif;
+        margin-bottom: 1em;
+    }
+    /*h4 {
+        padding-top: 0.5em;
+        margin-bottom: 0.25em;
+    }
+    .a-question-body {
+        margin-bottom: 0.75em;
+    }*/
 
     .o-table-striped {
 
@@ -61,7 +78,7 @@
     import {settings} from './../settings.js';
 
     // routing
-    import {link, location, querystring} from 'svelte-spa-router';
+    import {location, querystring} from 'svelte-spa-router';
 
     // data handling
     //import {isEmpty} from './../data/handling.js';
@@ -71,9 +88,18 @@
     // data
     export let contest;
 
+    // showing vote count
+    let showVoteCount = true;
+    if ($location === "/") {
+        showVoteCount = true;
+    } else {
+        showVoteCount = true;
+    }
+
     // map
     let showMap = settings.showMap;
     let Map;
+    let mapAvailable = true;
     const mapDelay = 300;
     const sleep = ms => new Promise(f => setTimeout(f, ms));
 	onMount(async () => {
@@ -83,6 +109,7 @@
         }
         if ( contest.boundary === "" || ! contest.boundary ) {
             showMap = false;
+            mapAvailable = false;
         }
         if (showMap === true) {
 		    await sleep(mapDelay); // simulate network delay
@@ -91,7 +118,8 @@
 	});
 
     // formatting
-    import {isWinner} from './../data/formatting.js';
+    import { apDate, isWinner } from './../data/formatting.js';
+    import ContestMenu from './ContestMenu.svelte';
     export let label;
     
     // set class based on dashboard or not
@@ -111,11 +139,26 @@
 <li class="{contestClass}" id="{contest.id}">
     <div class="o-result-contest-content">
         <h3>{contest.title}</h3>
-        {#if contest.sub_title !== null }
-            <h4>{contest.sub_title}</h4>
+        {#if contest.sub_title !== null || contest.question_body }
+            <div class="m-ballot-question">
+                <blockquote>
+                {#if contest.sub_title !== null }
+                    <h4>{contest.sub_title}</h4>
+                {/if}
+                {#if (showVoteCount === true)}
+                    {#if contest.question_body}
+                        <p class="a-question-body">{contest.question_body}</p>
+                    {/if}
+                {/if}
+                </blockquote>
+            </div>
         {/if}
-
         <table class="o-table-striped o-table-striped-start-light">
+            <!--{#if (showVoteCount === true)}
+                <caption>
+                    <div class="last-updated">Last updated {apDate(contest.updated, true, true, true)}</div>
+                </caption>
+            {/if}-->
             <thead>
                 <tr>
                     <th class="winner-column">&nbsp;</th>
@@ -132,7 +175,7 @@
                         <th class="third-choice-column"></th>
                         <th class="final-column">Final</th>
                     {:else}
-                        {#if ($location === "/")}
+                        {#if (showVoteCount === false)}
                             <th class="percentage">Results</th>
                         {:else}
                             <th class="percentage">
@@ -157,14 +200,13 @@
                 {:else}
                 <th></th>
                 {/if}
-                {#if ($location !== "/")}
+                {#if (showVoteCount === true)}
                     <th></th>
                 {/if}
                 </tr>
             </thead>
             <tbody>
                 {#each contest.results as r, key}
-
                     <tr id="{r.id}" class="{setResultClass(contest, r)}">
                         <td class="winner-column">{#if isWinner(contest, r, key) === true}<span class="fa fa-check"></span>{/if}</td>
                         <td class="candidate-column">{r.candidate}</td>
@@ -177,23 +219,16 @@
                         {/if}
                         {#if contest.ranked_choice !== true}
                             <td class="percentage">{r.percentage}%</td>
-                            {#if ($location !== "/")}
+                            {#if (showVoteCount === true)}
                                 <td class="votes">{r.votes_candidate}</td>
                             {/if}
                         {/if}
                     </tr>
-
                 {/each}
-
             </tbody>
         </table>
-    {#if ($location === "/")}
-        <a href="/contest/?id={contest.id}" use:link>Full results for this {label}</a>
-    {:else}
-        <a href="/" use:link>return to dashboard</a>
-    {/if}
     </div>
-    {#if ($location !== "/" && showMap === true)}
+    {#if (showMap === true)}
         <div class="o-map-wrapper">
             <div class="m-map-container">
                 <svelte:component this={Map} boundary_slug={contest.boundary}>
@@ -201,4 +236,5 @@
             </div>
         </div>
     {/if}
+    <ContestMenu contest="{contest}" mapAvailable={mapAvailable} showMap={showMap} showVoteCount={showVoteCount} label="{label}"/> 
 </li>
