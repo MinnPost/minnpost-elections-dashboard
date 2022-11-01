@@ -46,6 +46,9 @@
 </style>
 
 <script>
+    // settings
+	import {settings} from './../settings.js';
+
     // routing
     import {push, location, querystring} from 'svelte-spa-router';
 
@@ -172,45 +175,40 @@
 
     let Geolocate;
 	onMount(async () => {
-		Geolocate = (await import('./Geolocate.svelte')).default;
+        if (settings.searchByLocation === true) {
+		    Geolocate = (await import('./Geolocate.svelte')).default;
+        }
 	});
 
 </script>
 
 <div class="m-form m-form-search m-form-search-contest">
-        <form on:submit|preventDefault={() => searchSubmit(event, searchTerm)}>
-            <fieldset>
-                <label class="a-search-label screen-reader-text" for="q">Search for a contest</label>
-                <div class="a-input-with-button a-button-sentence">
-                    <AutoComplete
-                        type="search" name="q"
-                        searchFunction="{getContests}"
-                        delay="300"
-                        localFiltering={false}
-                        labelFieldName="title"
-                        valueFunction={getItem}
-                        bind:selectedItem="{searchTerm}"
-                        bind:value={searchTerm}
-                        inputClassName="search-field"
-                        placeholder="Search for a contest"
-                        hideArrow="{true}"
-                        cleanUserText={false}
-                        minCharactersToSearch=3
-                        showClear="{true}"
-                        showLoadingIndicator="{true}"
-                    />
-                    <button type="submit" class="search-submit">Search</button>
-                </div>
+    <form on:submit|preventDefault={() => searchSubmit(event, searchTerm)}>
+        <fieldset>
+            <label class="a-search-label screen-reader-text" for="q">Search for a contest</label>
+            <div class="a-input-with-button a-button-sentence">
+                <AutoComplete
+                    type="search" name="q"
+                    searchFunction="{getContests}"
+                    delay="300"
+                    localFiltering={false}
+                    labelFieldName="title"
+                    valueFunction={getItem}
+                    bind:selectedItem="{searchTerm}"
+                    bind:value={searchTerm}
+                    inputClassName="search-field"
+                    placeholder="Search for a contest"
+                    hideArrow="{true}"
+                    cleanUserText={false}
+                    minCharactersToSearch=3
+                    showClear="{true}"
+                    showLoadingIndicator="{true}"
+                />
+                <button type="submit" class="search-submit">Search</button>
+            </div>
+            {#if settings.searchByLocation === true}
                 <p><small>To find results by location, <a href="#" class="a-show-address-form">search by an address</a> or <svelte:component this="{Geolocate}"/></small></p>
-            </fieldset>
-        </form>
-        <!--<ol>
-        {#if ($location !== "/")}
-            <li><a href="/" on:click|preventDefault={() => suggestedSearchClick('')}>return to dashboard</a></li>
-        {/if}
-        </ol>-->
-        <!--<ol>
-            <li>suggested searches</li>
-            <li><a href="/" on:click={e => suggestedSearchClick()}>return to dashboard</a></li>
-        </ol>-->
+            {/if}
+        </fieldset>
+    </form>
 </div>

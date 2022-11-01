@@ -56,7 +56,9 @@
 
 	<Search/>
 
-	<SearchByAddress/>
+	{#if settings.searchByLocation === true}
+		<SearchByAddress/>
+	{/if}
 	
 	<Header/>
 

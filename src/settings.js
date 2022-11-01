@@ -4,6 +4,7 @@ export let settings = {
     showAds: false,
     showMap: true,
     showFooter: true,
+    searchByLocation: true,
     apiRoot: "https://minnpost-mn-election-results.herokuapp.com/api/",
     electionId: "id-20221108",
 }
