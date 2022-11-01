@@ -37,8 +37,9 @@
                 <li><a href="/contests/?scope=state_senate" use:link use:active={{path: '*/?scope=state_senate'}}>State Senate</a></li>
                 <li><a href="/contests/?scope=state_house" use:link use:active={{path: '*/?scope=state_house'}}>State House</a></li>
                 <li><a href="/search/?q=hennepin" use:link use:active use:active={{path: '*/?q=hennepin'}}>Hennepin County</a></li>
-                <!--<li><a href="/contests/?scope=school" use:link use:active={{className: 'active'}}>School Districts</a></li>
-                <li><a href="/contests/?scope=municipal" use:link use:active={{className: 'active'}}>Municipal</a></li>
+                <li><a href="/contests/?q=question" use:link use:active={{className: 'active'}}>Ballot Questions</a></li>
+                <li><a href="/search/?q=School%20Board%20Member" use:link use:active={{className: 'active'}}>School Board Members</a></li>
+                <!--<li><a href="/contests/?scope=municipal" use:link use:active={{className: 'active'}}>Municipal</a></li>
                 <li><a href="/contests/?scope=county" use:link use:active={{className: 'active'}}>County</a></li>-->
             </ul>
         </nav>
