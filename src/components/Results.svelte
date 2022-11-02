@@ -7,6 +7,7 @@
         gap: 1em;
         grid-template-columns: repeat(auto-fit, minmax(20em, 1fr));
         list-style: none;
+        align-content: flex-start;
     }
     @media screen and (min-width: 60em) {
         .o-results {
