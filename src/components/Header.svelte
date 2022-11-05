@@ -8,7 +8,7 @@
 
 <script>
     // data
-    import { electionData, pollInfo, resultStore, apiData } from './../stores.js';
+    import { electionData, pollInfo, resultStore, apiData, currentTo, currentOffset, isPaginated } from './../stores.js';
     import { apDate, pluralize, isTestElection} from './../data/formatting.js';
 
     // settings
@@ -18,8 +18,8 @@
 
     let showing = '';
     function showingData(resultStore) {
-        if (settings.paginate === true) {
-            showing = 'Showing ' + resultStore.length + ' of ' + pluralize($apiData.total_count, label) + ' for this group';
+        if ($isPaginated === true) {
+            showing = 'Showing ' + $currentOffset + '-' + $currentTo + ' of ' + pluralize($apiData.total_count, label) + ' for this group';
         } else {
             showing = 'Showing ' + pluralize(resultStore.length, label);
         }

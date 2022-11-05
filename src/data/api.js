@@ -2,9 +2,8 @@
 import {settings} from './../settings.js';
 
 // api calls
-export async function fetchContests(key, value, withResults = false, page = 0) {
+export async function fetchContests(key, value, withResults = false, page = 0, offset = 0) {
 	let res = [];
-	let offset = 0;
 	let endpoint = 'contests';
 	if (withResults === true) {
 		endpoint = 'contests-with-results';
@@ -14,12 +13,12 @@ export async function fetchContests(key, value, withResults = false, page = 0) {
 	if ( key && value ) {
 		url += `?${key}=${value}`;
 	}
+
 	// always add the election id
 	url += `&election_id=${settings.electionId}`;
+
+	// if we're paginating, do it
 	if (settings.paginate === true) {
-		if (page !== 0) {
-			offset = page * settings.limit;
-		}
 		url += `&limit=${settings.limit}&offset=${offset}`;
 	}
 	res = await fetch(url);
