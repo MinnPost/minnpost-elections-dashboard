@@ -7,6 +7,8 @@ export let settings = {
     searchByLocation: true,
     apiRoot: "https://minnpost-mn-election-results.herokuapp.com/api/",
     electionId: "id-20221108",
+    limit: 5,
+    paginate: false,
 }
 
 //electionId: "id-20221108",

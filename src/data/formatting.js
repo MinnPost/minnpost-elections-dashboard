@@ -99,3 +99,30 @@ export function isTestElection(date) {
     }
     return isTest;
 }
+
+export function isContestDetailView(location, querystring) {
+    let contestDetailView = false;
+    let searchParams = new URLSearchParams(querystring);
+    if ( location.startsWith("/contest/") && searchParams.get('id') !== null) {
+        contestDetailView = true;
+    }
+    return contestDetailView;
+}
+
+export function showingVoteCount(location) {
+    let showVoteCount = true;
+    /*if (location === "/") {
+        showVoteCount = true;
+    } else {
+        showVoteCount = true;
+    }*/
+    return showVoteCount;
+}
+
+export function contestHasMap(contest) {
+    let contestHasMap = true;
+    if ( contest.boundary === "" || ! contest.boundary ) {
+        contestHasMap = false;
+    }
+    return contestHasMap;
+}

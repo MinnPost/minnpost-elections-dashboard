@@ -28,6 +28,9 @@
     .o-table-striped {
 
     }
+    .o-table-contest-results {
+        margin-bottom: 0;
+    }
 
     th, td {
         vertical-align: middle;
@@ -57,8 +60,10 @@
     .o-table-striped-start-dark {
         
     }
-
-    .m-map-container {
+    .o-map-wrapper {
+        height: 300px;
+    }
+    :global(.m-map-container) {
         height: 100%;
         margin-top: 1.5em;
         padding: 0.5em;
@@ -68,8 +73,9 @@
 
     .o-result-contest-detail {
         display: grid;
-        gap: 1em;
+        column-gap: 1em;
         grid-template-columns: repeat(auto-fit, minmax(20em, 1fr));
+        align-items: start;
     }
 
 </style>
@@ -78,49 +84,52 @@
     import {settings} from './../settings.js';
 
     // routing
-    import {location, querystring} from 'svelte-spa-router';
+    import {link, location, querystring} from 'svelte-spa-router';
 
     // data handling
     //import {isEmpty} from './../data/handling.js';
 
     import { onMount } from 'svelte';
 
+    // formatting
+    import { isContestDetailView, showingVoteCount, isWinner, contestHasMap } from './../data/formatting.js';
+
     // data
     export let contest;
+    export let label;
+    export let contestCount;
 
-    // showing vote count
-    let showVoteCount = true;
-    if ($location === "/") {
-        showVoteCount = true;
-    } else {
-        showVoteCount = true;
+    // components
+    import ContestMenu from './ContestMenu.svelte';
+
+    // display settings
+    let contestDetailView = isContestDetailView($location, $querystring);
+    let showVoteCount = showingVoteCount($location);
+    let mapAvailable = contestHasMap(contest);
+    if (contestCount === 1) {
+        contestDetailView = true;
     }
 
     // map
-    let showMap = settings.showMap;
     let Map;
-    let mapAvailable = true;
+    let showMap = settings.showMap;
+    if (contestDetailView === false || mapAvailable === false) {
+        showMap = false;
+    }
     const mapDelay = 300;
     const sleep = ms => new Promise(f => setTimeout(f, ms));
 	onMount(async () => {
-        let searchParams = new URLSearchParams($querystring);
-        if ( ! $location.startsWith("/contest/") || searchParams.get('id') === null) {
-            showMap = false;
-        }
-        if ( contest.boundary === "" || ! contest.boundary ) {
-            showMap = false;
-            mapAvailable = false;
-        }
-        if (showMap === true) {
+        if (showMap === true && mapAvailable === true) {
 		    await sleep(mapDelay); // simulate network delay
 		    Map = (await import('./Map.svelte')).default;
         }
 	});
 
-    // formatting
-    import { apDate, isWinner } from './../data/formatting.js';
-    import ContestMenu from './ContestMenu.svelte';
-    export let label;
+    async function loadMap() {
+        showMap = true;
+        await sleep(mapDelay); // simulate network delay
+        Map = (await import('./Map.svelte')).default;
+    }
     
     // set class based on dashboard or not
     function setResultClass(result, contest) {
@@ -131,21 +140,25 @@
         return resultClass;
     }
     let contestClass = 'o-result-contest';
-    if ($location !== "/") {
+    if (contestDetailView === true) {
         contestClass += ' o-result-contest-detail';
     }
 </script>
 
 <li class="{contestClass}" id="{contest.id}">
     <div class="o-result-contest-content">
-        <h3>{contest.title}</h3>
+        {#if contestDetailView === false}
+            <h3 class="a-entry-title"><a href="/contest/?id={contest.id}" use:link>{contest.title}</a></h3>
+        {:else}
+            <h3 class="a-entry-title">{contest.title}</h3>
+        {/if}
         {#if contest.sub_title !== null || contest.question_body }
             <div class="m-ballot-question">
                 <blockquote>
                 {#if contest.sub_title !== null }
                     <h4>{contest.sub_title}</h4>
                 {/if}
-                {#if (showVoteCount === true)}
+                {#if contestDetailView === true}
                     {#if contest.question_body}
                         <p class="a-question-body">{contest.question_body}</p>
                     {/if}
@@ -153,18 +166,13 @@
                 </blockquote>
             </div>
         {/if}
-        <table class="o-table-striped o-table-striped-start-light">
-            <!--{#if (showVoteCount === true)}
-                <caption>
-                    <div class="last-updated">Last updated {apDate(contest.updated, true, true, true)}</div>
-                </caption>
-            {/if}-->
+        <table class="o-table-striped o-table-striped-start-light o-table-contest-results">
             <thead>
                 <tr>
                     <th class="winner-column">&nbsp;</th>
-                    <th>Candidate</th>
+                    <th class="candidate-column">Candidate</th>
                     {#if contest.partisan && contest.show_party === true}
-                        <th>
+                        <th class="party-column">
                             <span class="large-table-label">Party</span>
                             <span class="small-table-label"></span>
                         </th>
@@ -188,21 +196,22 @@
                 </tr>
                 <tr class="table-second-heading">
                     <th class="winner-column"></th>
-                    <th>{contest.precincts_reporting} of {contest.total_effected_precincts} precincts reporting.{#if contest.seats > 1} Choosing {contest.seats}.{/if}</th>
-                {#if contest.partisan && contest.show_party === true}
-                    <th></th>
-                {/if}
-                {#if contest.ranked_choice == true}
-                    <th class="first-choice-column first-choice-heading">1st choice</th>
-                    <th class="second-choice-column second-choice-heading">2nd choice</th>
-                    <th class="third-choice-column third-choice-heading">3rd choice</th>
-                    <th class="final-column"></th>
-                {:else}
-                <th></th>
-                {/if}
-                {#if (showVoteCount === true)}
-                    <th></th>
-                {/if}
+                    {#if contest.partisan && contest.show_party === true}
+                        <th class="party-column">{contest.precincts_reporting} of {contest.total_effected_precincts} precincts reporting.{#if contest.seats > 1} Choosing {contest.seats}.{/if}</th>
+                    {:else}
+                        <th class="party-column">{contest.precincts_reporting} of {contest.total_effected_precincts} precincts reporting.{#if contest.seats > 1} Choosing {contest.seats}.{/if}</th>
+                    {/if}
+                    {#if contest.ranked_choice == true}
+                        <th class="first-choice-column first-choice-heading">1st choice</th>
+                        <th class="second-choice-column second-choice-heading">2nd choice</th>
+                        <th class="third-choice-column third-choice-heading">3rd choice</th>
+                        <th class="final-column"></th>
+                    {:else}
+                        <th class="percentage"></th>
+                    {/if}
+                    {#if (showVoteCount === true)}
+                        <th class="votes"></th>
+                    {/if}
                 </tr>
             </thead>
             <tbody>
@@ -227,8 +236,11 @@
                 {/each}
             </tbody>
         </table>
+        {#if (contestDetailView === true)}
+            <ContestMenu contest="{contest}" contestDetailView="{contestDetailView}" mapAvailable="{mapAvailable}" label="{label}"/>
+        {/if}
     </div>
-    {#if (showMap === true)}
+    {#if (showMap === true && contestDetailView === true)}
         <div class="o-map-wrapper">
             <div class="m-map-container">
                 <svelte:component this={Map} boundary_slug={contest.boundary}>
@@ -236,5 +248,7 @@
             </div>
         </div>
     {/if}
-    <ContestMenu contest="{contest}" mapAvailable={mapAvailable} showMap={showMap} showVoteCount={showVoteCount} label="{label}"/> 
+    {#if (contestDetailView === false)}
+        <ContestMenu contest="{contest}" contestDetailView="{contestDetailView}" mapAvailable="{mapAvailable}" label="{label}"/>
+    {/if}
 </li>

@@ -1,11 +1,3 @@
-<script>
-    // data
-    import { electionData, pollInfo, resultStore } from './../stores.js';
-    import { apDate, pluralize, isTestElection} from './../data/formatting.js';
-    
-    let label = 'contest';
-</script>
-
 <style>
     .a-election-status {
         text-align: center;
@@ -13,6 +5,27 @@
         font-size: inherit;
     }
 </style>
+
+<script>
+    // data
+    import { electionData, pollInfo, resultStore, apiData } from './../stores.js';
+    import { apDate, pluralize, isTestElection} from './../data/formatting.js';
+
+    // settings
+    import {settings} from './../settings.js';
+    
+    let label = 'contest';
+
+    let showing = '';
+    function showingData(resultStore) {
+        if (settings.paginate === true) {
+            showing = 'Showing ' + resultStore.length + ' of ' + pluralize($apiData.total_count, label) + ' for this group';
+        } else {
+            showing = 'Showing ' + pluralize(resultStore.length, label);
+        }
+        return showing;
+    }
+</script>
 
 {#await $electionData}
     <p>loading...</p>
@@ -24,10 +37,8 @@
     <p style="color: red">{error.message}</p>
 {/await}
 
-{#await $resultStore}
-	<p>Loading contests</p>
-{:then}
-    <h3 class="a-election-status">Showing {pluralize($resultStore.length, label)}</h3>
-{:catch error}
-    <p>Something went wrong: {error.message}</p>
-{/await}
+{#if $apiData && $resultStore}
+    <h3 class="a-election-status">{showingData($resultStore)}</h3>
+{:else}
+    <p>loading...</p>
+{/if}

@@ -24,28 +24,66 @@ export const resultStore = derived([location, querystring], ([$location, $querys
     };
 }, []);
 
+// store info about the api data
+export const apiData = writable([]);
+
+// single function for responding to the fetchAndSet promise
+function respondToPromise(key, values, page, set) {
+    fetchContests(key, values, true, page)
+        .then(result => {
+            apiData.set(
+                {
+                'total_count': result.total_count,
+                'limit': result.limit,
+                'offset': result.offset,
+                }
+            );
+            return result.data
+        })
+        .then(set)
+}
+
 // routing for displayed results
 function fetchAndSet($location, $querystring, set) {
     const searchParams = new URLSearchParams($querystring);
+    let page = 0;
+    if (searchParams.get('page') !== null) {
+        page = searchParams.get('page');
+    }
     if ($location.startsWith("/search/")) {
         if (searchParams.get('q') !== null) {
             new Promise((resolve) => {
                 setTimeout(() => {
-                    fetchContests('title', searchParams.get('q'), true).then(set);
+                    //set(fetchContests('title', searchParams.get('q'), true, page).data);
+                    /*fetchContests('title', searchParams.get('q'), true, page)
+                        .then(result => {
+                            apiData.set(
+                                {
+                                'total_count': result.total_count,
+                                'limit': result.limit,
+                                'offset': result.offset,
+                                }
+                            );
+                            return result.data
+                        })
+                        .then(set)*/
+                    respondToPromise('title', searchParams.get('q'), page, set);
                     resolve()
                 }, delay)
             })
         } else if (searchParams.get('address') !== null) {
             new Promise((resolve) => {
                 setTimeout(() => {
-                    fetchContests('address', searchParams.get('address'), true).then(set);
+                    //fetchContests('address', searchParams.get('address'), true, page).then(set);
+                    respondToPromise('address', searchParams.get('address'), page, set);
                     resolve()
                 }, delay)
             })
         } else if (searchParams.get('latitude') !== null && searchParams.get('longitude') !== null) {
             new Promise((resolve) => {
                 setTimeout(() => {
-                    fetchContests('coordinates', searchParams.get('latitude') + ',' + searchParams.get('longitude'), true).then(set);
+                    //fetchContests('coordinates', searchParams.get('latitude') + ',' + searchParams.get('longitude'), true, page).then(set);
+                    respondToPromise('coordinates', searchParams.get('latitude') + ',' + searchParams.get('longitude'), page, set);
                     resolve()
                 }, delay)
             })
@@ -54,14 +92,16 @@ function fetchAndSet($location, $querystring, set) {
         if (searchParams.get('scope') !== null) {
             new Promise((resolve) => {
                 setTimeout(() => {
-                    fetchContests('scope', searchParams.get('scope'), true).then(set);
+                    //fetchContests('scope', searchParams.get('scope'), true, page).then(set);
+                    respondToPromise('scope', searchParams.get('scope'), page, set);
                     resolve()
                 }, delay)
             })
         } else if (searchParams.get('group') !== null) {
             new Promise((resolve) => {
                 setTimeout(() => {
-                    fetchContests('results_group', searchParams.get('group'), true).then(set);
+                    //fetchContests('results_group', searchParams.get('group'), true, page).then(set);
+                    respondToPromise('results_group', searchParams.get('group'), page, set);
                     resolve()
                 }, delay)
             })
@@ -69,14 +109,16 @@ function fetchAndSet($location, $querystring, set) {
     } else if ($location.startsWith("/contest/") && searchParams.get('id') !== null) {
         new Promise((resolve) => {
             setTimeout(() => {
-                fetchContests('contest_id', searchParams.get('id'), true).then(set);
+                //fetchContests('contest_id', searchParams.get('id'), true, page).then(set);
+                respondToPromise('contest_id', searchParams.get('id'), page, set);
                 resolve()
             }, delay)
         })
     } else if ($location === "/" && ! searchParams.get('q')) {
         new Promise((resolve) => {
             setTimeout(() => {
-                fetchContests('contest_ids', dashboard, true).then(set);
+                //fetchContests('contest_ids', dashboard, true, page).then(set);
+                respondToPromise('contest_ids', dashboard, page, set);
                 resolve()
             }, delay)
         })

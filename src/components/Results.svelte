@@ -35,7 +35,7 @@
 {#key $resultStore}
     <ul class="o-results">
         {#each $resultStore as contest}
-            <Contest contest="{contest}" label="{label}"/>
+            <Contest contest="{contest}" label="{label}" contestCount="{$resultStore.length}"/>
         {/each}
     </ul>
 {/key}

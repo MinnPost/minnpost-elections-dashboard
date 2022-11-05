@@ -11,6 +11,7 @@
 	import SearchByAddress from './components/SearchByAddress.svelte';
 	import Navigation from './components/Navigation.svelte';
 	import Results from "./components/Results.svelte";
+	import Pagination from "./components/Pagination.svelte";
 	import Footer from "./components/Footer.svelte";
 
 	// routing
@@ -67,6 +68,10 @@
 	{/if}
 
 	<Router {routes} on:routeLoaded={routeLoaded} />
+
+	{#if settings.paginate === true}
+		<Pagination/>
+	{/if}
 
 	<Footer/>
 
