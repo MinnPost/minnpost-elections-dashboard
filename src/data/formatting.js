@@ -100,11 +100,17 @@ export function isTestElection(date) {
     return isTest;
 }
 
-export function isContestDetailView(location, querystring) {
+export function isContestDetailView(location, querystring, contestCount) {
     let contestDetailView = false;
     let searchParams = new URLSearchParams(querystring);
     if ( location.startsWith("/contest/") && searchParams.get('id') !== null) {
         contestDetailView = true;
+    }
+    if (contestCount === 1) {
+        contestDetailView = true;
+    }
+    if (searchParams.get('page') !== null) {
+        contestDetailView = false;
     }
     return contestDetailView;
 }

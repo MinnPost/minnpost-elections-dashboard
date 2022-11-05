@@ -117,12 +117,9 @@
     import ContestMenu from './ContestMenu.svelte';
 
     // display settings
-    let contestDetailView = isContestDetailView($location, $querystring);
+    let contestDetailView = isContestDetailView($location, $querystring, contestCount);
     let showVoteCount = showingVoteCount($location);
     let mapAvailable = contestHasMap(contest);
-    if (contestCount === 1) {
-        contestDetailView = true;
-    }
 
     // ballot question
     let showBallotQuestion = settings.showBallotQuestion;
