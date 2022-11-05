@@ -9,14 +9,12 @@
     import {link, location, querystring} from 'svelte-spa-router';
     import active from 'svelte-spa-router/active'
 
-    let totalPages = 1;
-    let pagesArray = [];
-    function getPages(apiData) {
+    let pageCount = 1;
+    function getPageCount(apiData) {
         if (apiData.total_count > settings.limit) {
-            totalPages = Math.ceil(apiData.total_count / settings.limit);
+            pageCount = Math.ceil(apiData.total_count / settings.limit);
         }
-        pagesArray = Array.from({length: totalPages}, (x, i) => i+1) // [1,2,3,4,5,6,7,8,9,10]
-        return pagesArray;
+        return pageCount;
     }
 
     function getPageLink(page) {
@@ -44,18 +42,77 @@
         return path;
     }
 
+    function getCurrentPage() {
+        let linkParams = new URLSearchParams($querystring);
+        let currentPage = linkParams.get('page');
+        return currentPage;
+    }
+
+    const getRange = (start, end) => {
+        return Array(end - start + 1)
+        .fill()
+        .map((v, i) => i + start)
+    }
+
+    const pagination = (currentPage, pageCount) => {
+        let delta;
+        if (pageCount <= 7) {
+            // delta === 7: [1 2 3 4 5 6 7]
+            delta = 7
+        } else {
+            // delta === 2: [1 ... 4 5 6 ... 10]
+            // delta === 4: [1 2 3 4 5 ... 10]
+            delta = currentPage > 4 && currentPage < pageCount - 3 ? 2 : 4
+        }
+
+        const range = {
+            start: Math.round(currentPage - delta / 2),
+            end: Math.round(currentPage + delta / 2)
+        }
+
+        if (range.start - 1 === 1 || range.end + 1 === pageCount) {
+            range.start += 1
+            range.end += 1
+        }
+
+        let pages =
+            currentPage > delta
+            ? getRange(Math.min(range.start, pageCount - delta), Math.min(range.end, pageCount))
+            : getRange(1, Math.min(pageCount, delta + 1))
+
+        const withDots = (value, pair) => (pages.length + 1 !== pageCount ? pair : [value])
+
+        if (pages[0] !== 1) {
+            pages = withDots(1, [1, '...']).concat(pages)
+        }
+
+        if (pages[pages.length - 1] < pageCount) {
+            pages = pages.concat(withDots(pageCount, ['...', pageCount]))
+        }
+
+        return pages
+    }
+
 </script>
 
 {#if $isPaginated === true}
     {#if $apiData}
-        {#if (getPages($apiData)).length > 0}
+        {#if (pagination(getCurrentPage(), getPageCount($apiData))).length > 0}
             <div class="m-pagination">
                 <ol>
-                    {#each getPages($apiData) as page}
-                        <li><a href="{getPageLink(page)}" use:link use:active={{path: getActivePath(page)}}>{page}</a></li>
+                    {#if getCurrentPage() > 1}
+                        <li class="a-pagination-previous"><a href="{getPageLink(parseInt(getCurrentPage()) - 1)}" use:link><i class="fas fa-chevron-left"></i> Previous</a></li>
+                    {/if}
+                    {#each pagination(getCurrentPage(), getPageCount($apiData)) as page}
+                        {#if page !== '...'}
+                            <li><a href="{getPageLink(page)}" use:link use:active={{path: getActivePath(page)}}>{page}</a></li>
+                        {:else}
+                            <li class="a-pagination-ellipsis"><span>&hellip;</span></li>
+                        {/if}
                     {/each}
-                    <!--<li class="a-pagination-ellipsis"><span>…</span></li>
-                    <li class="a-pagination-next"><a href="/">Next <svg class="svg-inline--fa fa-chevron-right" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" data-fa-i2svg=""><path fill="currentColor" d="M96 480c-8.188 0-16.38-3.125-22.62-9.375c-12.5-12.5-12.5-32.75 0-45.25L242.8 256L73.38 86.63c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0l192 192c12.5 12.5 12.5 32.75 0 45.25l-192 192C112.4 476.9 104.2 480 96 480z"></path></svg><!-- <i class="fas fa-chevron-right"></i> Font Awesome fontawesome.com --><!--</a></li>-->
+                    {#if getCurrentPage() > getPageCount($apiData).length}
+                        <li class="a-pagination-next"><a href="{getPageLink(parseInt(getCurrentPage()) + 1)}">Next <i class="fas fa-chevron-right"></i></a></li>
+                    {/if}
                 </ol>
             </div>
         {/if}
