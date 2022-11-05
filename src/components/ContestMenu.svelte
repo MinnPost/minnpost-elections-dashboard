@@ -1,10 +1,4 @@
 <style>
-    .a-button-text-link {
-        background: none;
-        line-height: inherit;
-        border: none;
-        box-shadow: unset;
-    }
     .m-menu-contest-actions {
         border-bottom: 2px solid #d6d6da;
         border-top: 1px solid #d6d6da;

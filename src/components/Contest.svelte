@@ -78,6 +78,20 @@
         align-items: start;
     }
 
+    .a-show-ballot-question  {
+        padding: 0;
+        color: #135b7e;
+    }
+    .a-show-ballot-question:hover, .a-show-ballot-question:focus {
+        text-decoration: underline;
+    }
+    :global(.a-button-text-link) {
+        background: none;
+        line-height: inherit;
+        border: none;
+        box-shadow: unset;
+    }
+
 </style>
 <script>
     // settings
@@ -110,6 +124,12 @@
         contestDetailView = true;
     }
 
+    // ballot question
+    let showBallotQuestion = settings.showBallotQuestion;
+    if (contestDetailView === true) {
+        showBallotQuestion = true;
+    }
+
     // map
     let Map;
     let showMap = settings.showMap;
@@ -124,12 +144,6 @@
 		    Map = (await import('./Map.svelte')).default;
         }
 	});
-
-    async function loadMap() {
-        showMap = true;
-        await sleep(mapDelay); // simulate network delay
-        Map = (await import('./Map.svelte')).default;
-    }
     
     // set class based on dashboard or not
     function setResultClass(result, contest) {
@@ -158,7 +172,10 @@
                 {#if contest.sub_title !== null }
                     <h4>{contest.sub_title}</h4>
                 {/if}
-                {#if contestDetailView === true}
+                {#if settings.showBallotQuestion === false}
+                    <button class="a-show-ballot-question a-button-text-link" on:click={() => (showBallotQuestion = !showBallotQuestion)}>{#if showBallotQuestion === true}Hide Ballot Question{:else}Show Ballot Question{/if}</button>
+                {/if}
+                {#if showBallotQuestion === true}
                     {#if contest.question_body}
                         <p class="a-question-body">{contest.question_body}</p>
                     {/if}
