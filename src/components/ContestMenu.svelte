@@ -26,11 +26,11 @@
     export let contest;
     export let contestDetailView;
     export let label;
-    //export let showVoteCount;
     export let mapAvailable;
-    //export let showMap;
     
-    import {link} from 'svelte-spa-router';
+    import {link, querystring, location} from 'svelte-spa-router';
+
+    import { isPaginated } from './../stores.js';
 
     // map
     let Map;
@@ -43,12 +43,19 @@
         Map = (await import('./Map.svelte')).default;
     }
 
+    function getPageLink() {
+        let url = "";
+        let linkParams = new URLSearchParams($querystring);
+        url = $location + '?' + linkParams;
+        return url;
+    }
+
     // related contests
     function getRelatedContestLink(contest) {
-        const relatedContestPaths = [
+        let relatedContestPaths = [
             {
                 "scope": "state",
-                "label": "Statewide",
+                "label": "statewide",
             },
             {
                 "scope": "us_house",
@@ -71,6 +78,34 @@
             }
             relatedContestPaths.push(countyPath);
         }
+        if ($isPaginated === true && contest.sub_title !== null || contest.question_body) {
+            let questionPaths = [
+                {
+                    "scope": "county",
+                    "search": "question",
+                    "text": "All ballot questions",
+                },
+                {
+                    "scope": "municipal",
+                    "search": "question",
+                    "text": "All ballot questions",
+                },
+                {
+                    "scope": "school",
+                    "search": "question",
+                    "text": "All ballot questions",
+                }
+            ];
+            relatedContestPaths = relatedContestPaths.concat(questionPaths);
+        }
+        if ($isPaginated === true && contest.scope === 'school' && contest.title.toLowerCase().includes('School Board Member'.toLowerCase())) {
+            let schoolBoardPath = {
+                "scope": "school",
+                "search": "School Board Member",
+                "text": "All school board " + label + 's'
+            }
+            relatedContestPaths.push(schoolBoardPath);
+        }
         let link = {};
         let path = relatedContestPaths.find((e) => e.scope == contest.scope);
         if (path) {
@@ -80,7 +115,14 @@
             if (path.search) {
                 link.href = '/search/?q=' + path.search;
             }
-            link.text = 'More ' + path.label + ' ' + label + 's';
+            if ( path.label ) {
+                link.text = 'More ' + path.label + ' ' + label + 's';
+            } else {
+                link.text = path.text;
+            }
+            if (getPageLink() === link.href) {
+                delete link.href;
+            }
         }
         return link;
     }
