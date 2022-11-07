@@ -35,11 +35,16 @@
 	}
 
 	function routeLoaded(event) {
-		const el = document.querySelector('.m-form-search-contest');
-		if (!el) return;
-        el.scrollIntoView({
-            behavior: 'smooth'
-        });
+		if (localStorage.getItem("hasCodeRunBefore") === null) {
+			/** Your code here. **/
+			localStorage.setItem("hasCodeRunBefore", true);
+		} else {
+			const el = document.querySelector('.m-form-search-contest');
+			if (!el) return;
+			el.scrollIntoView({
+				behavior: 'smooth'
+			});
+		}
 	}
 
 </script>

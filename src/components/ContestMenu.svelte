@@ -28,7 +28,9 @@
     export let label;
     export let mapAvailable;
     
-    import {link, querystring, location} from 'svelte-spa-router';
+    import { link, querystring, location } from 'svelte-spa-router';
+
+    import { navigationContext } from '../data/navigationContext.js';
 
     import { isPaginated } from './../stores.js';
 
@@ -46,85 +48,32 @@
     function getPageLink() {
         let url = "";
         let linkParams = new URLSearchParams($querystring);
-        url = $location + '?' + linkParams;
+        url = ($location + '?' + linkParams).replaceAll('+', '%20');
         return url;
     }
 
     // related contests
     function getRelatedContestLink(contest) {
-        let relatedContestPaths = [
-            {
-                "scope": "state",
-                "label": "statewide",
-            },
-            {
-                "scope": "us_house",
-                "label": "U.S. House",
-            },
-            {
-                "scope": "state_house",
-                "label": "State House",
-            },
-            {
-                "scope": "state_senate",
-                "label": "State Senate",
-            }
-        ];
-        if (contest.scope === 'county' && contest.place_name && contest.place_name !== '') {
-            let countyPath = {
-                "scope": "county",
-                "search": contest.place_name + "+County",
-                "label": contest.place_name + " County",
-            }
-            relatedContestPaths.push(countyPath);
-        }
-        if ($isPaginated === true && contest.sub_title !== null || contest.question_body) {
-            let questionPaths = [
-                {
-                    "scope": "county",
-                    "search": "question",
-                    "text": "All ballot questions",
-                },
-                {
-                    "scope": "municipal",
-                    "search": "question",
-                    "text": "All ballot questions",
-                },
-                {
-                    "scope": "school",
-                    "search": "question",
-                    "text": "All ballot questions",
-                }
-            ];
-            relatedContestPaths = relatedContestPaths.concat(questionPaths);
-        }
-        if ($isPaginated === true && contest.scope === 'school' && contest.title.toLowerCase().includes('School Board Member'.toLowerCase())) {
-            let schoolBoardPath = {
-                "scope": "school",
-                "search": "School Board Member",
-                "text": "All school board " + label + 's'
-            }
-            relatedContestPaths.push(schoolBoardPath);
-        }
-        let link = {};
-        let path = relatedContestPaths.find((e) => e.scope == contest.scope);
+        let path = navigationContext([contest], contest, isPaginated, $location, $querystring);
+        let menuLink = {};
+        
         if (path) {
             if (path.scope) {
-                link.href = '/contests/?scope=' + path.scope;
+                menuLink.href = '/contests/?scope=' + path.scope;
             }
             if (path.search) {
-                link.href = '/search/?q=' + path.search;
+                menuLink.href = '/search/?q=' + path.search;
             }
             if ( path.label ) {
-                link.text = 'More ' + path.label + ' ' + label + 's';
+                menuLink.text = 'More ' + decodeURIComponent(path.label) + ' ' + label + 's';
             } else {
-                link.text = path.text;
+                menuLink.text = path.text;
             }
-            if (getPageLink() === link.href) {
-                delete link.href;
+            if (getPageLink().toLowerCase() === menuLink.href.toLowerCase()) {
+                delete menuLink.href;
             }
         }
-        return link;
+        return menuLink;
     }
 </script>
 

@@ -100,9 +100,6 @@
     // routing
     import {link, location, querystring} from 'svelte-spa-router';
 
-    // data handling
-    //import {isEmpty} from './../data/handling.js';
-
     import { onMount } from 'svelte';
 
     // formatting

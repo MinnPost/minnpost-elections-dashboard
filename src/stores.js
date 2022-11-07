@@ -37,20 +37,24 @@ export const apiData = writable([]);
 
 // single function for responding to the fetchAndSet promise
 function respondToPromise(key, values, set) {
-    let page = get(currentPage);
     let queryOffset = get(currentOffset) - 1;
     fetchContests(key, values, true, queryOffset)
         .then(result => {
             if (typeof (result.total_count) !== 'undefined') {
                 isPaginated.set(true);
+                if (result.total_count < settings.limit) {
+                    isPaginated.set(false);
+                }
+            } else {
+                isPaginated.set(false);
+                currentTo.set(0);
+            }
+            if (get(isPaginated) === true) {
                 if ( ( settings.limit * get(currentPage) ) <= ( result.total_count ) ) {
                     currentTo.set( ( settings.limit * get(currentPage) ) );
                 } else {
                     currentTo.set(result.total_count);
                 }
-            } else {
-                isPaginated.set(false);
-                currentTo.set(0);
             }
             apiData.set(
                 {
@@ -69,6 +73,8 @@ function fetchAndSet($location, $querystring, set) {
     const searchParams = new URLSearchParams($querystring);
     if (searchParams.get('page') !== null) {
         currentPage.set(parseInt(searchParams.get('page')));
+    } else {
+        currentPage.set(1);
     }
     currentOffset.set((get(currentPage) - 1) * settings.limit + 1);
     if ($location.startsWith("/search/")) {

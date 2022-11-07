@@ -11,17 +11,33 @@
     import { electionData, pollInfo, resultStore, apiData, currentTo, currentOffset, isPaginated } from './../stores.js';
     import { apDate, pluralize, isTestElection} from './../data/formatting.js';
 
-    // settings
-    import {settings} from './../settings.js';
+    // routing
+    import { querystring, location } from 'svelte-spa-router';
+    import { navigationContext } from '../data/navigationContext.js';
     
     let label = 'contest';
 
     let showing = '';
     function showingData(resultStore) {
-        if ($isPaginated === true) {
-            showing = 'Showing ' + $currentOffset + '-' + $currentTo + ' of ' + pluralize($apiData.total_count, label) + ' for this group';
+        let context = navigationContext(resultStore, {}, $isPaginated, $location, $querystring);
+        let contextLabel = "";
+        let suffix = "";
+        if (context && context.label) {
+            contextLabel = context.label;
         } else {
-            showing = 'Showing ' + pluralize(resultStore.length, label);
+            let searchParams = new URLSearchParams($querystring);
+            if (searchParams.get('q') !== null) {
+                suffix = ' for ' + decodeURIComponent(searchParams.get('q'));
+            }
+            if (searchParams.get('address') !== null) {
+                suffix = ' near ' + decodeURIComponent(searchParams.get('address'));
+            }
+        }
+        if ($isPaginated === true) {
+            let pluralized = pluralize($apiData.total_count, label, contextLabel + ' ');
+            showing = 'Showing ' + $currentOffset + '-' + $currentTo + ' of ' + pluralized + suffix;
+        } else {
+            showing = 'Showing ' + resultStore.length + ' of ' + pluralize(resultStore.length, label, contextLabel + ' ') + suffix;
         }
         return showing;
     }

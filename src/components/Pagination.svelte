@@ -32,19 +32,23 @@
     function getActivePath(page) {
         let path = "";
         let linkParams = new URLSearchParams($querystring);
-        let currentPage = linkParams.get('page');
+        let currentPage = getCurrentPage($querystring);
         linkParams.delete('page');
-        if (page === 1 && currentPage === null) {
+        if (parseInt(page) === 1 && parseInt(currentPage) === 1) {
             path = '*/?' + linkParams;
         } else {
             path = '*/?' + linkParams + '&page=' + page;
         }
+        path = path.replaceAll('+', '%20');
         return path;
     }
 
-    function getCurrentPage() {
+    function getCurrentPage($querystring) {
         let linkParams = new URLSearchParams($querystring);
         let currentPage = linkParams.get('page');
+        if (currentPage === null) {
+            currentPage = 1;
+        }
         return currentPage;
     }
 
@@ -97,15 +101,19 @@
 
 {#if $isPaginated === true}
     {#if $apiData}
-        {#if (pagination(getCurrentPage(), getPageCount($apiData))).length > 0}
+        {#if (pagination(getCurrentPage($querystring), getPageCount($apiData))).length > 0}
             <div class="m-pagination">
                 <ol>
                     {#if getCurrentPage() > 1}
                         <li class="a-pagination-previous"><a href="{getPageLink(parseInt(getCurrentPage()) - 1)}" use:link><i class="fas fa-chevron-left"></i> Previous</a></li>
                     {/if}
-                    {#each pagination(getCurrentPage(), getPageCount($apiData)) as page}
+                    {#each pagination(getCurrentPage($querystring), getPageCount($apiData)) as page}
                         {#if page !== '...'}
-                            <li><a href="{getPageLink(page)}" use:link use:active={{path: getActivePath(page)}}>{page}</a></li>
+                            {#if getCurrentPage($querystring) === page}
+                                <li class="active"><span>{page}</span></li>
+                            {:else}
+                                <li><a href="{getPageLink(page)}" use:link use:active={{path: getActivePath(page)}}>{page}</a></li>
+                            {/if}
                         {:else}
                             <li class="a-pagination-ellipsis"><span>&hellip;</span></li>
                         {/if}

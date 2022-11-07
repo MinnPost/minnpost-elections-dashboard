@@ -1,6 +1,6 @@
-// Mark who won.  Overall having all precincts reporting is good
+// Mark who won. Overall having all precincts reporting is good
 // enough but with ranked choice, we need have all the final data
-// in.  Primaries need to choose winners per parties
+// in. Primaries need to choose winners per parties
 function contestIsDone(contest) {
     let done = false;
     if (contest.precincts_reporting === contest.total_effected_precincts) {
@@ -9,7 +9,7 @@ function contestIsDone(contest) {
     return done;
 }
 
-// If there is a percent needed option.  We assume yes no questions
+// If there is a percent needed option. We assume yes no questions
 export function isWinner(contest, result, key) {
     let isWinner = false;
     if (contest.percent_needed && contest.percent_needed > 0 && contestIsDone(contest) === true) {
@@ -83,7 +83,7 @@ export function apDate(string, hasTime = false, showTime = false, relative = tru
 }
 
 // language settings
-export const pluralize = (count, noun, suffix = 's') => `${count} ${noun}${count !== 1 ? suffix : ''}`;
+export const pluralize = (count, noun, context = '', suffix = 's') => `${count} ${context}${noun}${count !== 1 ? suffix : ''}`;
 
 // is this a test election?
 export function isTestElection(date) {
@@ -100,6 +100,8 @@ export function isTestElection(date) {
     return isTest;
 }
 
+// are we showing the detail view for this contest? assumes we have a contest ID
+// and that we don't have pagination.
 export function isContestDetailView(location, querystring, contestCount) {
     let contestDetailView = false;
     let searchParams = new URLSearchParams(querystring);
@@ -115,6 +117,7 @@ export function isContestDetailView(location, querystring, contestCount) {
     return contestDetailView;
 }
 
+// are we showing the vote count?
 export function showingVoteCount(location) {
     let showVoteCount = true;
     /*if (location === "/") {
@@ -125,6 +128,7 @@ export function showingVoteCount(location) {
     return showVoteCount;
 }
 
+// does this contest have a valid boundary to create a map?
 export function contestHasMap(contest) {
     let contestHasMap = true;
     if ( contest.boundary === "" || ! contest.boundary ) {
