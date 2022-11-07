@@ -28,6 +28,9 @@
             width: 75.5172413793%;
         }
     }
+    :global(div.m-autocomplete-items) {
+        z-index: 100000;
+    }
     :global(div.autocomplete) {
         width: 100%;
     }
@@ -197,6 +200,7 @@
                     bind:selectedItem="{searchTerm}"
                     bind:value={searchTerm}
                     inputClassName="search-field"
+                    dropdownClassName="m-autocomplete-items"
                     placeholder="Search for a contest"
                     hideArrow="{true}"
                     cleanUserText={false}
