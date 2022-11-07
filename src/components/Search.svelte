@@ -28,9 +28,6 @@
             width: 75.5172413793%;
         }
     }
-    :global(div.m-autocomplete-items) {
-        z-index: 100000;
-    }
     :global(div.autocomplete) {
         width: 100%;
     }

@@ -5,7 +5,7 @@
         position: sticky;
         top: 0;
         background: #fff;
-        z-index: 100;
+        z-index: 90;
     }
     :global(.admin-bar .o-wrapper-contests-navigation) {
         top: 32px !important;
