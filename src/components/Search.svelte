@@ -95,8 +95,8 @@
     }
 
     async function getContests(keyword) {
-        var contests = fetchContests('title', keyword, false);
-        return contests;
+        let contests = await fetchContests('title', keyword, false, 0, false);
+        return contests.data;
     }
 
     function getItem(value) {

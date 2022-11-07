@@ -39,7 +39,7 @@ export const apiData = writable([]);
 function respondToPromise(key, values, set) {
     let page = get(currentPage);
     let queryOffset = get(currentOffset) - 1;
-    fetchContests(key, values, true, page, queryOffset)
+    fetchContests(key, values, true, queryOffset)
         .then(result => {
             if (typeof (result.total_count) !== 'undefined') {
                 isPaginated.set(true);
