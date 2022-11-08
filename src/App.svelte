@@ -6,6 +6,7 @@
     import { fade } from 'svelte/transition';
 
 	// layout components
+	import Head from "./components/Head.svelte";
 	import Header from "./components/Header.svelte";
 	import Search from './components/Search.svelte';
 	import SearchByAddress from './components/SearchByAddress.svelte';
@@ -57,6 +58,8 @@
 		font-family: "ff-meta-web-pro", helvetica, arial, sans-serif;
 	}
 </style>
+
+<Head/>
 
 <div class="election-results" in:fade="{{duration: 500}}">
 
