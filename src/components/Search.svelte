@@ -1,33 +1,19 @@
 <style>
     form {
         border-bottom: 1px solid #5e6e76;
-        padding: 0 1.5em;
         margin: 0 auto 1.5em auto;
-        width: 83.6842105263%;
+        width: 100%;
     }
     fieldset {
         border: 0;
     }
-    @media screen and (min-width: 30em) {
-        form {
-            width: 75.5172413793%;
-        }
-    }
     @media screen and (min-width: 50em) {
         form {
-            width: 58.7179487179%;
-        }
-    }
-    @media screen and (min-width: 60em) {
-        form {
-            width: 59.1525423729%;
-        }
-    }
-    @media screen and (min-width: 70em) {
-        form {
+            padding: 0 1.5em;
             width: 75.5172413793%;
         }
     }
+    
     :global(div.autocomplete) {
         width: 100%;
     }

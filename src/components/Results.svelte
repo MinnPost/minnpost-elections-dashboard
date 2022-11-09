@@ -4,10 +4,11 @@
     }
     .o-results {
         display: grid;
-        gap: 1em;
+        gap: 1.5em;
         grid-template-columns: repeat(auto-fit, minmax(20em, 1fr));
         list-style: none;
         align-content: flex-start;
+        margin-left: 0;
     }
     @media screen and (min-width: 60em) {
         .o-results {

@@ -1,7 +1,13 @@
 <style>
     .o-result-contest {
-        padding-left: 0.5em;
-        padding-right: 0.5em;
+        margin: 0;
+        padding: 0;
+    }
+    @media screen and (min-width: 60em) {
+        .o-result-contest {
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+        }
     }
 
     h3 {
@@ -17,24 +23,15 @@
         font-family: "ff-meta-web-pro", helvetica, arial, sans-serif;
         margin-bottom: 1em;
     }
-    /*h4 {
-        padding-top: 0.5em;
-        margin-bottom: 0.25em;
-    }
-    .a-question-body {
-        margin-bottom: 0.75em;
-    }*/
-
-    .o-table-striped {
-
-    }
-    .o-table-contest-results {
-        margin-bottom: 0;
-    }
 
     th, td {
         vertical-align: middle;
-        padding: .5em;
+        padding: .25em;
+    }
+    @media screen and (min-width: 60em) {
+        th, td {
+            padding: .5em;
+        }
     }
 
     tr:not(:last-child) th {
