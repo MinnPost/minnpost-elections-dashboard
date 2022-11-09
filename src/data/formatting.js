@@ -20,7 +20,7 @@ export function isWinner(contest, result, key) {
             isWinner = true;
         }
     } else if ((contestIsDone(contest) && !contest.ranked_choice && !contest.primary) ||
-    (contestIsDone(contest) && contest.ranked_choice && contestRankedChoiceResults(contest) && !contest.primary) ||
+    (contestIsDone(contest) && contest.ranked_choice && !contest.primary) ||
     (contestIsDone(contest) && contest.primary && !contest.partisan)) {
         // Conditions where we just want the top seats
         if (key < contest.seats && !result.percent) {
@@ -56,7 +56,11 @@ export function apDate(string, hasTime = false, showTime = false, relative = tru
         if (hasTime === false) {
             string = string + ' 00:00:00';
         }
-        let dateObject = new Date(string);
+        let newString = string.toString().replace(/ /g, "T");
+        let dateObject = new Date(newString);
+        if (isNaN(dateObject)) {
+            dateObject = new Date(string);
+        }
         dateObject.toLocaleString('en-US', { timeZone: 'America/Chicago' });
         if (showTime === false) {
             apDate = Dateline(dateObject).getAPDate({includeYear: true});
@@ -67,15 +71,18 @@ export function apDate(string, hasTime = false, showTime = false, relative = tru
                 const now = new Date();
                 const nowWithoutTime = new Date(now.getTime());
                 const dateObjectWithoutTime = new Date(dateObject.getTime());
+                if (!isNaN(dateObjectWithoutTime)) {
+                    console.log('what' + dateObjectWithoutTime);
 
-                nowWithoutTime.setHours(0, 0, 0, 0);
-                dateObjectWithoutTime.setHours(0, 0, 0, 0);
-                nowWithoutTime.toLocaleString('en-US', { timeZone: 'America/Chicago' });
-                dateObjectWithoutTime.toLocaleString('en-US', { timeZone: 'America/Chicago' });
-                if (nowWithoutTime.getTime() === dateObjectWithoutTime.getTime()) {
-                    apDate = 'at ' + Dateline(dateObject).getAPTime();
-                } else {
-                    apDate = 'on ' + Dateline(dateObject).getAPDate({includeYear: true}) + ' at ' + Dateline(dateObject).getAPTime();
+                    nowWithoutTime.setHours(0, 0, 0, 0);
+                    dateObjectWithoutTime.setHours(0, 0, 0, 0);
+                    nowWithoutTime.toLocaleString('en-US', { timeZone: 'America/Chicago' });
+                    dateObjectWithoutTime.toLocaleString('en-US', { timeZone: 'America/Chicago' });
+                    if (nowWithoutTime.getTime() === dateObjectWithoutTime.getTime()) {
+                        apDate = 'at ' + Dateline(dateObject).getAPTime();
+                    } else {
+                        apDate = 'on ' + Dateline(dateObject).getAPDate({includeYear: true}) + ' at ' + Dateline(dateObject).getAPTime();
+                    }
                 }
             }
             
