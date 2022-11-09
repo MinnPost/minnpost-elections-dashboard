@@ -208,9 +208,9 @@
                 <tr class="table-second-heading">
                     <th class="winner-column"></th>
                     {#if contest.partisan && contest.show_party === true}
-                        <th class="party-column">{contest.precincts_reporting} of {contest.total_effected_precincts} precincts reporting.{#if contest.seats > 1} Choosing {contest.seats}.{/if}</th>
+                        <th class="party-column">{contest.precincts_reporting.toLocaleString()} of {contest.total_effected_precincts.toLocaleString()} precincts reporting.{#if contest.seats > 1} Choosing {contest.seats}.{/if}</th>
                     {:else}
-                        <th class="party-column">{contest.precincts_reporting} of {contest.total_effected_precincts} precincts reporting.{#if contest.seats > 1} Choosing {contest.seats}.{/if}</th>
+                        <th class="party-column">{contest.precincts_reporting.toLocaleString()} of {contest.total_effected_precincts.toLocaleString()} precincts reporting.{#if contest.seats > 1} Choosing {contest.seats}.{/if}</th>
                     {/if}
                     {#if contest.ranked_choice == true}
                         <th class="first-choice-column first-choice-heading">1st choice</th>
@@ -240,7 +240,7 @@
                         {#if contest.ranked_choice !== true}
                             <td class="percentage">{r.percentage}%</td>
                             {#if (showVoteCount === true)}
-                                <td class="votes">{r.votes_candidate}</td>
+                                <td class="votes">{r.votes_candidate.toLocaleString()}</td>
                             {/if}
                         {/if}
                     </tr>

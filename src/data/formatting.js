@@ -20,7 +20,7 @@ export function isWinner(contest, result, key) {
             isWinner = true;
         }
     } else if ((contestIsDone(contest) && !contest.ranked_choice && !contest.primary) ||
-    (contestIsDone(contest) && contest.ranked_choice && rankedChoiceFinal && !contest.primary) ||
+    (contestIsDone(contest) && contest.ranked_choice && contestRankedChoiceResults(contest) && !contest.primary) ||
     (contestIsDone(contest) && contest.primary && !contest.partisan)) {
         // Conditions where we just want the top seats
         if (key < contest.seats && !result.percent) {
@@ -37,13 +37,15 @@ export function isWinner(contest, result, key) {
     return isWinner;
 }
 
-/*// Get ranked choice final results
-if (parsed.ranked_choice) {
-rankedChoiceFinal = (_.size(parsed.results) == _.size(_.filter(parsed.results, function(r) {
-    return (!_.isUndefined(r.ranked_choices[100]));
-})));
-}
-*/
+// Get ranked choice final results
+/*function contestRankedChoiceResults(contest) {
+    if (contest.ranked_choice) {
+        //console.log(contest.results.length);
+        //rankedChoiceFinal = (contest.results.length == _.size(_.filter(contest.results, function(r) {
+            //return (!_.isUndefined(r.ranked_choices[100]));
+        //})));
+    }
+}*/
 
 // AP date formatting
 import Dateline from 'dateline';
